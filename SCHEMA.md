@@ -2,7 +2,20 @@
 
 ## Design Philosophy
 
-The database design relies heavily on PostgreSQL features to simplify application code and guarantee isolation. We use Row-Level Security (RLS) for all multi-tenancy, and we design for immutability where auditing demands it.
+The database design relies heavily on PostgreSQL features to simplify application code and guarantee isolation. We use Row-Level Security (RLS) for all multi-tenancy on sensitive state paths, paired with Redis caching and direct read-replica queries for non-sensitive public menu browsing.
+
+## Data Access Architecture
+
+1. **Public Read Path (Menu Browsing):**
+   - High-throughput endpoint: `GET /api/v1/menu/:zone_slug/:table_number`.
+   - Served primarily from Redis cache (`cache:menu:{tenant_id}`).
+   - On cache miss, queries database using application-level `WHERE tenant_id = ?` without initiating a PostgreSQL RLS transaction wrapper. This permits transaction-mode pooling via PgBouncer (`pool_mode = transaction`) under peak concurrency (e.g. 500+ simultaneous diners).
+
+2. **Sensitive State Path (Orders, KDS, Cashier, Audit, Tables):**
+   - All mutations, active order fetches, cashier settlement views, and audit log accesses run inside PostgreSQL transactions with RLS active.
+   - Enforced by application middleware running `SET LOCAL app.current_tenant_id = ?` inside every transaction block.
+
+---
 
 ## Core Tables
 
@@ -20,8 +33,6 @@ CREATE TABLE tenants (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
-
-*(Note: Tenants table itself does not have RLS as it is the root entity, but access to it is tightly controlled.)*
 
 ### 2. Zones & Tables
 
@@ -43,7 +54,7 @@ CREATE TABLE tables (
     zone_id UUID NOT NULL REFERENCES zones(id) ON DELETE CASCADE,
     table_number VARCHAR(10) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
-    session_id UUID NULL, -- Used to track if table is occupied
+    session_id UUID NULL, -- Active session identifier
     UNIQUE(tenant_id, zone_id, table_number)
 );
 ```
@@ -62,7 +73,8 @@ CREATE TABLE menu_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
-    name VARCHAR(150) NOT NULL,
+    name_en VARCHAR(150) NOT NULL,
+    name_roman_urdu VARCHAR(150),
     description TEXT,
     base_price NUMERIC(10,2) NOT NULL,
     is_86ed BOOLEAN DEFAULT FALSE,
@@ -73,15 +85,14 @@ CREATE TABLE modifiers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     menu_item_id UUID NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
-    name VARCHAR(50) NOT NULL, -- e.g. "Extra Cheese", "No Onion"
+    name_en VARCHAR(50) NOT NULL, -- e.g. "Extra Cheese"
+    name_roman_urdu VARCHAR(50),  -- e.g. "Ziada Cheese"
     price_delta NUMERIC(10,2) DEFAULT 0.00,
     type VARCHAR(20) NOT NULL -- 'EXCLUSION', 'ADD_ON', 'PREFERENCE'
 );
 ```
 
-### 4. Orders & Order Items
-
-An order aggregates a diner's submission into a ticket.
+### 4. Orders & Snapshotted Order Items
 
 ```sql
 CREATE TABLE orders (
@@ -90,10 +101,10 @@ CREATE TABLE orders (
     table_id UUID NOT NULL REFERENCES tables(id) ON DELETE RESTRICT,
     session_id UUID NOT NULL, -- Ties multi-round orders together
     status VARCHAR(30) NOT NULL DEFAULT 'PENDING_VERIFICATION',
-    -- Status states: PENDING_VERIFICATION -> PREPARING -> READY -> SERVED -> SETTLED | VOIDED
+    -- Status pipeline: PENDING_VERIFICATION -> PREPARING -> READY -> SERVED -> SETTLED | VOIDED
     subtotal NUMERIC(10,2) NOT NULL,
-    diner_fingerprint VARCHAR(255), -- Non-PII tracking for velocity gates
-    diner_phone VARCHAR(20) NULL, -- Collected post-order for loyalty, if provided
+    diner_fingerprint VARCHAR(255), -- Non-PII velocity tracking
+    diner_phone VARCHAR(20) NULL, -- Optional WhatsApp number for loyalty
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -106,10 +117,25 @@ CREATE TABLE order_items (
     name_snapshotted VARCHAR(150) NOT NULL,
     unit_price_snapshotted NUMERIC(10, 2) NOT NULL,
     quantity INT NOT NULL,
-    modifiers_snapshotted JSONB, -- Array of { name, price_delta, type }
-    free_text_note VARCHAR(40),
+    modifiers_snapshotted JSONB NOT NULL, -- Array of { id, name_en, name_roman_urdu, price_delta, type }
+    free_text_note VARCHAR(40), -- Validated against ^[a-zA-Z0-9\s.,!?-]{0,40}$
     line_total NUMERIC(10, 2) NOT NULL
 );
+```
+
+#### Modifier JSONB Schema Constraint (Validated by Zod at Application Layer)
+
+```typescript
+// Shape enforced before insertion into order_items.modifiers_snapshotted
+[
+  {
+    "id": "mod-uuid",
+    "name_en": "Extra Cheese",
+    "name_roman_urdu": "Ziada Cheese",
+    "price_delta": 100.00,
+    "type": "ADD_ON" // 'ADD_ON' | 'EXCLUSION' | 'PREFERENCE'
+  }
+]
 ```
 
 ### 5. Immutable Audit Log
@@ -121,21 +147,21 @@ CREATE TABLE order_lifecycle_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-    event_type VARCHAR(50) NOT NULL,
+    event_type VARCHAR(50) NOT NULL, 
     actor_type VARCHAR(30) NOT NULL,
-    actor_id VARCHAR(100),
-    terminal_label VARCHAR(50),
-    metadata JSONB,
+    actor_id VARCHAR(100), 
+    terminal_label VARCHAR(50), 
+    metadata JSONB, 
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Crucial: Block application user from altering history
+-- Deny UPDATE and DELETE to the application runtime database user
 REVOKE UPDATE, DELETE ON order_lifecycle_events FROM app_runtime_user;
 ```
 
-## Row-Level Security (RLS) Implementation
+---
 
-To guarantee data isolation across cafes, RLS is mandatory on every operational table.
+## Row-Level Security (RLS) Policies
 
 ### Step 1: Enable RLS
 
@@ -150,19 +176,16 @@ ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_lifecycle_events ENABLE ROW LEVEL SECURITY;
 ```
 
-### Step 2: Define Policies relying on Session Context
-
-We use a custom postgres setting `app.current_tenant_id` which the Fastify middleware sets inside every transaction.
+### Step 2: Define Tenant Isolation Policy
 
 ```sql
--- Example applied to 'orders' table. Repeat for all enabled tables.
 CREATE POLICY tenant_isolation_policy ON orders
     FOR ALL
     USING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid)
     WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 ```
 
-### Step 3: Application Middleware Execution (TypeScript Example)
+### Step 3: Application Middleware Execution
 
 ```typescript
 async function withTenantContext<T>(tenantId: string, callback: (trx: any) => Promise<T>): Promise<T> {
