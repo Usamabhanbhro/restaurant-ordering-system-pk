@@ -12,6 +12,17 @@
  │               Load Balancer & Edge Proxy (Cloudflare)         │
  └──────────────────────────────┬────────────────────────────────┘
                                 │
+                    ┌───────────┴───────────┐
+                    │                       │
+                    ▼                       ▼
+ ┌─────────────────────────┐   ┌─────────────────────────┐
+ │  Public Read Path (Redis)│   │  Sensitive State Path   │
+ │  / CACHE HIT < 2ms      │   │  / RL TRANSACTION        │
+ │  (Bypass RLS)           │   │  (Strict Isolation)      │
+ └─────────────────────────┘   └─────────────────────────┘
+                                │
+               SQL over Connection Pool (with RLS)
+                                │
                                 ▼
  ┌───────────────────────────────────────────────────────────────┐
  │                 Fastify Application Layer (Node.js)           │
@@ -22,13 +33,13 @@
  │  └──────────────────────────┬──────────────────────────────┘  │
  └─────────────────────────────┼─────────────────────────────────┘
                                │
-               SQL over Connection Pool (with RLS)
+               Redis (Caching, Streams & Pub/Sub)
                                │
                                ▼
  ┌───────────────────────────────────────────────────────────────┐
  │                 PostgreSQL Database Instance                  │
  │  ┌─────────────────────────────────────────────────────────┐  │
- │  │ Tenants | Tables | Menu Items | Orders | Audit Logs    │  │
+ │  │ Tenants | Tables | Menu Items | Orders (versioned)      │  │
  │  └─────────────────────────────────────────────────────────┘  │
  └───────────────────────────────────────────────────────────────┘
                                ▲
@@ -36,7 +47,8 @@
  ┌─────────────────────────────┴─────────────────────────────────┐
  │              In-Venue Physical Hardware Layer                 │
  │   ┌───────────────────────┐       ┌───────────────────────┐   │
- │   │  Kitchen KDS Tablet   │       │ Cashier Terminal View │   │
+ │   │  Kitchen KDS Tablet   │       │  WhatsApp Gateway    │   │
+ │   │  (Circuit Breaker)    │       │  (Fail-Open Fallback)│   │
  │   └───────────────────────┘       └───────────────────────┘   │
  └───────────────────────────────────────────────────────────────┘
 ```
@@ -44,44 +56,63 @@
 ## 2. Component Descriptions
 
 ### 2.1 Customer PWA (Client Edge)
-- Built as a lightweight, bundle-optimized Progressive Web App.
-- Uses Service Workers for offline fallback (caching the full menu payload and styling).
-- Connects via WebSocket for real-time order state progression.
+- Lightweight Progressive Web App with Service Workers for offline menu caching.
+- WebSocket connection with JWT-based tenant binding for real-time state updates.
 
 ### 2.2 Application Server (Fastify)
-- Single monolithic Fastify service for the MVP, structured with clean module boundaries.
-- **Tenant Context Middleware:** Sets PostgreSQL transaction session variable `app.current_tenant_id` for every operation to enforce RLS.
-- **WebSocket Manager:** Manages active connections across 3 distinct rooms per tenant: `kds_room`, `cashier_room`, and individual `session_room` for diners.
+- Strict tenant-scoped middleware: `SET LOCAL app.current_tenant_id` for sensitive operations.
+- **Dual Data Access Paths:**
+  - **Public Path:** Non-sensitive menu reads via Redis cache to avoid RLS/Transaction overhead under high concurrency.
+  - **Sensitive Path:** All mutations and state reads (Orders, KDS, Cashier, Audit) run inside strict PostgreSQL RLS transactions.
 
-### 2.3 Storage Layer (PostgreSQL)
-- Relational database storing all tenant, menu, order, and lifecycle logs.
-- Uses strict PostgreSQL Row-Level Security (RLS) policies to prevent cross-tenant data leaks.
-- Uses an append-only table `order_lifecycle_events` for audit trails with revoked destructive privileges.
+### 2.3 WebSocket Isolation Layers
+- **Handshake Layer:** JWT verification binds socket connection immediately to `tenant_id`.
+- **Namespace Layer:** Redis channels prefixed with `pubsub:tenant:{id}:kds:{station}`.
+- **Runtime Validation:** Every broadcast validates `socket.data.tenantId === payload.tenantId`.
 
-## 3. Real-Time Order Flow
+### 2.4 Real-Time Sync Engine (Redis Streams)
+- Uses Redis Streams with monotonic sequence IDs (`seq_id`) for reliable state tracking.
+- **Reconnection Handshake:** Client sends `RESYNC { last_received_seq_id }`. 
+- **Delta Replay:** Server replays missed events from the Redis ring buffer (up to 2,000 events).
+- **Fallback:** If client is too far behind, server triggers `FORCE_FULL_RESYNC` via full API fetch.
 
-```
-Diner Phone                Fastify Server                KDS Tablet               Cashier Web View
-    │                            │                            │                          │
-    │── 1. POST /orders ────────►│                            │                          │
-    │                            │── 2. WS: ORDER_HOLD ──────►│                          │
-    │                            │                            │                          │
-    │                            │                            │ (Cook verifies table     │
-    │                            │                            │  and taps VERIFY)        │
-    │                            │◄── 3. POST /verify ────────│                          │
-    │◄── 4. WS: STATE: PREPARING─│                            │                          │
-    │                            │                            │                          │
-    │                            │                            │ (Cook finishes & taps)   │
-    │                            │◄── 5. POST /bump ──────────│                          │
-    │◄── 6. WS: STATE: READY ────│                            │── 7. WS: TAB_UPDATED ───►│
-    │                            │                            │                          │
-    │                            │                            │                          │ (Customer pays at cash)
-    │                            │◄── 8. POST /settle ───────────────────────────────────│
-    │◄── 9. WS: SESSION_CLOSED ──│                                                       │
+## 3. Optimistic Locking & State Transitions
+
+To handle concurrent updates (e.g., KDS bumping an order while Cashier settles it), the `orders` table uses a `version` column.
+
+```sql
+ALTER TABLE orders 
+ADD COLUMN version INT NOT NULL DEFAULT 1,
+ADD COLUMN locked_for_settlement BOOLEAN NOT NULL DEFAULT FALSE;
 ```
 
-## 4. Disaster Recovery & Offline Fallback Architecture
+Every transition is an atomic conditional update:
+```sql
+UPDATE orders 
+SET status = $new_status, version = version + 1
+WHERE id = $order_id 
+  AND version = $expected_version 
+  AND status = ANY($valid_source_statuses);
+```
+If `rowsAffected === 0`, the server returns `409 Conflict` with the current state.
 
-1. **Internet / Cloud Outage:** If the Fastify backend is unreachable, the customer's PWA detects network failure and activates the cached offline menu with a banner advising them to place orders verbally with staff.
-2. **Total Power Cut / Device Failure:** Diners scan the emergency QR code on the back of the acrylic block, fetching a pure static PDF menu hosted on Cloudflare Pages without touching application servers.
-3. **KDS Tablet Disconnection:** Upon reconnecting, the KDS client sends a synchronization handshake to fetch the latest server-side order queue, reconciling any missed WebSocket events.
+## 4. Safety Guarantees
+
+### 4.1 XSS & Injection Protection
+- Free-text notes (`guest_notes`) are validated at the API boundary using a strict whitelist regex: `^[a-zA-Z0-9\s.,!?-]{0,40}$`. This prevents XSS, CSS injection, and CSV formula injection.
+
+### 4.2 "86ed" Item Race Conditions
+- During order submission, the system executes a `SELECT ... FOR SHARE` on `menu_items`.
+- If any item has `is_86ed = TRUE` during this atomic transaction, the order is rolled back and a `422 Unprocessable Entity` is returned with the specific unavailable items.
+
+### 4.3 WhatsApp Gateway Circuit Breaker
+- The WhatsApp API integration is wrapped in a circuit breaker (3s timeout, 3-failure threshold).
+- **Fail-Open Policy:** If the gateway is down, the system bypasses the OTP and routes the order to the KDS `UNVERIFIED / HOLD` queue with a `⚠️ WHATSAPP DOWN` badge for manual waiter verification.
+
+## 5. Disaster Recovery & Offline Strategy
+
+| Failure | Mitigation |
+|---|---|
+| **Cloud/Backend Down** | PWA displays cached menu (Read-only) with "Offline" banner. |
+| **Internet/4G Down** | QR-on-reverse fallback: physical scan of static PDF menu on Cloudflare. |
+| **Power/Device Down** | Redis Streams preserve state; KDS re-syncs all pending events on reconnect. |
