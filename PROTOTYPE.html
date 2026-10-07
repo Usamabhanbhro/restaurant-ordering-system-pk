@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QueueLess UI/UX Interactive Prototype</title>
-  <!-- Tailwind CSS -->
+  <title>QueueLess • Modern In-Venue Pre-Ordering & Kitchen Dispatch</title>
+  
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -13,125 +14,193 @@
         extend: {
           colors: {
             brand: {
-              50: '#ecfdf5',
-              100: '#d1fae5',
-              500: '#10b981',
-              600: '#059669',
-              700: '#047857',
-              800: '#065f46',
-              900: '#064e3b',
+              50: '#FEEBE5',
+              100: '#FDD8CE',
+              400: '#FF6B42',
+              500: '#EF5A30',
+              600: '#D94820',
+              700: '#B83512',
+              900: '#751E06',
             },
-            cafe: {
-              primary: 'var(--cafe-primary, #059669)',
-              secondary: 'var(--cafe-secondary, #065f46)',
-              accent: 'var(--cafe-accent, #f59e0b)',
+            canvas: '#FFFBF8',
+            surface: '#FFFFFF',
+            surfaceSubtle: '#F4F4F6',
+            accent: {
+              avocado: '#DBE4B5',
+              mint: '#34B5AD',
+              tuna: '#FCA9F9',
+              slate: '#1E293B',
             }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+            'float': '0 12px 32px -4px rgba(0, 0, 0, 0.12)',
+            'pill': '0 2px 10px rgba(0, 0, 0, 0.08)',
           }
         }
       }
     }
   </script>
-  <!-- React & Babel -->
+
+  <!-- React 18 & Babel -->
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0F172A;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
     }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.05); opacity: 0.4; }
-      100% { transform: scale(0.95); opacity: 0.8; }
+    
+    @keyframes pulse-subtle {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.8; }
     }
-    .animate-pulse-ring {
-      animation: pulse-ring 2s infinite ease-in-out;
+    .animate-pulse-subtle {
+      animation: pulse-subtle 2s infinite ease-in-out;
+    }
+
+    @keyframes slide-up {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up {
+      animation: slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
-  <div id="root"></div>
+<body class="h-screen w-screen overflow-hidden flex flex-col bg-slate-900 text-slate-100">
+  <div id="root" class="h-full w-full"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    // --- Mock Data ---
+    // --- Audio Synthesis for Kitchen & Shift Alert ---
+    const playChime = () => {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.6);
+      } catch (e) {
+        console.warn("Audio Context error", e);
+      }
+    };
+
+    // --- Mock Venue & Menu Data (Pakistani Fast-Casual / Specialty Cafe) ---
     const MOCK_VENUE = {
       name: "Brewery Cafe Gulberg",
       slug: "brewery-cafe-gulberg",
       tagline: "Specialty Coffee & Gourmet Burgers",
-      logo: "☕",
-      colors: {
-        primary: "#059669",
-        secondary: "#064e3b"
-      },
-      paymentDetails: {
-        easypaisa: { title: "Easypaisa Account", number: "0300-1234567", name: "Brewery Cafe Gulberg" },
-        sadapay: { title: "SadaPay", number: "0300-9876543", name: "Muhammad Usama" },
-        bank: { title: "Meezan Bank Ltd", iban: "PK12MEZN0001234567890123", name: "Brewery Cafe Pvt Ltd" }
-      },
-      leadTimeMinutes: 10,
+      coverImage: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200&q=80",
+      rating: "4.8",
+      reviewsCount: "340+",
+      prepLeadMinutes: 10,
       openTime: "08:00",
-      closeTime: "22:00"
+      closeTime: "22:00",
+      priceNote: "Prices are set by the venue.",
+      paymentMethods: [
+        {
+          id: "pm-ep",
+          kind: "EASYPAISA",
+          label: "Easypaisa Counter",
+          accountTitle: "Brewery Cafe Gulberg",
+          accountNumber: "0300-1234567",
+          instructions: "Transfer exact amount & enter the 11-digit Txn ID."
+        },
+        {
+          id: "pm-sp",
+          kind: "SADAPAY",
+          label: "SadaPay",
+          accountTitle: "Muhammad Usama (Cafe Partner)",
+          accountNumber: "0300-9876543",
+          instructions: "Send via SadaPay wallet or IBAN with order number in memo."
+        },
+        {
+          id: "pm-bank",
+          kind: "BANK",
+          label: "Meezan Bank (Raast)",
+          accountTitle: "Brewery Cafe Pvt Ltd",
+          accountNumber: "PK12MEZN0001234567890123",
+          instructions: "Instant transfer via Raast ID or IBAN."
+        }
+      ]
     };
 
     const MOCK_CATEGORIES = [
-      { id: "cat-1", name: "🔥 Popular Picks", icon: "Flame" },
-      { id: "cat-2", name: "🍔 Gourmet Burgers", icon: "Utensils" },
-      { id: "cat-3", name: "☕ Specialty Coffee", icon: "Coffee" },
-      { id: "cat-4", name: "🍟 Quick Bites", icon: "Pizza" },
-      { id: "cat-5", name: "🥤 Refreshers", icon: "CupSoda" }
+      { id: "cat-popular", name: "Popular", emoji: "🔥" },
+      { id: "cat-burgers", name: "Burgers", emoji: "🍔" },
+      { id: "cat-coffee", name: "Specialty Coffee", emoji: "☕" },
+      { id: "cat-bites", name: "Quick Bites", emoji: "🍟" },
+      { id: "cat-refreshers", name: "Refreshers", emoji: "🥤" },
     ];
 
     const MOCK_ITEMS = [
       {
         id: "item-1",
-        categoryId: "cat-2",
+        categoryId: "cat-burgers",
         nameEn: "Double Smash Burger",
         nameRomanUrdu: "Double Smash Burger",
-        description: "Two 80g smashed beef patties, American cheddar, caramelized onions, secret house sauce in brioche.",
+        description: "Two 80g smashed prime beef patties, melted cheddar, caramelized onions, house truffle mayo in glazed brioche.",
         price: 750,
         popular: true,
+        weight: "240g",
         image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80",
         modifierGroups: [
           {
-            id: "mg-cheese",
+            id: "mg-addons",
             title: "Cheese & Add-ons",
             min: 0,
             max: 3,
             modifiers: [
               { id: "m-1", nameEn: "Extra Melted Cheddar", nameRomanUrdu: "Ziada Cheese", priceDelta: 120, type: "ADD_ON" },
               { id: "m-2", nameEn: "Smoked Beef Bacon Strip", nameRomanUrdu: "Beef Bacon", priceDelta: 180, type: "ADD_ON" },
-              { id: "m-3", nameEn: "Fried Egg", nameRomanUrdu: "Anda", priceDelta: 80, type: "ADD_ON" }
+              { id: "m-3", nameEn: "Crispy Fried Egg", nameRomanUrdu: "Anda", priceDelta: 80, type: "ADD_ON" },
             ]
           },
           {
             id: "mg-excl",
-            title: "Exclusions / Diet",
+            title: "Dietary & Exclusions",
             min: 0,
             max: 3,
             modifiers: [
               { id: "m-4", nameEn: "No Pickles", nameRomanUrdu: "Achar Na Dalein", priceDelta: 0, type: "EXCLUSION" },
               { id: "m-5", nameEn: "No Onion", nameRomanUrdu: "Pyaz Na Dalein", priceDelta: 0, type: "EXCLUSION" },
-              { id: "m-6", nameEn: "Sauce on the Side", nameRomanUrdu: "Sauce Alag", priceDelta: 0, type: "PREFERENCE" }
+              { id: "m-6", nameEn: "Sauce on the Side", nameRomanUrdu: "Sauce Alag", priceDelta: 0, type: "PREFERENCE" },
             ]
           }
         ]
       },
       {
         id: "item-2",
-        categoryId: "cat-3",
+        categoryId: "cat-coffee",
         nameEn: "Spanish Iced Latte",
         nameRomanUrdu: "Spanish Iced Latte",
-        description: "Double espresso shot shaken over condensed milk and whole milk with artisanal clear ice.",
+        description: "Double specialty espresso shaken with sweetened condensed milk and cold whole milk over clear craft ice.",
         price: 520,
         popular: true,
+        weight: "350ml",
         image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=400&q=80",
         modifierGroups: [
           {
@@ -141,41 +210,55 @@
             max: 1,
             modifiers: [
               { id: "m-7", nameEn: "Oat Milk Substitute", nameRomanUrdu: "Oat Milk", priceDelta: 150, type: "ADD_ON" },
-              { id: "m-8", nameEn: "Almond Milk Substitute", nameRomanUrdu: "Almond Milk", priceDelta: 150, type: "ADD_ON" }
+              { id: "m-8", nameEn: "Almond Milk Substitute", nameRomanUrdu: "Almond Milk", priceDelta: 150, type: "ADD_ON" },
             ]
           },
           {
             id: "mg-sweet",
-            title: "Sweetness",
+            title: "Sweetness Level",
             min: 0,
             max: 1,
             modifiers: [
               { id: "m-9", nameEn: "Less Sweet (50%)", nameRomanUrdu: "Kam Cheeni", priceDelta: 0, type: "PREFERENCE" },
-              { id: "m-10", nameEn: "Extra Espresso Shot", nameRomanUrdu: "Extra Shot", priceDelta: 120, type: "ADD_ON" }
+              { id: "m-10", nameEn: "Extra Espresso Shot", nameRomanUrdu: "Extra Shot", priceDelta: 120, type: "ADD_ON" },
             ]
           }
         ]
       },
       {
         id: "item-3",
-        categoryId: "cat-4",
+        categoryId: "cat-bites",
         nameEn: "Loaded Truffle Fries",
         nameRomanUrdu: "Truffle Fries",
-        description: "Skin-on rustic fries tossed in white truffle oil, grated parmesan and garlic aioli dip.",
+        description: "Crispy skin-on rustic potato fries tossed in Italian white truffle oil, shaved parmesan & fresh rosemary garlic aioli.",
         price: 450,
         popular: true,
+        weight: "180g",
         image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&q=80",
         modifierGroups: []
       },
       {
         id: "item-4",
-        categoryId: "cat-2",
+        categoryId: "cat-burgers",
         nameEn: "Nashville Hot Chicken Sando",
         nameRomanUrdu: "Nashville Chicken Burger",
-        description: "Crispy fried chicken dipped in spicy cayenne butter, dill slaw and chipotle ranch.",
+        description: "Buttermilk fried chicken breast dipped in fiery cayenne oil, dill pickle chips, creamy coleslaw on soft potato bun.",
         price: 680,
         popular: false,
+        weight: "260g",
         image: "https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?w=400&q=80",
+        modifierGroups: []
+      },
+      {
+        id: "item-5",
+        categoryId: "cat-refreshers",
+        nameEn: "Peach Passion Fruit Iced Tea",
+        nameRomanUrdu: "Peach Iced Tea",
+        description: "Slow-brewed Ceylon black tea infused with white peach puree and real passion fruit seeds.",
+        price: 390,
+        popular: false,
+        weight: "400ml",
+        image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80",
         modifierGroups: []
       }
     ];
@@ -184,31 +267,33 @@
     const getAvailableSlots = () => {
       const slots = [];
       const now = new Date();
-      // start at next 10-min interval + 15 min buffer
       const startMin = Math.ceil((now.getMinutes() + 15) / 10) * 10;
       const start = new Date(now);
       start.setMinutes(startMin, 0, 0);
 
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 5; i++) {
         const slotTime = new Date(start.getTime() + i * 15 * 60000);
         const timeStr = slotTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-        // Simulating random slot capacity
-        const capacityState = i === 1 ? 'filling' : (i === 4 ? 'full' : 'available');
+        const capacityState = i === 1 ? 'filling' : (i === 3 ? 'full' : 'available');
         slots.push({
           time: timeStr,
           status: capacityState,
-          label: `${timeStr} (Break Slot #${i + 1})`
+          label: `${timeStr}`,
+          breakSlot: `Break Slot #${i + 1}`
         });
       }
       return slots;
     };
 
-    // --- Main Prototype Root Component ---
+    // =========================================================================
+    // MAIN APP WRAPPER (Interactive Orchestrator)
+    // =========================================================================
     function App() {
-      // Global Shared State between Customer PWA & Staff Dashboard
+      // Global Shared State (Reactive Sync between Customer and Staff)
       const [orders, setOrders] = useState([
         {
-          id: "ORD-101",
+          id: "ORD-108",
+          code: "#108",
           customerName: "Ahmad Ali (FAST)",
           customerEmail: "ahmad.ali@nu.edu.pk",
           items: [
@@ -217,6 +302,7 @@
           ],
           total: 1390,
           slot: "13:30",
+          breakSlot: "Break Slot #2",
           state: "PENDING_PAYMENT", // PENDING_PAYMENT | SCHEDULED | PREPARING | READY | SERVED | VOIDED
           paymentMethod: "Easypaisa",
           txnId: "EP-9823411",
@@ -224,117 +310,147 @@
           createdAt: "13:12",
           kitchenStartAt: "13:20",
           undoUntil: null,
-          rejectionReason: null
+          rejectionReason: null,
+          refundOwed: false
         },
         {
-          id: "ORD-102",
+          id: "ORD-105",
+          code: "#105",
           customerName: "Zainab Fatima (LUMS)",
           customerEmail: "zainab@lums.edu.pk",
           items: [
-            { name: "Loaded Truffle Fries", qty: 2, price: 900, mods: [], note: "Extra napkins" }
+            { name: "Loaded Truffle Fries", qty: 2, price: 900, mods: [], note: "Extra napkins please" }
           ],
           total: 900,
           slot: "13:45",
+          breakSlot: "Break Slot #3",
           state: "SCHEDULED",
           paymentMethod: "SadaPay",
           txnId: "SP-5541908",
           hasScreenshot: false,
           createdAt: "13:15",
           kitchenStartAt: "13:35",
-          undoUntil: Date.now() + 240000,
-          rejectionReason: null
+          undoUntil: Date.now() + 280000,
+          rejectionReason: null,
+          refundOwed: false
         },
         {
-          id: "ORD-103",
-          customerName: "Hamza Khan",
-          customerEmail: "hamza.khan@gmail.com",
+          id: "ORD-102",
+          code: "#102",
+          customerName: "Bilal Tariq",
+          customerEmail: "bilal@gmail.com",
           items: [
-            { name: "Nashville Hot Chicken Sando", qty: 1, price: 680, mods: [], note: "Very spicy please" }
+            { name: "Double Smash Burger", qty: 1, price: 750, mods: [], note: "" }
           ],
-          total: 680,
+          total: 750,
           slot: "13:15",
+          breakSlot: "Break Slot #1",
           state: "PREPARING",
           paymentMethod: "Meezan Bank",
           txnId: "MB-0987123",
           hasScreenshot: true,
           createdAt: "12:55",
           kitchenStartAt: "13:05",
-          verifiedAt: "13:05",
           undoUntil: null,
-          rejectionReason: null
+          rejectionReason: null,
+          refundOwed: false
         }
       ]);
 
-      const [activeView, setActiveView] = useState("split"); // 'split' | 'customer' | 'staff'
-      const [venue86List, setVenue86List] = useState({}); // { itemId: true }
+      const [viewMode, setViewMode] = useState("split"); // 'split' | 'customer' | 'staff'
+      const [venue86List, setVenue86List] = useState({});
       const [remoteOrdersPaused, setRemoteOrdersPaused] = useState(false);
       const [undoToast, setUndoToast] = useState(null);
 
-      // Trigger Undo Toast
+      // Trigger 5-Minute Undo Window
       const triggerUndo = (message, onUndo) => {
         setUndoToast({ message, onUndo });
         setTimeout(() => {
           setUndoToast(null);
-        }, 5000);
+        }, 6000);
       };
 
       return (
-        <div className="flex flex-col h-screen overflow-hidden bg-slate-950 text-slate-100">
-          {/* Top Global Control Bar */}
-          <header className="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 z-50">
+        <div className="flex flex-col h-full w-full overflow-hidden bg-slate-950 text-slate-100">
+          {/* Top Universal Control Bar */}
+          <header className="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 z-40">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-900/40">
-                Q
+              <!-- Speed Cup Q Logo SVG -->
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FF6B42] to-[#EF5A30] flex items-center justify-center shadow-lg shadow-orange-950/40">
+                <svg viewBox="0 0 512 512" className="w-5 h-5 fill-slate-950">
+                  <path d="M 235 125 L 140 285 L 210 285 L 145 395 L 295 240 L 225 240 Z" />
+                  <path d="M 230 150 C 310 150 370 205 370 285 C 370 335 345 375 305 395 L 340 435 L 285 435 L 255 400 C 247 401 238 402 230 402 C 215 402 200 398 185 392 L 210 355 C 217 358 223 359 230 359 C 285 359 325 325 325 285 C 325 245 285 193 230 193 C 218 193 205 197 195 203 L 195 158 C 206 153 218 150 230 150 Z" />
+                  <path d="M 370 230 C 400 230 415 250 415 280 C 415 310 400 330 370 330 L 370 295 C 382 295 387 290 387 280 C 387 270 382 265 370 265 Z" />
+                </svg>
               </div>
               <div>
-                <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-                  QueueLess <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Interactive Spec</span>
-                </h1>
-                <p className="text-xs text-slate-400">COUNTER_PICKUP (v1) • Unified Staff Dashboard & Customer PWA</p>
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-base tracking-tight text-white">Queue<span className="text-[#EF5A30]">Less</span></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                    F&B Consumer Spec
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Viewport Mode Switcher */}
-            <div className="flex items-center bg-slate-800 p-1 rounded-lg border border-slate-700/60 text-xs">
+            {/* View Mode Switcher */}
+            <div className="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700/80 text-xs font-semibold">
               <button
-                onClick={() => setActiveView("split")}
-                className={`px-3 py-1 rounded-md font-medium transition-all ${activeView === "split" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
+                onClick={() => setViewMode("split")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${viewMode === "split" ? "bg-[#EF5A30] text-white shadow-md shadow-orange-900/30" : "text-slate-400 hover:text-white"}`}
               >
                 📱 View Both (Side-by-Side)
               </button>
               <button
-                onClick={() => setActiveView("customer")}
-                className={`px-3 py-1 rounded-md font-medium transition-all ${activeView === "customer" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
+                onClick={() => setViewMode("customer")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${viewMode === "customer" ? "bg-[#EF5A30] text-white shadow-md shadow-orange-900/30" : "text-slate-400 hover:text-white"}`}
               >
-                📱 Customer Phone Only
+                📱 Customer Mobile PWA
               </button>
               <button
-                onClick={() => setActiveView("staff")}
-                className={`px-3 py-1 rounded-md font-medium transition-all ${activeView === "staff" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
+                onClick={() => setViewMode("staff")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${viewMode === "staff" ? "bg-[#EF5A30] text-white shadow-md shadow-orange-900/30" : "text-slate-400 hover:text-white"}`}
               >
-                🖥️ Staff Tablet/Desktop
+                🖥️ Staff KDS / Lanes
               </button>
             </div>
 
-            {/* Status / Quick Actions */}
+            {/* Status indicator */}
             <div className="flex items-center gap-3 text-xs">
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-slate-300">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Live State Sync Active</span>
+                <span>Reactive Realtime Sync</span>
               </div>
             </div>
           </header>
 
-          {/* Main Content Area */}
+          {/* Main Container Viewport */}
           <main className="flex-1 flex overflow-hidden p-3 gap-3">
-            {/* Customer PWA Container */}
-            {(activeView === "split" || activeView === "customer") && (
-              <div className={`${activeView === "split" ? "w-[420px] shrink-0" : "max-w-md mx-auto w-full"} flex flex-col rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden relative transition-all`}>
-                <div className="bg-slate-800/90 px-3 py-2 border-b border-slate-700/60 text-center text-xs font-semibold text-slate-300 flex items-center justify-between">
-                  <span>📱 Customer Mobile PWA</span>
-                  <span className="text-[10px] text-emerald-400 font-mono">order.cafe.pk/brewery-gulberg</span>
+            {/* 1. CUSTOMER PWA PHONE VIEWPORT */}
+            {(viewMode === "split" || viewMode === "customer") && (
+              <div className={`${viewMode === "split" ? "w-[430px] shrink-0" : "max-w-md mx-auto w-full"} flex flex-col rounded-[2.5rem] border-[6px] border-slate-800 bg-[#FFFBF8] text-slate-900 shadow-2xl overflow-hidden relative transition-all`}>
+                
+                {/* Phone Notch & Status Bar */}
+                <div className="h-6 bg-slate-900 flex items-center justify-between px-6 text-[11px] font-bold text-slate-400 select-none">
+                  <span>9:41</span>
+                  <div className="w-20 h-4 bg-slate-800 rounded-full mx-auto"></div>
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <span>5G</span>
+                    <span className="text-emerald-400">100%</span>
+                  </div>
                 </div>
-                <div className="flex-1 overflow-y-auto no-scrollbar relative">
+
+                {/* Subheader with Venue URL */}
+                <div className="bg-[#FFFBF8] border-b border-neutral-200/60 px-4 py-2 flex items-center justify-between text-xs font-semibold text-neutral-500">
+                  <div className="flex items-center gap-1.5 text-neutral-800 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-[#EF5A30]"></span>
+                    <span>order.cafe.pk/brewery-gulberg</span>
+                  </div>
+                  <span className="text-[10px] text-neutral-400">PWA</span>
+                </div>
+
+                {/* Customer App Body */}
+                <div className="flex-1 overflow-y-auto no-scrollbar relative bg-[#FFFBF8]">
                   <CustomerPWA
                     venue={MOCK_VENUE}
                     categories={MOCK_CATEGORIES}
@@ -342,16 +458,21 @@
                     venue86List={venue86List}
                     remoteOrdersPaused={remoteOrdersPaused}
                     orders={orders}
-                    onNewOrder={(newOrder) => setOrders(prev => [newOrder, ...prev])}
-                    onCancelOrder={(orderId) => setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: 'VOIDED' } : o))}
+                    onNewOrder={(order) => {
+                      setOrders(prev => [order, ...prev]);
+                      playChime();
+                    }}
+                    onCancelOrder={(orderId) => {
+                      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: 'VOIDED', refundOwed: o.state === 'SCHEDULED' } : o));
+                    }}
                   />
                 </div>
               </div>
             )}
 
-            {/* Staff Unified Dashboard Container */}
-            {(activeView === "split" || activeView === "staff") && (
-              <div className="flex-1 flex flex-col rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden min-w-0 transition-all">
+            {/* 2. STAFF UNIFIED KDS VIEWPORT */}
+            {(viewMode === "split" || viewMode === "staff") && (
+              <div className="flex-1 flex flex-col rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl overflow-hidden min-w-0 transition-all">
                 <StaffDashboard
                   venue={MOCK_VENUE}
                   orders={orders}
@@ -366,18 +487,21 @@
             )}
           </main>
 
-          {/* Global Undo Toast */}
+          {/* Global 5-Minute Undo Toast */}
           {undoToast && (
-            <div className="fixed bottom-6 right-6 z-50 bg-slate-800 border border-emerald-500 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-bounce">
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-400 text-base font-bold">✓</span>
-                <span className="text-sm">{undoToast.message}</span>
+            <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border-2 border-[#EF5A30] text-white px-5 py-3.5 rounded-2xl shadow-float flex items-center gap-4 animate-slide-up">
+              <div className="w-6 h-6 rounded-full bg-[#EF5A30]/20 flex items-center justify-center text-[#EF5A30] font-bold text-sm">
+                ↩
+              </div>
+              <div className="text-xs">
+                <p className="font-bold text-white">{undoToast.message}</p>
+                <p className="text-[10px] text-slate-400">5-minute undo window active</p>
               </div>
               <button
                 onClick={undoToast.onUndo}
-                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 font-semibold text-xs rounded-lg transition-colors text-white"
+                className="px-3.5 py-1.5 bg-[#EF5A30] hover:bg-[#D94820] text-white font-bold text-xs rounded-full transition-all shadow-md shadow-orange-950/40"
               >
-                Undo (5m)
+                Undo Now
               </button>
             </div>
           )}
@@ -386,62 +510,57 @@
     }
 
     // =========================================================================
-    // 1. CUSTOMER PWA COMPONENT
+    // 1. CUSTOMER PWA (Buy Bao / Uber Eats / Starbucks Hybrid)
     // =========================================================================
     function CustomerPWA({ venue, categories, items, venue86List, remoteOrdersPaused, orders, onNewOrder, onCancelOrder }) {
-      const [currentTab, setCurrentTab] = useState("menu"); // 'menu' | 'cart' | 'status' | 'profile'
-      const [selectedCategory, setSelectedCategory] = useState("cat-1");
+      const [activeTab, setActiveTab] = useState("menu"); // 'menu' | 'cart' | 'status' | 'profile'
+      const [selectedCategory, setSelectedCategory] = useState("cat-popular");
       const [searchQuery, setSearchQuery] = useState("");
       const [cart, setCart] = useState([]);
-      const [selectedSlot, setSelectedSlot] = useState("");
       const [customizingItem, setCustomizingItem] = useState(null);
-      const [activeOrder, setActiveOrder] = useState(null);
-
-      // Authentication State
-      const [userProfile, setUserProfile] = useState({
-        email: "student.fast@nu.edu.pk",
-        name: "Usama B.",
-        affiliation: "FAST-NUCES",
-        isLoggedIn: true
-      });
-      const [otpInput, setOtpInput] = useState("");
-      const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
-
-      // Payment Step Form State
-      const [paymentTxnId, setPaymentTxnId] = useState("");
-      const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("easypaisa");
+      const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+      const [selectedSlot, setSelectedSlot] = useState("");
+      const [selectedMethod, setSelectedMethod] = useState("EASYPAISA");
+      const [claimedTxnId, setClaimedTxnId] = useState("");
       const [termsAccepted, setTermsAccepted] = useState(false);
+      const [copiedText, setCopiedText] = useState("");
+
+      const userProfile = {
+        name: "Ahmad Ali",
+        email: "ahmad.ali@nu.edu.pk",
+        affiliation: "FAST-NUCES",
+        badge: "Verified Student"
+      };
 
       const availableSlots = getAvailableSlots();
 
-      // Find my latest active order from global orders
-      useEffect(() => {
-        const myActive = orders.find(o => o.customerEmail === userProfile.email && o.state !== 'SERVED' && o.state !== 'VOIDED');
-        if (myActive) {
-          setActiveOrder(myActive);
-        }
-      }, [orders, userProfile]);
+      // Find my latest active order
+      const myActiveOrder = orders.find(o => o.customerEmail === userProfile.email && o.state !== 'SERVED' && o.state !== 'VOIDED');
 
-      // Add Item to Cart with Modifiers
-      const handleAddToCart = (customized) => {
-        setCart(prev => [...prev, customized]);
-        setCustomizingItem(null);
-      };
-
-      // Calculate Total
-      const cartSubtotal = cart.reduce((acc, item) => {
-        const modsDelta = (item.selectedModifiers || []).reduce((mSum, m) => mSum + m.priceDelta, 0);
-        return acc + (item.price + modsDelta) * item.quantity;
+      // Cart total calculation
+      const cartSubtotal = cart.reduce((sum, item) => {
+        const modTotal = (item.selectedModifiers || []).reduce((mSum, m) => mSum + m.priceDelta, 0);
+        return sum + (item.price + modTotal) * item.quantity;
       }, 0);
 
-      // Submit Remote Pre-Order
-      const handleSubmitOrder = () => {
-        if (!selectedSlot) return alert("Please select a valid pickup slot");
-        if (!termsAccepted) return alert("Please accept the same-day pickup terms & no-show conditions");
-        if (!paymentTxnId.trim()) return alert("Please enter the transaction reference ID from your banking app");
+      const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
+
+      // Copy Helper
+      const handleCopy = (text) => {
+        navigator.clipboard.writeText(text);
+        setCopiedText(text);
+        setTimeout(() => setCopiedText(""), 2000);
+      };
+
+      // Submit Order
+      const handlePlaceOrder = () => {
+        if (!selectedSlot) return alert("Please select a pickup time slot");
+        if (!claimedTxnId.trim()) return alert("Please enter the transaction reference ID");
+        if (!termsAccepted) return alert("Please agree to the same-day counter pickup terms");
 
         const newOrder = {
           id: `ORD-${Math.floor(100 + Math.random() * 900)}`,
+          code: `#${Math.floor(100 + Math.random() * 900)}`,
           customerName: userProfile.name,
           customerEmail: userProfile.email,
           items: cart.map(c => ({
@@ -452,824 +571,632 @@
             note: c.note || ""
           })),
           total: cartSubtotal,
-          slot: selectedSlot,
+          slot: selectedSlot.time,
+          breakSlot: selectedSlot.breakSlot,
           state: "PENDING_PAYMENT",
-          paymentMethod: venue.paymentDetails[selectedPaymentMethod].title,
-          txnId: paymentTxnId,
+          paymentMethod: selectedMethod,
+          txnId: claimedTxnId.trim(),
           hasScreenshot: true,
-          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          kitchenStartAt: selectedSlot // dynamic
+          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+          kitchenStartAt: selectedSlot.time,
+          undoUntil: null,
+          rejectionReason: null,
+          refundOwed: false
         };
 
         onNewOrder(newOrder);
-        setActiveOrder(newOrder);
         setCart([]);
-        setPaymentTxnId("");
-        setCurrentTab("status");
+        setShowCheckoutModal(false);
+        setActiveTab("status");
       };
 
-      if (remoteOrdersPaused) {
-        return (
-          <div className="p-6 text-center h-full flex flex-col items-center justify-center bg-slate-900 text-slate-300">
-            <div className="text-4xl mb-3">☕</div>
-            <h3 className="font-bold text-lg text-white mb-1">Kitchen is Paused</h3>
-            <p className="text-xs text-slate-400 max-w-xs">
-              Brewery Cafe is currently experiencing high rush and has paused online pre-orders. Please order directly at the counter.
-            </p>
-          </div>
-        );
-      }
-
       return (
-        <div className="flex flex-col h-full bg-slate-950 text-slate-100">
-          {/* Cafe Header Banner (KFC / Starbucks style) */}
-          <div className="bg-gradient-to-b from-emerald-950 to-slate-900 p-4 border-b border-slate-800 shrink-0">
-            <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col min-h-full pb-20 relative bg-[#FFFBF8] text-neutral-900">
+          
+          {/* Top Hero Banner */}
+          <div className="relative h-44 w-full overflow-hidden bg-neutral-900">
+            <img
+              src={venue.coverImage}
+              alt={venue.name}
+              className="w-full h-full object-cover opacity-85"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
+            
+            {/* Floating Top Elements */}
+            <div className="absolute top-3 left-4 right-4 flex items-center justify-between text-white">
+              <span className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-[11px] font-bold flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                {venue.openTime} - {venue.closeTime}
+              </span>
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{venue.logo}</span>
-                <div>
-                  <h2 className="font-bold text-sm text-white">{venue.name}</h2>
-                  <p className="text-[11px] text-emerald-400 font-medium">{venue.tagline}</p>
+                <span className="px-2.5 py-1 rounded-full bg-[#EF5A30] text-white text-[11px] font-bold shadow-md">
+                  ★ {venue.rating}
+                </span>
+              </div>
+            </div>
+
+            {/* Venue Profile Pill Card (Overlapping Hero) */}
+            <div className="absolute -bottom-1 left-4 right-4 flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-[#EF5A30] p-2.5 shadow-lg shadow-orange-950/20 shrink-0 flex items-center justify-center border-2 border-white">
+                <svg viewBox="0 0 512 512" className="w-full h-full fill-white">
+                  <path d="M 235 125 L 140 285 L 210 285 L 145 395 L 295 240 L 225 240 Z" />
+                  <path d="M 230 150 C 310 150 370 205 370 285 C 370 335 345 375 305 395 L 340 435 L 285 435 L 255 400 C 247 401 238 402 230 402 C 215 402 200 398 185 392 L 210 355 C 217 358 223 359 230 359 C 285 359 325 325 325 285 C 325 245 285 193 230 193 C 218 193 205 197 195 203 L 195 158 C 206 153 218 150 230 150 Z" />
+                  <path d="M 370 230 C 400 230 415 250 415 280 C 415 310 400 330 370 330 L 370 295 C 382 295 387 290 387 280 C 387 270 382 265 370 265 Z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="font-extrabold text-base text-neutral-900 tracking-tight leading-tight">{venue.name}</h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] font-bold text-[#EF5A30] bg-orange-100/70 px-2 py-0.5 rounded-full">
+                    10–15m Counter Pickup
+                  </span>
+                  <span className="text-[10px] text-neutral-500">• Lahore F&B</span>
                 </div>
               </div>
-              <button
-                onClick={() => setCurrentTab("profile")}
-                className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200"
-              >
-                {userProfile.name.charAt(0)}
-              </button>
-            </div>
-
-            {/* In-App Notice */}
-            <div className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg flex items-center justify-between text-[11px] text-emerald-300">
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>Pre-orders Open (Prep: ~{venue.leadTimeMinutes}m)</span>
-              </span>
-              <span className="font-mono text-slate-400 text-[10px]">Prices as entered</span>
             </div>
           </div>
 
-          {/* Navigation Bar / Tabs */}
-          <div className="flex bg-slate-900 border-b border-slate-800 px-2 py-1 text-xs shrink-0">
-            <button
-              onClick={() => setCurrentTab("menu")}
-              className={`flex-1 py-1.5 text-center font-medium rounded-md transition-colors ${currentTab === "menu" ? "bg-slate-800 text-white font-bold" : "text-slate-400"}`}
-            >
-              Menu
-            </button>
-            <button
-              onClick={() => setCurrentTab("cart")}
-              className={`flex-1 py-1.5 text-center font-medium rounded-md relative transition-colors ${currentTab === "cart" ? "bg-slate-800 text-white font-bold" : "text-slate-400"}`}
-            >
-              Cart ({cart.reduce((a,b)=>a+b.quantity, 0)})
-              {cart.length > 0 && <span className="absolute top-1 right-3 w-2 h-2 rounded-full bg-emerald-500"></span>}
-            </button>
-            <button
-              onClick={() => setCurrentTab("status")}
-              className={`flex-1 py-1.5 text-center font-medium rounded-md transition-colors ${currentTab === "status" ? "bg-slate-800 text-white font-bold" : "text-slate-400"}`}
-            >
-              Order Status {activeOrder && <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse ml-1"></span>}
-            </button>
-          </div>
+          {/* Venue Status Banner (If Paused) */}
+          {remoteOrdersPaused && (
+            <div className="mx-4 mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-center gap-2.5">
+              <span className="text-base">⚠️</span>
+              <p className="font-semibold">Remote orders are paused right now by cafe staff. Please order at counter.</p>
+            </div>
+          )}
 
-          {/* Body Content */}
-          <div className="flex-1 overflow-y-auto no-scrollbar p-3">
-            {/* VIEW: MENU */}
-            {currentTab === "menu" && (
-              <div className="space-y-4">
-                {/* Search Bar */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search coffee, smash burgers, fries..."
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                </div>
+          {/* TAB CONTENT: 1. MENU */}
+          {activeTab === "menu" && (
+            <div className="mt-4 px-4 space-y-4">
+              
+              {/* Search Bar (Rounded-full Pill) */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search burgers, iced latte, fries..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white border border-neutral-200/80 text-xs font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#EF5A30] shadow-soft placeholder-neutral-400"
+                />
+                <span className="absolute left-3.5 top-3 text-neutral-400 text-xs">🔍</span>
+              </div>
 
-                {/* Horizontal Category Pill Bar (Starbucks Pattern) */}
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                  {categories.map(cat => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                        selectedCategory === cat.id
-                          ? "bg-emerald-600 text-white shadow-md shadow-emerald-950"
-                          : "bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800"
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
+              {/* Sticky Category Carousel */}
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
+                      selectedCategory === cat.id
+                        ? "bg-neutral-900 text-white shadow-pill"
+                        : "bg-white text-neutral-600 border border-neutral-200/80 hover:bg-neutral-50"
+                    }`}
+                  >
+                    <span>{cat.emoji}</span>
+                    <span>{cat.name}</span>
+                  </button>
+                ))}
+              </div>
 
-                {/* Menu Items List */}
-                <div className="space-y-3">
-                  {items
-                    .filter(i => selectedCategory === "cat-1" ? true : i.categoryId === selectedCategory)
-                    .filter(i => searchQuery ? i.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) : true)
-                    .map(item => {
-                      const is86 = venue86List[item.id];
-                      return (
-                        <div
-                          key={item.id}
-                          className={`bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3 flex gap-3 transition-all ${is86 ? "opacity-40 grayscale" : "hover:border-slate-700"}`}
-                        >
+              {/* Food Item Cards List (Uber Eats / Buy Bao Split Card Layout) */}
+              <div className="space-y-3 pt-1">
+                {items
+                  .filter(it => {
+                    if (searchQuery.trim()) {
+                      return it.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             it.nameRomanUrdu.toLowerCase().includes(searchQuery.toLowerCase());
+                    }
+                    if (selectedCategory === "cat-popular") return it.popular;
+                    return it.categoryId === selectedCategory;
+                  })
+                  .map((item) => {
+                    const is86ed = venue86List[item.id];
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => !is86ed && setCustomizingItem({ ...item, quantity: 1, selectedModifiers: [], note: "" })}
+                        className={`p-3.5 rounded-3xl bg-white border border-neutral-200/70 shadow-soft flex items-center justify-between gap-3 transition-all cursor-pointer ${
+                          is86ed ? "opacity-40 grayscale cursor-not-allowed" : "hover:border-[#EF5A30]/40"
+                        }`}
+                      >
+                        {/* Left Side: Information */}
+                        <div className="flex-1 pr-2">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-extrabold text-sm text-neutral-900 leading-snug">{item.nameEn}</h3>
+                            {item.popular && (
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-orange-100 text-[#EF5A30]">
+                                POPULAR
+                              </span>
+                            )}
+                          </div>
+                          
+                          <p className="text-[11px] font-medium text-[#EF5A30] mt-0.5">{item.nameRomanUrdu}</p>
+                          
+                          <p className="text-[11px] text-neutral-500 line-clamp-2 mt-1 leading-relaxed">
+                            {item.description}
+                          </p>
+
+                          <div className="flex items-center gap-3 mt-2.5">
+                            <span className="text-sm font-extrabold text-neutral-950">Rs. {item.price}</span>
+                            {item.weight && <span className="text-[10px] text-neutral-400 font-medium">• {item.weight}</span>}
+                          </div>
+                        </div>
+
+                        {/* Right Side: Clean Cutout Thumbnail + Pill Add Button */}
+                        <div className="relative w-24 h-24 shrink-0 rounded-2xl overflow-hidden bg-neutral-100 shadow-inner">
                           <img
                             src={item.image}
                             alt={item.nameEn}
-                            className="w-20 h-20 rounded-xl object-cover shrink-0 bg-slate-800"
+                            className="w-full h-full object-cover"
                           />
-                          <div className="flex-1 flex flex-col justify-between">
-                            <div>
-                              <div className="flex items-start justify-between">
-                                <h4 className="font-semibold text-xs text-white">{item.nameEn}</h4>
-                                <span className="font-bold text-xs text-emerald-400">Rs. {item.price}</span>
-                              </div>
-                              <p className="text-[10px] text-slate-400 line-clamp-2 mt-0.5">{item.description}</p>
+                          {is86ed ? (
+                            <div className="absolute inset-0 bg-neutral-900/70 backdrop-blur-[1px] flex items-center justify-center text-white text-[10px] font-bold">
+                              86 OUT
                             </div>
-
-                            <div className="flex items-center justify-between pt-2">
-                              <span className="text-[9px] text-slate-500 font-mono italic">{item.nameRomanUrdu}</span>
-                              {is86 ? (
-                                <span className="text-[10px] px-2 py-0.5 rounded bg-red-950 text-red-400 font-bold border border-red-900">SOLD OUT (86)</span>
-                              ) : (
-                                <button
-                                  onClick={() => setCustomizingItem(item)}
-                                  className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors flex items-center gap-1 shadow-sm"
-                                >
-                                  <span>+ Add</span>
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-            )}
-
-            {/* VIEW: CART & CHECKOUT (Grubhub / Foodpanda pattern) */}
-            {currentTab === "cart" && (
-              <div className="space-y-4">
-                <h3 className="font-bold text-sm text-white border-b border-slate-800 pb-2">Your Tray ({cart.length} items)</h3>
-
-                {cart.length === 0 ? (
-                  <div className="text-center py-12 text-slate-500">
-                    <p className="text-3xl mb-2">🛒</p>
-                    <p className="text-xs">Your tray is empty.</p>
-                    <button
-                      onClick={() => setCurrentTab("menu")}
-                      className="mt-3 text-xs text-emerald-400 font-semibold underline"
-                    >
-                      Browse Cafe Menu
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    {/* Cart Items */}
-                    <div className="space-y-2">
-                      {cart.map((c, idx) => (
-                        <div key={idx} className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
-                          <div>
-                            <div className="font-semibold text-white">{c.nameEn} x{c.quantity}</div>
-                            {c.selectedModifiers && c.selectedModifiers.length > 0 && (
-                              <div className="text-[10px] text-emerald-400">
-                                {c.selectedModifiers.map(m => m.nameEn).join(", ")}
-                              </div>
-                            )}
-                            {c.note && <div className="text-[10px] text-slate-400 italic">Note: "{c.note}"</div>}
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold text-slate-200">
-                              Rs. {(c.price + (c.selectedModifiers||[]).reduce((s,m)=>s+m.priceDelta,0)) * c.quantity}
-                            </div>
+                          ) : (
                             <button
-                              onClick={() => setCart(prev => prev.filter((_, i) => i !== idx))}
-                              className="text-[10px] text-red-400 hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCustomizingItem({ ...item, quantity: 1, selectedModifiers: [], note: "" });
+                              }}
+                              className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-neutral-900 hover:bg-[#EF5A30] text-white flex items-center justify-center font-bold text-sm shadow-md transition-colors"
                             >
-                              Remove
+                              +
                             </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Step 1: Pickup Time Slot Selection with Capacity */}
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl space-y-2">
-                      <label className="text-xs font-bold text-white block">
-                        ⏰ Select 15-Min Break Pickup Slot
-                      </label>
-                      <select
-                        value={selectedSlot}
-                        onChange={(e) => setSelectedSlot(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                      >
-                        <option value="">-- Choose scheduled pickup time --</option>
-                        {availableSlots.map(s => (
-                          <option
-                            key={s.time}
-                            value={s.time}
-                            disabled={s.status === 'full'}
-                          >
-                            {s.time} {s.status === 'filling' ? '⚠️ High Demand' : (s.status === 'full' ? '⛔ FULL' : '✅ Available')}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="text-[10px] text-slate-400">
-                        Kitchen begins preparation ~10 mins before your selected slot.
-                      </p>
-                    </div>
-
-                    {/* Step 2: Payment Method Details */}
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl space-y-2.5">
-                      <label className="text-xs font-bold text-white block">
-                        💳 Pay Direct to Cafe Accounts
-                      </label>
-
-                      <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
-                        {['easypaisa', 'sadapay', 'bank'].map(method => (
-                          <button
-                            key={method}
-                            type="button"
-                            onClick={() => setSelectedPaymentMethod(method)}
-                            className={`p-2 rounded-xl border text-[11px] font-semibold capitalize transition-all ${
-                              selectedPaymentMethod === method
-                                ? "bg-emerald-950 border-emerald-500 text-emerald-300"
-                                : "bg-slate-950 border-slate-800 text-slate-400"
-                            }`}
-                          >
-                            {method}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Payment Instructions Details Box */}
-                      <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">
-                        <div className="text-slate-400 font-medium text-[10px]">
-                          Send <span className="font-bold text-emerald-400">Rs. {cartSubtotal}</span> to:
-                        </div>
-                        <div className="font-mono text-white text-xs font-bold">
-                          {venue.paymentDetails[selectedPaymentMethod].number || venue.paymentDetails[selectedPaymentMethod].iban}
-                        </div>
-                        <div className="text-slate-400 text-[10px]">
-                          Title: {venue.paymentDetails[selectedPaymentMethod].name}
+                          )}
                         </div>
                       </div>
-
-                      {/* Transaction ID Submission */}
-                      <div className="space-y-1 pt-1">
-                        <label className="text-[11px] text-slate-300 font-medium block">
-                          Enter Bank Transaction Reference ID <span className="text-emerald-400">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={paymentTxnId}
-                          onChange={(e) => setPaymentTxnId(e.target.value)}
-                          placeholder="e.g. EP-9872134 or TRX-4412"
-                          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Pre-Payment Terms & No-Show Condition */}
-                    <div className="p-3 bg-slate-900 border border-slate-800 rounded-2xl text-[11px] text-slate-400 space-y-2">
-                      <label className="flex items-start gap-2 cursor-pointer text-slate-300 font-medium">
-                        <input
-                          type="checkbox"
-                          checked={termsAccepted}
-                          onChange={(e) => setTermsAccepted(e.target.checked)}
-                          className="mt-0.5 accent-emerald-500"
-                        />
-                        <span>I accept same-day pickup terms. Orders uncollected 30 mins after ready are marked no-show with no refund.</span>
-                      </label>
-                    </div>
-
-                    {/* Submit Order Button */}
-                    <button
-                      onClick={handleSubmitOrder}
-                      className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-emerald-950 transition-all flex items-center justify-center gap-2"
-                    >
-                      <span>Submit Pre-Order • Rs. {cartSubtotal}</span>
-                    </button>
-                  </>
-                )}
+                    );
+                  })}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* VIEW: 5-STATE LIVE ORDER TRACKING */}
-            {currentTab === "status" && (
-              <div className="space-y-4">
-                {!activeOrder ? (
-                  <div className="text-center py-12 text-slate-500">
-                    <p className="text-3xl mb-2">📦</p>
-                    <p className="text-xs">No active order in progress.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Status Header Card */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-2">
-                      <div className="text-xs text-slate-400">Order ID: <span className="font-mono text-white font-bold">{activeOrder.id}</span></div>
+          {/* TAB CONTENT: 2. LIVE ORDER STATUS & TIMELINE */}
+          {activeTab === "status" && (
+            <div className="p-4 space-y-4">
+              <h2 className="text-base font-extrabold text-neutral-900 tracking-tight">Active Pre-Order Status</h2>
 
-                      {/* State 1: Awaiting Payment */}
-                      {activeOrder.state === "PENDING_PAYMENT" && (
-                        <div className="py-3">
-                          <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 mx-auto flex items-center justify-center text-xl animate-pulse">
-                            ⏳
-                          </div>
-                          <h3 className="font-bold text-sm text-white mt-2">Awaiting Payment Confirmation</h3>
-                          <p className="text-[11px] text-amber-300 mt-1">Staff is verifying your transaction ID: <span className="font-mono">{activeOrder.txnId}</span></p>
-                        </div>
-                      )}
-
-                      {/* State 2: Confirmed & Scheduled */}
-                      {activeOrder.state === "SCHEDULED" && (
-                        <div className="py-3">
-                          <div className="w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/40 mx-auto flex items-center justify-center text-xl">
-                            📅
-                          </div>
-                          <h3 className="font-bold text-sm text-white mt-2">Order Confirmed!</h3>
-                          <p className="text-[11px] text-blue-300 mt-1">Scheduled for pickup at <span className="font-bold">{activeOrder.slot}</span></p>
-                        </div>
-                      )}
-
-                      {/* State 3: Preparing */}
-                      {activeOrder.state === "PREPARING" && (
-                        <div className="py-3">
-                          <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 mx-auto flex items-center justify-center text-xl animate-spin">
-                            🍳
-                          </div>
-                          <h3 className="font-bold text-sm text-white mt-2">Kitchen is Preparing Food</h3>
-                          <p className="text-[11px] text-emerald-300 mt-1">Freshly cooked for your {activeOrder.slot} slot.</p>
-                        </div>
-                      )}
-
-                      {/* State 4: Ready for Pickup */}
-                      {activeOrder.state === "READY" && (
-                        <div className="py-3 bg-emerald-950/40 border border-emerald-500/50 rounded-xl p-3">
-                          <div className="text-3xl animate-bounce">🔔</div>
-                          <h3 className="font-bold text-base text-emerald-400 mt-1">Ready at Counter #2!</h3>
-                          <p className="text-xs text-white font-medium">Please show Order #{activeOrder.id} to collect.</p>
-                        </div>
-                      )}
-
-                      {/* State 5 / Neutral Cancel */}
-                      {activeOrder.state === "VOIDED" && (
-                        <div className="py-3">
-                          <div className="w-12 h-12 rounded-full bg-slate-800 text-slate-400 mx-auto flex items-center justify-center text-xl">
-                            ✕
-                          </div>
-                          <h3 className="font-bold text-sm text-white mt-2">Order Closed</h3>
-                          <p className="text-[11px] text-slate-400 mt-1">This order could not be completed.</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Order Summary & Modifiers */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-2 text-xs">
-                      <div className="font-bold text-white border-b border-slate-800 pb-1.5 flex justify-between">
-                        <span>Items Ordered</span>
-                        <span>Rs. {activeOrder.total}</span>
-                      </div>
-                      {activeOrder.items.map((it, i) => (
-                        <div key={i} className="flex justify-between text-[11px] text-slate-300">
-                          <div>
-                            <span>{it.qty}x {it.name}</span>
-                            {it.mods.length > 0 && <span className="block text-[10px] text-emerald-400">{it.mods.join(", ")}</span>}
-                          </div>
-                          <span className="font-mono">Rs. {it.price * it.qty}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Cancel Button (Active until preparation) */}
-                    {activeOrder.state === "PENDING_PAYMENT" || activeOrder.state === "SCHEDULED" ? (
-                      <button
-                        onClick={() => onCancelOrder(activeOrder.id)}
-                        className="w-full py-2.5 rounded-xl bg-slate-900 border border-red-500/40 hover:bg-red-950/30 text-red-400 font-semibold text-xs transition-colors"
-                      >
-                        Cancel Order
-                      </button>
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* VIEW: PROFILE (Perks Wallet) */}
-            {currentTab === "profile" && (
-              <div className="space-y-4 text-xs">
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-base">
-                      {userProfile.name.charAt(0)}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-white">{userProfile.name}</h4>
-                      <p className="text-[11px] text-slate-400 font-mono">{userProfile.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
-                    <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Affiliation Badge</div>
+              {myActiveOrder ? (
+                <div className="space-y-4">
+                  
+                  {/* Digital Counter Pickup Ticket */}
+                  <div className="p-4 rounded-3xl bg-neutral-900 text-white shadow-float relative overflow-hidden">
                     <div className="flex items-center justify-between">
-                      <span className="text-emerald-400 font-semibold">{userProfile.affiliation} Student</span>
-                      <span className="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800">Verified</span>
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-orange-400">⚡ Counter Pickup Ticket</span>
+                      <span className="text-xs font-bold text-neutral-400">{myActiveOrder.slot} ({myActiveOrder.breakSlot})</span>
+                    </div>
+
+                    <div className="mt-3 flex items-baseline justify-between">
+                      <span className="text-4xl font-black tracking-tight text-white">{myActiveOrder.code}</span>
+                      <span className="text-sm font-bold text-neutral-300">Rs. {myActiveOrder.total}</span>
+                    </div>
+
+                    <p className="text-xs text-neutral-400 mt-1">Show this number at the cafe counter acrylic stand when ready.</p>
+                  </div>
+
+                  {/* 5-Stage Vertical Timeline (Buy Bao Stepper) */}
+                  <div className="p-4 rounded-3xl bg-white border border-neutral-200/80 shadow-soft">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-4">Preparation Timeline</h3>
+                    
+                    <div className="space-y-4 relative pl-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-neutral-200">
+                      
+                      {/* Step 1: Claim Awaiting Review */}
+                      <div className="relative">
+                        <span className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
+                          myActiveOrder.state === 'PENDING_PAYMENT' ? 'bg-[#EF5A30] ring-4 ring-orange-100 animate-pulse' : 'bg-neutral-900'
+                        }`}>
+                          ✓
+                        </span>
+                        <div>
+                          <p className="text-xs font-extrabold text-neutral-900">1. Awaiting Payment Confirmation</p>
+                          <p className="text-[11px] text-neutral-500">
+                            {myActiveOrder.paymentMethod} Txn: <span className="font-mono text-neutral-800">{myActiveOrder.txnId}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Step 2: Confirmed & Scheduled */}
+                      <div className="relative">
+                        <span className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
+                          myActiveOrder.state === 'SCHEDULED' ? 'bg-[#EF5A30] ring-4 ring-orange-100' : (myActiveOrder.state === 'PREPARING' || myActiveOrder.state === 'READY' ? 'bg-neutral-900' : 'bg-neutral-300')
+                        }`}>
+                          2
+                        </span>
+                        <div>
+                          <p className="text-xs font-extrabold text-neutral-900">2. Confirmed & Scheduled</p>
+                          <p className="text-[11px] text-neutral-500">Cooking begins 10m before {myActiveOrder.slot}</p>
+                        </div>
+                      </div>
+
+                      {/* Step 3: Kitchen Preparing */}
+                      <div className="relative">
+                        <span className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
+                          myActiveOrder.state === 'PREPARING' ? 'bg-[#EF5A30] ring-4 ring-orange-100 animate-pulse' : (myActiveOrder.state === 'READY' ? 'bg-neutral-900' : 'bg-neutral-300')
+                        }`}>
+                          3
+                        </span>
+                        <div>
+                          <p className="text-xs font-extrabold text-neutral-900">3. Being Prepared</p>
+                          <p className="text-[11px] text-neutral-500">Cook is assembling your order on the hotline</p>
+                        </div>
+                      </div>
+
+                      {/* Step 4: Ready at Counter */}
+                      <div className="relative">
+                        <span className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
+                          myActiveOrder.state === 'READY' ? 'bg-emerald-500 ring-4 ring-emerald-100 animate-pulse' : 'bg-neutral-300'
+                        }`}>
+                          4
+                        </span>
+                        <div>
+                          <p className="text-xs font-extrabold text-neutral-900">4. Ready for Pickup</p>
+                          <p className="text-[11px] text-neutral-500">Waiting on the counter tray. Please collect promptly.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Cancellation Action (Valid before kitchen start) */}
+                  {myActiveOrder.state !== 'PREPARING' && myActiveOrder.state !== 'READY' && (
+                    <button
+                      onClick={() => {
+                        if (confirm("Cancel this pre-order? If payment was confirmed, refund will be queued.")) {
+                          onCancelOrder(myActiveOrder.id);
+                        }
+                      }}
+                      className="w-full py-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 text-xs font-bold transition-colors"
+                    >
+                      Cancel Order (Before Kitchen Start)
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-12 px-4 bg-white rounded-3xl border border-neutral-200/80 shadow-soft">
+                  <span className="text-3xl">☕</span>
+                  <h3 className="font-bold text-sm text-neutral-900 mt-2">No Active Pre-Orders</h3>
+                  <p className="text-xs text-neutral-500 mt-1">Select items and schedule your next pickup slot.</p>
+                  <button
+                    onClick={() => setActiveTab("menu")}
+                    className="mt-4 px-5 py-2 rounded-full bg-neutral-900 text-white font-bold text-xs"
+                  >
+                    Browse Menu
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB CONTENT: 3. PROFILE / PERKS WALLET (F3 / ADR-0009) */}
+          {activeTab === "profile" && (
+            <div className="p-4 space-y-4">
+              <div className="p-4 rounded-3xl bg-white border border-neutral-200/80 shadow-soft flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-[#EF5A30] text-white font-bold flex items-center justify-center text-lg">
+                  AA
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-neutral-900">{userProfile.name}</h3>
+                  <p className="text-xs text-neutral-500">{userProfile.email}</p>
+                  <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#EF5A30]">
+                    🎓 {userProfile.affiliation} ({userProfile.badge})
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* ITEM CUSTOMIZATION MODAL (Single Modal Design) */}
+              <div className="p-4 rounded-3xl bg-white border border-neutral-200/80 shadow-soft space-y-3 text-xs">
+                <h4 className="font-bold text-neutral-900">Perks & Affiliations</h4>
+                <div className="flex items-center justify-between p-2.5 rounded-2xl bg-neutral-50 border border-neutral-100">
+                  <span>SZABIST / FAST 10% Off</span>
+                  <span className="text-emerald-600 font-bold">Active at Counter</span>
+                </div>
+                <p className="text-[11px] text-neutral-400">Discount badges are verified at the cashier register POS.</p>
+              </div>
+            </div>
+          )}
+
+          {/* STICKY FLOATING CART CAPSULE (Uber Eats / Buy Bao Style) */}
+          {cartItemCount > 0 && activeTab === "menu" && (
+            <div className="fixed bottom-20 left-4 right-4 z-30 max-w-[398px] mx-auto animate-slide-up">
+              <button
+                onClick={() => setShowCheckoutModal(true)}
+                className="w-full py-3.5 px-5 rounded-full bg-neutral-950 text-white flex items-center justify-between shadow-float hover:bg-[#EF5A30] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-white/20 text-xs font-bold flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                  <span className="text-xs font-bold">View Cart & Checkout</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-extrabold">Rs. {cartSubtotal}</span>
+                  <span className="text-xs">→</span>
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* BOTTOM NAVIGATION BAR */}
+          <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-md border-t border-neutral-200 px-6 flex items-center justify-around z-20 max-w-[430px] mx-auto">
+            <button
+              onClick={() => setActiveTab("menu")}
+              className={`flex flex-col items-center gap-1 text-[10px] font-bold ${activeTab === "menu" ? "text-[#EF5A30]" : "text-neutral-400 hover:text-neutral-700"}`}
+            >
+              <span className="text-base">🍔</span>
+              <span>Menu</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("status")}
+              className={`flex flex-col items-center gap-1 text-[10px] font-bold relative ${activeTab === "status" ? "text-[#EF5A30]" : "text-neutral-400 hover:text-neutral-700"}`}
+            >
+              <span className="text-base">⏱️</span>
+              <span>Tracker</span>
+              {myActiveOrder && <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-[#EF5A30] animate-ping"></span>}
+            </button>
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`flex flex-col items-center gap-1 text-[10px] font-bold ${activeTab === "profile" ? "text-[#EF5A30]" : "text-neutral-400 hover:text-neutral-700"}`}
+            >
+              <span className="text-base">👤</span>
+              <span>Perks</span>
+            </button>
+          </nav>
+
+          {/* ITEM CUSTOMIZATION BOTTOM SHEET DRAWER */}
           {customizingItem && (
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-              <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-t-3xl sm:rounded-2xl p-4 max-h-[85vh] flex flex-col animate-in fade-in slide-in-from-bottom-5">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-bold text-sm text-white">{customizingItem.nameEn}</h3>
-                    <p className="text-xs text-emerald-400 font-bold">Base: Rs. {customizingItem.price}</p>
-                  </div>
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center">
+              <div className="w-full max-w-[430px] max-h-[85vh] bg-[#FFFBF8] rounded-t-[2.5rem] shadow-float overflow-hidden flex flex-col animate-slide-up">
+                
+                {/* Header Image with Close Button */}
+                <div className="relative h-44 w-full bg-neutral-100 shrink-0">
+                  <img src={customizingItem.image} alt={customizingItem.nameEn} className="w-full h-full object-cover" />
                   <button
                     onClick={() => setCustomizingItem(null)}
-                    className="text-slate-400 hover:text-white text-lg font-bold"
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white font-bold flex items-center justify-center text-xs backdrop-blur-md"
                   >
                     ✕
                   </button>
                 </div>
 
-                {/* Modifiers List */}
-                <div className="flex-1 overflow-y-auto no-scrollbar space-y-3 my-2 text-xs">
-                  {customizingItem.modifierGroups.map(group => (
-                    <div key={group.id} className="space-y-1.5">
-                      <div className="font-bold text-slate-300 text-[11px] uppercase tracking-wider">{group.title}</div>
-                      <div className="space-y-1">
-                        {group.modifiers.map(mod => (
-                          <label key={mod.id} className="flex items-center justify-between p-2 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
-                            <div className="flex items-center gap-2">
-                              <input type="checkbox" className="accent-emerald-500" />
-                              <span className="text-slate-200">{mod.nameEn}</span>
+                {/* Drawer Content */}
+                <div className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
+                  <div>
+                    <h3 className="font-extrabold text-base text-neutral-900">{customizingItem.nameEn}</h3>
+                    <p className="text-xs text-[#EF5A30] font-semibold">{customizingItem.nameRomanUrdu}</p>
+                    <p className="text-xs text-neutral-500 mt-1">{customizingItem.description}</p>
+                  </div>
+
+                  {/* Modifiers List */}
+                  {(customizingItem.modifierGroups || []).map((grp) => (
+                    <div key={grp.id} className="space-y-2 pt-2 border-t border-neutral-200">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-neutral-900">{grp.title}</h4>
+                        <span className="text-[10px] text-neutral-400">Optional</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {grp.modifiers.map((mod) => {
+                          const isSelected = (customizingItem.selectedModifiers || []).some(m => m.id === mod.id);
+                          return (
+                            <div
+                              key={mod.id}
+                              onClick={() => {
+                                setCustomizingItem(prev => {
+                                  const exists = (prev.selectedModifiers || []).some(m => m.id === mod.id);
+                                  const updated = exists
+                                    ? prev.selectedModifiers.filter(m => m.id !== mod.id)
+                                    : [...(prev.selectedModifiers || []), mod];
+                                  return { ...prev, selectedModifiers: updated };
+                                });
+                              }}
+                              className={`p-2.5 rounded-2xl border text-xs flex items-center justify-between cursor-pointer transition-all ${
+                                isSelected ? "bg-neutral-900 text-white border-neutral-900" : "bg-white text-neutral-800 border-neutral-200/80 hover:bg-neutral-50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] ${isSelected ? "border-white bg-[#EF5A30]" : "border-neutral-300"}`}>
+                                  {isSelected && "✓"}
+                                </span>
+                                <span className="font-semibold">{mod.nameEn}</span>
+                                <span className={`text-[10px] ${isSelected ? "text-neutral-300" : "text-neutral-400"}`}>({mod.nameRomanUrdu})</span>
+                              </div>
+                              <span className="font-bold">{mod.priceDelta > 0 ? `+Rs. ${mod.priceDelta}` : "Free"}</span>
                             </div>
-                            <span className="text-slate-400 font-mono">+{mod.priceDelta > 0 ? `Rs. ${mod.priceDelta}` : 'Free'}</span>
-                          </label>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
 
-                  {/* Free-text Kitchen Note (max 40 chars) */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Cooking Preference (Max 40 Chars)</label>
+                  {/* Free-text Kitchen Note */}
+                  <div className="space-y-1 pt-2 border-t border-neutral-200">
+                    <label className="text-xs font-bold text-neutral-900">Kitchen Note (Max 40 chars)</label>
                     <input
                       type="text"
-                      maxLength="40"
-                      placeholder="e.g. extra crispy, cut in half"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                      maxLength={40}
+                      placeholder="e.g. Cut in half, extra napkins"
+                      value={customizingItem.note || ""}
+                      onChange={(e) => setCustomizingItem(prev => ({ ...prev, note: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs focus:ring-1 focus:ring-[#EF5A30] focus:outline-none"
                     />
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleAddToCart({ ...customizingItem, quantity: 1, selectedModifiers: [], note: "" })}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-950 transition-colors"
-                >
-                  Add to Tray • Rs. {customizingItem.price}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    // =========================================================================
-    // 2. UNIFIED STAFF DASHBOARD COMPONENT (5 Lanes)
-    // =========================================================================
-    function StaffDashboard({ venue, orders, setOrders, venue86List, setVenue86List, remoteOrdersPaused, setRemoteOrdersPaused, triggerUndo }) {
-      const [shiftActive, setShiftActive] = useState(false);
-      const [adminModalOpen, setAdminModalOpen] = useState(false);
-      const [activeLaneTab, setActiveLaneTab] = useState("all"); // 'all' | 'payments' | 'scheduled' | 'prep' | 'ready' | 'refunds'
-      const [rejectingOrder, setRejectingOrder] = useState(null);
-      const [adminPinInput, setAdminPinInput] = useState("");
-
-      // Lane Action Handlers
-      const handleConfirmPayment = (orderId) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: 'SCHEDULED', undoUntil: Date.now() + 300000 } : o));
-        triggerUndo(`Payment for ${orderId} confirmed`, () => {
-          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: 'PENDING_PAYMENT' } : o));
-        });
-      };
-
-      const handleRejectPayment = (orderId, reason) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: 'VOIDED', rejectionReason: reason } : o));
-        setRejectingOrder(null);
-        triggerUndo(`Payment for ${orderId} rejected (${reason})`, () => {
-          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: 'PENDING_PAYMENT', rejectionReason: null } : o));
-        });
-      };
-
-      const handleBumpReady = (orderId) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: 'READY' } : o));
-      };
-
-      const handleMarkServed = (orderId) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: 'SERVED' } : o));
-      };
-
-      // Filter orders per lane
-      const lanePayments = orders.filter(o => o.state === 'PENDING_PAYMENT');
-      const laneScheduled = orders.filter(o => o.state === 'SCHEDULED');
-      const lanePrep = orders.filter(o => o.state === 'PREPARING');
-      const laneReady = orders.filter(o => o.state === 'READY');
-      const laneRefunds = orders.filter(o => o.state === 'VOIDED' && o.paymentMethod);
-
-      return (
-        <div className="flex flex-col h-full bg-slate-950 text-slate-100">
-          {/* Header Bar */}
-          <div className="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-3">
-              <span className="font-bold text-sm text-white">{venue.name} — Staff Operations</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Role: Operator</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-xs">
-              {/* Shift Start Audio Banner */}
-              {!shiftActive ? (
-                <button
-                  onClick={() => setShiftActive(true)}
-                  className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-md shadow-amber-950/50 animate-pulse"
-                >
-                  <span>🔔 Tap to Start Shift & Enable Audio</span>
-                </button>
-              ) : (
-                <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg font-medium flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Audio Alerts Active
-                </span>
-              )}
-
-              {/* Pause Remote Orders Switch */}
-              <button
-                onClick={() => setRemoteOrdersPaused(!remoteOrdersPaused)}
-                className={`px-3 py-1 rounded-lg font-semibold border transition-all ${
-                  remoteOrdersPaused
-                    ? "bg-red-500 text-white border-red-400"
-                    : "bg-slate-800 text-slate-300 border-slate-700 hover:text-white"
-                }`}
-              >
-                {remoteOrdersPaused ? "🛑 Online Paused" : "🟢 Online Active"}
-              </button>
-
-              {/* Admin Panel Modal Trigger */}
-              <button
-                onClick={() => setAdminModalOpen(true)}
-                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg border border-slate-700"
-              >
-                ⚙️ Admin Tab (PIN)
-              </button>
-            </div>
-          </div>
-
-          {/* 5-Lanes Unified View */}
-          <div className="flex-1 overflow-x-auto overflow-y-hidden p-3 flex gap-3">
-            {/* LANE 1: PAYMENTS TO CONFIRM */}
-            <div className="flex-1 min-w-[260px] max-w-[320px] bg-slate-900/70 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
-              <div className="bg-amber-950/40 border-b border-amber-800/40 p-2.5 flex items-center justify-between text-xs font-bold text-amber-300">
-                <span>💳 Payments to Confirm</span>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-mono text-[10px]">{lanePayments.length}</span>
-              </div>
-              <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-2">
-                {lanePayments.map(ord => (
-                  <div key={ord.id} className="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-3 rounded-xl space-y-2 text-xs">
-                    <div className="flex justify-between font-bold text-white">
-                      <span>{ord.id} ({ord.slot})</span>
-                      <span className="text-emerald-400">Rs. {ord.total}</span>
-                    </div>
-                    <div className="text-[11px] text-slate-300">Customer: <span className="font-semibold">{ord.customerName}</span></div>
-
-                    <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 font-mono text-[10px] text-slate-400">
-                      <div>Method: <span className="text-slate-200">{ord.paymentMethod}</span></div>
-                      <div>Txn ID: <span className="text-amber-400 font-bold">{ord.txnId}</span></div>
-                    </div>
-
-                    <div className="flex gap-1.5 pt-1">
-                      <button
-                        onClick={() => handleConfirmPayment(ord.id)}
-                        className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-[11px] rounded-lg transition-colors"
-                      >
-                        ✓ Confirm
-                      </button>
-                      <button
-                        onClick={() => setRejectingOrder(ord)}
-                        className="px-2.5 py-1.5 bg-slate-800 hover:bg-red-950/60 text-red-400 font-bold text-[11px] rounded-lg border border-slate-700"
-                      >
-                        ✕ Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* LANE 2: SCHEDULED (Pre-orders countdown) */}
-            <div className="flex-1 min-w-[260px] max-w-[320px] bg-slate-900/70 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
-              <div className="bg-blue-950/40 border-b border-blue-800/40 p-2.5 flex items-center justify-between text-xs font-bold text-blue-300">
-                <span>⏰ Scheduled Pre-Orders</span>
-                <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono text-[10px]">{laneScheduled.length}</span>
-              </div>
-              <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-2">
-                {laneScheduled.map(ord => (
-                  <div key={ord.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-2 text-xs">
-                    <div className="flex justify-between font-bold text-white">
-                      <span>{ord.id} (Slot: {ord.slot})</span>
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">Starts in ~10m</span>
-                    </div>
-                    <div className="text-[11px] text-slate-300 font-semibold">{ord.customerName}</div>
-                    <div className="text-[10px] text-slate-400">
-                      {ord.items.map(i => `${i.qty}x ${i.name}`).join(", ")}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* LANE 3: ACTIVE PREPARING */}
-            <div className="flex-1 min-w-[260px] max-w-[320px] bg-slate-900/70 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
-              <div className="bg-emerald-950/40 border-b border-emerald-800/40 p-2.5 flex items-center justify-between text-xs font-bold text-emerald-300">
-                <span>🍳 Active Kitchen Prep</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-[10px]">{lanePrep.length}</span>
-              </div>
-              <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-2">
-                {lanePrep.map(ord => (
-                  <div key={ord.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-2 text-xs">
-                    <div className="flex justify-between font-bold text-white">
-                      <span>{ord.id} • Slot: {ord.slot}</span>
-                      <span className="text-emerald-400 font-mono text-[11px]">Cook: 6m</span>
-                    </div>
-                    <div className="space-y-1 py-1">
-                      {ord.items.map((it, idx) => (
-                        <div key={idx} className="text-xs text-white">
-                          <span className="font-bold text-emerald-400">{it.qty}x</span> {it.name}
-                          {it.mods.map((m, mi) => (
-                            <span key={mi} className="block text-[10px] text-amber-400 ml-3">• {m}</span>
-                          ))}
-                          {it.note && <span className="block text-[10px] text-slate-400 italic ml-3">"{it.note}"</span>}
-                        </div>
-                      ))}
-                    </div>
+                {/* Sticky Action Footer */}
+                <div className="p-4 bg-white border-t border-neutral-200 flex items-center gap-3">
+                  {/* Stepper Capsule */}
+                  <div className="flex items-center bg-neutral-100 rounded-full px-2 py-1 gap-2.5 text-xs font-extrabold">
                     <button
-                      onClick={() => handleBumpReady(ord.id)}
-                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-xs rounded-lg transition-colors shadow"
+                      onClick={() => setCustomizingItem(prev => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }))}
+                      className="w-6 h-6 rounded-full bg-white text-neutral-800 flex items-center justify-center shadow-sm"
                     >
-                      ✓ Mark Ready (Counter #2)
+                      -
+                    </button>
+                    <span>{customizingItem.quantity}</span>
+                    <button
+                      onClick={() => setCustomizingItem(prev => ({ ...prev, quantity: prev.quantity + 1 }))}
+                      className="w-6 h-6 rounded-full bg-white text-neutral-800 flex items-center justify-center shadow-sm"
+                    >
+                      +
                     </button>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* LANE 4: READY FOR PICKUP */}
-            <div className="flex-1 min-w-[260px] max-w-[320px] bg-slate-900/70 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
-              <div className="bg-purple-950/40 border-b border-purple-800/40 p-2.5 flex items-center justify-between text-xs font-bold text-purple-300">
-                <span>🔔 Ready at Counter</span>
-                <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 font-mono text-[10px]">{laneReady.length}</span>
-              </div>
-              <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-2">
-                {laneReady.map(ord => (
-                  <div key={ord.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-2 text-xs">
-                    <div className="flex justify-between font-bold text-white">
-                      <span>{ord.id}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Ready 2m</span>
-                    </div>
-                    <div className="text-xs text-slate-300 font-semibold">{ord.customerName}</div>
-                    <button
-                      onClick={() => handleMarkServed(ord.id)}
-                      className="w-full py-2 bg-slate-800 hover:bg-slate-700 font-bold text-slate-200 text-xs rounded-lg border border-slate-700"
-                    >
-                      Handed Over (Served)
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* LANE 5: REFUNDS OWED */}
-            <div className="flex-1 min-w-[260px] max-w-[320px] bg-slate-900/70 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
-              <div className="bg-red-950/40 border-b border-red-800/40 p-2.5 flex items-center justify-between text-xs font-bold text-red-300">
-                <span>💸 Refunds Owed</span>
-                <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-mono text-[10px]">{laneRefunds.length}</span>
-              </div>
-              <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-2">
-                {laneRefunds.map(ord => (
-                  <div key={ord.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-2 text-xs">
-                    <div className="flex justify-between font-bold text-white">
-                      <span>{ord.id}</span>
-                      <span className="text-red-400">Rs. {ord.total}</span>
-                    </div>
-                    <div className="text-[11px] text-slate-300">{ord.customerName}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">Reason: {ord.rejectionReason || "Student Cancel"}</div>
-                    <button
-                      onClick={() => setOrders(prev => prev.filter(o => o.id !== ord.id))}
-                      className="w-full py-1.5 bg-red-950 hover:bg-red-900 border border-red-800 text-red-200 text-[11px] font-bold rounded-lg transition-colors"
-                    >
-                      ✓ Manual Refund Done
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* PAYMENT REJECTION MODAL (Distinguishing WRONG_AMOUNT vs NOT_FOUND with Admin PIN) */}
-          {rejectingOrder && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-sm w-full space-y-4">
-                <h3 className="font-bold text-sm text-white">Reject Payment Claim — {rejectingOrder.id}</h3>
-                <p className="text-xs text-slate-400">Choose reason for rejecting student's payment claim:</p>
-
-                <div className="space-y-2 text-xs">
+                  {/* Black Add Pill CTA */}
                   <button
-                    onClick={() => handleRejectPayment(rejectingOrder.id, "WRONG_AMOUNT")}
-                    className="w-full text-left p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700"
+                    onClick={() => {
+                      setCart(prev => [...prev, customizingItem]);
+                      setCustomizingItem(null);
+                    }}
+                    className="flex-1 py-3 px-4 rounded-full bg-neutral-900 hover:bg-[#EF5A30] text-white font-extrabold text-xs transition-colors flex items-center justify-between"
                   >
-                    <div className="font-bold text-amber-400">⚠️ Wrong Amount (Underpaid)</div>
-                    <div className="text-[10px] text-slate-400">No strike. Student can send remaining amount before cutoff.</div>
-                  </button>
-
-                  <button
-                    onClick={() => handleRejectPayment(rejectingOrder.id, "PAYMENT_NOT_FOUND")}
-                    className="w-full text-left p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-red-500/50"
-                  >
-                    <div className="font-bold text-red-400">⛔ Payment Not Found in Bank / Fake Txn</div>
-                    <div className="text-[10px] text-slate-400">Records 1 strike after 5m undo window. 3 strikes blocks user.</div>
+                    <span>Add to Order</span>
+                    <span>Rs. {(customizingItem.price + (customizingItem.selectedModifiers || []).reduce((s, m) => s + m.priceDelta, 0)) * customizingItem.quantity}</span>
                   </button>
                 </div>
-
-                <button
-                  onClick={() => setRejectingOrder(null)}
-                  className="w-full py-2 text-xs text-slate-400 hover:text-white"
-                >
-                  Cancel
-                </button>
               </div>
             </div>
           )}
 
-          {/* ADMIN MANAGEMENT TAB OVERLAY (Menu 86 toggles, Operating hours, Customer unblocking) */}
-          {adminModalOpen && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-5 max-h-[90vh] overflow-y-auto no-scrollbar">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-base text-white">⚙️ Venue Admin Control</h3>
-                  <button onClick={() => setAdminModalOpen(false)} className="text-slate-400 hover:text-white font-bold">✕</button>
+          {/* CHECKOUT & PAKISTANI PAYMENT DRAWER */}
+          {showCheckoutModal && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center">
+              <div className="w-full max-w-[430px] max-h-[92vh] bg-[#FFFBF8] rounded-t-[2.5rem] shadow-float overflow-hidden flex flex-col animate-slide-up">
+                
+                {/* Header */}
+                <div className="p-4 border-b border-neutral-200 flex items-center justify-between bg-white">
+                  <div>
+                    <h3 className="font-extrabold text-sm text-neutral-900">Slot & Direct Venue Payment</h3>
+                    <p className="text-[10px] text-neutral-500">Zero App Fees • Direct Venue Transfer</p>
+                  </div>
+                  <button onClick={() => setShowCheckoutModal(false)} className="text-xs font-bold p-1">✕</button>
                 </div>
 
-                {/* 86 Live Item Toggle */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">86 Item Stock Toggles</h4>
-                  <div className="space-y-1.5 text-xs">
-                    {MOCK_ITEMS.map(it => (
-                      <div key={it.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                        <span className="text-white font-medium">{it.nameEn}</span>
+                <div className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
+                  
+                  {/* Slot Carousel */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-extrabold text-neutral-900">Select Today's Pickup Slot</span>
+                      <span className="text-[10px] text-[#EF5A30] font-bold">Cutoff: 10m Prep Lead</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                      {availableSlots.map((s, idx) => (
                         <button
-                          onClick={() => setVenue86List(prev => ({ ...prev, [it.id]: !prev[it.id] }))}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                            venue86List[it.id] ? "bg-red-500 text-white" : "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                          key={idx}
+                          disabled={s.status === 'full'}
+                          onClick={() => setSelectedSlot(s)}
+                          className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
+                            selectedSlot.time === s.time
+                              ? "bg-neutral-900 text-white border-neutral-900 shadow-md"
+                              : (s.status === 'full' ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed" : "bg-white text-neutral-800 border-neutral-200 hover:border-neutral-400")
                           }`}
                         >
-                          {venue86List[it.id] ? "86'd (Out of Stock)" : "In Stock"}
+                          <p className="font-black text-xs">{s.time}</p>
+                          <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
+                          <span className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
+                            s.status === 'available' ? 'bg-emerald-100 text-emerald-800' : (s.status === 'filling' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-200 text-neutral-500')
+                          }`}>
+                            {s.status}
+                          </span>
                         </button>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Payment Methods */}
+                  <div className="space-y-2 pt-2 border-t border-neutral-200">
+                    <span className="text-xs font-extrabold text-neutral-900">Venue Direct Payment Rails</span>
+                    
+                    <div className="grid grid-cols-3 gap-2">
+                      {venue.paymentMethods.map(pm => (
+                        <button
+                          key={pm.id}
+                          onClick={() => setSelectedMethod(pm.kind)}
+                          className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
+                            selectedMethod === pm.kind
+                              ? "bg-neutral-900 text-white border-neutral-900"
+                              : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
+                          }`}
+                        >
+                          {pm.kind}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Active Payment Details Card */}
+                    {(() => {
+                      const activePM = venue.paymentMethods.find(m => m.kind === selectedMethod) || venue.paymentMethods[0];
+                      return (
+                        <div className="p-3.5 rounded-2xl bg-white border border-neutral-200/90 shadow-sm space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-neutral-400 uppercase">{activePM.label}</span>
+                            <span className="text-xs font-extrabold text-[#EF5A30]">Amount: Rs. {cartSubtotal}</span>
+                          </div>
+                          
+                          <div>
+                            <p className="text-[11px] text-neutral-500">Account Title: <strong className="text-neutral-800">{activePM.accountTitle}</strong></p>
+                            <div className="flex items-center justify-between mt-1 p-2 rounded-xl bg-neutral-100 font-mono text-xs font-bold">
+                              <span>{activePM.accountNumber}</span>
+                              <button
+                                onClick={() => handleCopy(activePM.accountNumber)}
+                                className="px-2 py-0.5 rounded-md bg-white border text-[10px] font-sans font-bold hover:bg-neutral-50"
+                              >
+                                {copiedText === activePM.accountNumber ? "✓ Copied" : "Copy"}
+                              </button>
+                            </div>
+                          </div>
+
+                          <p className="text-[10px] text-neutral-400 leading-tight">{activePM.instructions}</p>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Transaction ID & Screenshot */}
+                  <div className="space-y-2 pt-2 border-t border-neutral-200">
+                    <div>
+                      <label className="text-xs font-bold text-neutral-900">Transaction Reference ID *</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. EP-9876543210 or Bank Txn ID"
+                        value={claimedTxnId}
+                        onChange={(e) => setClaimedTxnId(e.target.value)}
+                        className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#EF5A30] focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="p-3 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/50 text-center">
+                      <p className="text-[11px] font-bold text-neutral-700">Receipt Screenshot (Optional)</p>
+                      <p className="text-[9px] text-neutral-400">Kept 30 days for cashier dispute verification</p>
+                      <div className="mt-2 text-xs text-[#EF5A30] font-bold cursor-pointer">📎 Simulating Receipt Attached</div>
+                    </div>
+                  </div>
+
+                  {/* Terms Acknowledgment */}
+                  <div className="flex items-start gap-2 pt-2">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mt-0.5 accent-[#EF5A30]"
+                    />
+                    <label htmlFor="terms" className="text-[10px] text-neutral-500 leading-tight">
+                      I understand orders are same-day counter pickup. Orders held 30m past pickup are no-show with no refund (TERMS_DRAFT).
+                    </label>
                   </div>
                 </div>
 
-                {/* Remote Hours Configuration */}
-                <div className="space-y-2 pt-2 border-t border-slate-800">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Remote Pre-Order Schedule</h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">Open Time</label>
-                      <input type="text" defaultValue="08:00" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white font-mono" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">Close Time</label>
-                      <input type="text" defaultValue="22:00" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white font-mono" />
-                    </div>
-                  </div>
+                {/* Bottom Checkout CTA */}
+                <div className="p-4 bg-white border-t border-neutral-200">
+                  <button
+                    onClick={handlePlaceOrder}
+                    className="w-full py-3.5 rounded-full bg-neutral-900 hover:bg-[#EF5A30] text-white font-extrabold text-xs transition-colors flex items-center justify-between px-6 shadow-md"
+                  >
+                    <span>Submit Payment Claim</span>
+                    <span>Rs. {cartSubtotal}</span>
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => setAdminModalOpen(false)}
-                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 font-bold text-xs rounded-xl text-white transition-colors"
-                >
-                  Save & Return to Shifts
-                </button>
               </div>
             </div>
           )}
@@ -1277,8 +1204,324 @@
       );
     }
 
-    // Render the Application
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    // =========================================================================
+    // 2. UNIFIED STAFF DASHBOARD (Toast / Square Style KDS)
+    // =========================================================================
+    function StaffDashboard({ venue, orders, setOrders, venue86List, setVenue86List, remoteOrdersPaused, setRemoteOrdersPaused, triggerUndo }) {
+      const [activeTab, setActiveTab] = useState("lanes"); // 'lanes' | 'admin'
+      const [shiftActive, setShiftActive] = useState(false);
+
+      // Handle Confirm Claim
+      const handleConfirmClaim = (orderId) => {
+        setOrders(prev => prev.map(o => {
+          if (o.id === orderId) {
+            return {
+              ...o,
+              state: "SCHEDULED",
+              undoUntil: Date.now() + 300000
+            };
+          }
+          return o;
+        }));
+
+        triggerUndo("Payment Confirmed", () => {
+          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: "PENDING_PAYMENT" } : o));
+        });
+        playChime();
+      };
+
+      // Handle Reject Claim
+      const handleRejectClaim = (orderId, reason) => {
+        setOrders(prev => prev.map(o => {
+          if (o.id === orderId) {
+            return {
+              ...o,
+              rejectionReason: reason,
+              undoUntil: Date.now() + 300000
+            };
+          }
+          return o;
+        }));
+
+        triggerUndo(`Payment Rejected (${reason})`, () => {
+          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, rejectionReason: null } : o));
+        });
+      };
+
+      // Move to READY
+      const handleBumpReady = (orderId) => {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: "READY" } : o));
+        playChime();
+      };
+
+      // Mark Handed Over (SERVED)
+      const handleMarkServed = (orderId) => {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: "SERVED" } : o));
+      };
+
+      // Mark Refund Done
+      const handleRefundDone = (orderId) => {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, refundOwed: false } : o));
+      };
+
+      // Filter Orders by 5 Lanes
+      const pendingClaims = orders.filter(o => o.state === 'PENDING_PAYMENT' && !o.rejectionReason);
+      const scheduledOrders = orders.filter(o => o.state === 'SCHEDULED');
+      const preparingOrders = orders.filter(o => o.state === 'PREPARING');
+      const readyOrders = orders.filter(o => o.state === 'READY');
+      const refundOrders = orders.filter(o => o.refundOwed);
+
+      return (
+        <div className="flex flex-col h-full bg-slate-900 text-slate-100">
+          
+          {/* Subheader */}
+          <div className="h-12 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 bg-slate-900/90 text-xs">
+            <div className="flex items-center gap-3">
+              <span className="font-extrabold text-sm text-white">Staff KDS & Cashier Lanes</span>
+              <button
+                onClick={() => {
+                  setShiftActive(prev => !prev);
+                  if (!shiftActive) playChime();
+                }}
+                className={`px-3 py-1 rounded-full font-bold transition-all ${
+                  shiftActive ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40" : "bg-slate-800 text-slate-400 hover:text-white"
+                }`}
+              >
+                {shiftActive ? "Shift Active 🔔" : "Start Shift (Enable Sound)"}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setRemoteOrdersPaused(prev => !prev)}
+                className={`px-3 py-1 rounded-full font-bold text-[11px] transition-all ${
+                  remoteOrdersPaused ? "bg-amber-500/20 text-amber-400 border border-amber-500/40" : "bg-slate-800 text-emerald-400"
+                }`}
+              >
+                {remoteOrdersPaused ? "Remote Orders: PAUSED 🔴" : "Remote Orders: ACTIVE 🟢"}
+              </button>
+
+              <button
+                onClick={() => setActiveTab(activeTab === "lanes" ? "admin" : "lanes")}
+                className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold"
+              >
+                {activeTab === "lanes" ? "Admin Settings ⚙️" : "View Kitchen Lanes"}
+              </button>
+            </div>
+          </div>
+
+          {/* TAB 1: 5 OPERATIONAL LANES */}
+          {activeTab === "lanes" && (
+            <div className="flex-1 p-3 grid grid-cols-5 gap-3 overflow-hidden min-h-0">
+              
+              {/* Lane 1: Payments to Confirm */}
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+                <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-orange-400">
+                  <span>PAYMENTS ({pendingClaims.length})</span>
+                  <span className="text-[10px] bg-orange-950 px-1.5 py-0.5 rounded text-orange-300">New</span>
+                </div>
+                <div className="flex-1 p-2 overflow-y-auto no-scrollbar space-y-2">
+                  {pendingClaims.map(ord => (
+                    <div key={ord.id} className="p-3 rounded-2xl bg-slate-900 border border-orange-500/40 shadow-soft space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-sm text-white">{ord.code}</span>
+                        <span className="text-[10px] font-bold text-orange-400">Slot: {ord.slot}</span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-200">{ord.customerName}</p>
+                        <p className="text-xs font-black text-emerald-400 mt-0.5">Rs. {ord.total}</p>
+                      </div>
+                      <div className="p-2 rounded-xl bg-slate-950/80 font-mono text-[11px] text-slate-300">
+                        <p className="text-[9px] text-slate-500 uppercase">{ord.paymentMethod}</p>
+                        <p className="font-bold text-white">{ord.txnId}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => handleConfirmClaim(ord.id)}
+                          className="py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-colors shadow-sm"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => handleRejectClaim(ord.id, "NOT_FOUND")}
+                          className="py-1.5 rounded-xl bg-slate-800 hover:bg-rose-900/50 text-rose-400 font-extrabold text-xs transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lane 2: Scheduled Orders */}
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+                <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-blue-400">
+                  <span>SCHEDULED ({scheduledOrders.length})</span>
+                  <span className="text-[10px] text-slate-400">Auto-cook</span>
+                </div>
+                <div className="flex-1 p-2 overflow-y-auto no-scrollbar space-y-2">
+                  {scheduledOrders.map(ord => (
+                    <div key={ord.id} className="p-3 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-sm text-white">{ord.code}</span>
+                        <span className="text-[10px] font-bold text-blue-400">Pickup: {ord.slot}</span>
+                      </div>
+                      <p className="text-xs font-bold text-slate-300">{ord.customerName}</p>
+                      <div className="text-[11px] text-slate-400 space-y-0.5">
+                        {ord.items.map((it, i) => (
+                          <p key={i}>• {it.qty}x {it.name}</p>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setOrders(prev => prev.map(o => o.id === ord.id ? { ...o, state: "PREPARING" } : o));
+                          playChime();
+                        }}
+                        className="w-full py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs"
+                      >
+                        Start Cooking Now
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lane 3: Preparing (Kitchen Active) */}
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+                <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-amber-400">
+                  <span>PREPARING ({preparingOrders.length})</span>
+                  <span className="text-[10px] text-emerald-400">Active</span>
+                </div>
+                <div className="flex-1 p-2 overflow-y-auto no-scrollbar space-y-2">
+                  {preparingOrders.map(ord => (
+                    <div key={ord.id} className="p-3 rounded-2xl bg-slate-900 border border-amber-500/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-sm text-white">{ord.code}</span>
+                        <span className="text-[10px] font-bold text-emerald-400">⏱️ Cook: 6m</span>
+                      </div>
+                      <p className="text-xs font-bold text-slate-300">{ord.customerName}</p>
+                      <div className="p-2 rounded-xl bg-slate-950 text-[11px] text-slate-200 space-y-1">
+                        {ord.items.map((it, i) => (
+                          <div key={i}>
+                            <p className="font-bold">• {it.qty}x {it.name}</p>
+                            {it.mods.map((m, mi) => (
+                              <p key={mi} className="text-[9px] text-[#EF5A30] pl-2">{m}</p>
+                            ))}
+                            {it.note && <p className="text-[9px] text-amber-400 pl-2">Note: {it.note}</p>}
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => handleBumpReady(ord.id)}
+                        className="w-full py-2 rounded-xl bg-[#EF5A30] hover:bg-[#D94820] text-white font-extrabold text-xs shadow-md transition-colors"
+                      >
+                        BUMP (Ready)
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lane 4: Ready at Counter */}
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+                <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-400">
+                  <span>READY ({readyOrders.length})</span>
+                  <span className="text-[10px] text-slate-400">Counter</span>
+                </div>
+                <div className="flex-1 p-2 overflow-y-auto no-scrollbar space-y-2">
+                  {readyOrders.map(ord => (
+                    <div key={ord.id} className="p-3 rounded-2xl bg-slate-900 border border-emerald-500/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-xl text-emerald-400">{ord.code}</span>
+                        <span className="text-[10px] text-slate-400">Ready 2m</span>
+                      </div>
+                      <p className="text-xs font-bold text-slate-300">{ord.customerName}</p>
+                      <button
+                        onClick={() => handleMarkServed(ord.id)}
+                        className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-colors"
+                      >
+                        Mark Handed Over
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lane 5: Refunds Owed */}
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+                <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-rose-400">
+                  <span>REFUNDS ({refundOrders.length})</span>
+                  <span className="text-[10px] text-slate-400">Manual</span>
+                </div>
+                <div className="flex-1 p-2 overflow-y-auto no-scrollbar space-y-2">
+                  {refundOrders.map(ord => (
+                    <div key={ord.id} className="p-3 rounded-2xl bg-slate-900 border border-rose-500/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-sm text-white">{ord.code}</span>
+                        <span className="text-xs font-bold text-rose-400">Rs. {ord.total}</span>
+                      </div>
+                      <p className="text-xs text-slate-300">{ord.customerName}</p>
+                      <p className="text-[10px] text-slate-400">Reason: Customer Cancelled</p>
+                      <button
+                        onClick={() => handleRefundDone(ord.id)}
+                        className="w-full py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs"
+                      >
+                        Refund Done ✓
+                      </button>
+                    </div>
+                  ))}
+                  {refundOrders.length === 0 && (
+                    <p className="text-center py-6 text-xs text-slate-500">No refunds pending</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: ADMIN SETTINGS & 86 OUT TOGGLE */}
+          {activeTab === "admin" && (
+            <div className="flex-1 p-6 overflow-y-auto space-y-6">
+              <div>
+                <h2 className="text-lg font-bold text-white">Day-2 Admin Controls</h2>
+                <p className="text-xs text-slate-400">Toggle stock (86) and manage operating parameters</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                <h3 className="font-bold text-sm text-slate-200">86 Out-of-Stock Toggle</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {MOCK_ITEMS.map(it => {
+                    const is86 = venue86List[it.id];
+                    return (
+                      <div key={it.id} className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-xs text-white">{it.nameEn}</p>
+                          <p className="text-[10px] text-slate-400">Rs. {it.price}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setVenue86List(prev => ({ ...prev, [it.id]: !prev[it.id] }));
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            is86 ? "bg-rose-500/20 text-rose-400 border border-rose-500/40" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                          }`}
+                        >
+                          {is86 ? "Mark In Stock" : "86 (Out of Stock)"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Render Root Application
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
   </script>
 </body>
 </html>
