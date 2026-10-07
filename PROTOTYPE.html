@@ -80,6 +80,71 @@
     .animate-slide-up {
       animation: slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+
+    /* --- iOS 26 Liquid Glass Design System (Dynamic Material, Specular Highlights & Ambient Diffusion) --- */
+    .liquid-glass-dock {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      box-shadow: 
+        inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.04),
+        0 14px 36px -4px rgba(0, 0, 0, 0.14),
+        0 4px 12px -2px rgba(0, 0, 0, 0.06);
+    }
+
+    .liquid-glass-capsule {
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(20px) saturate(190%);
+      -webkit-backdrop-filter: blur(20px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      box-shadow: 
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.95),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .liquid-glass-btn-active {
+      background: #0A0A0A;
+      color: #FFFFFF;
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 0.25),
+        0 4px 14px rgba(0, 0, 0, 0.22);
+    }
+
+    .liquid-glass-btn-inactive {
+      background: rgba(255, 255, 255, 0.92);
+      color: #374151;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 1),
+        0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .liquid-glass-btn-inactive:hover {
+      background: #FFFFFF;
+      color: #111827;
+      transform: translateY(-1px);
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 1),
+        0 4px 10px rgba(0, 0, 0, 0.09);
+    }
+
+    .liquid-glass-prominent {
+      background: rgba(15, 15, 15, 0.95);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 
+        inset 0 1px 1.2px 0 rgba(255, 255, 255, 0.35),
+        0 12px 32px -4px rgba(0, 0, 0, 0.32);
+    }
+
+    .liquid-glass-ambient-blur {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background: linear-gradient(to top, rgba(255, 251, 248, 0.88) 0%, rgba(255, 251, 248, 0.4) 60%, rgba(255, 251, 248, 0) 100%);
+    }
   </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col bg-slate-900 text-slate-100">
@@ -1339,7 +1404,7 @@
             <div className={`absolute left-4 right-4 z-20 animate-slide-up transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isFloatingNav ? "bottom-20" : "bottom-[74px]"}`}>
               <button
                 onClick={() => setShowCheckoutModal(true)}
-                className="w-full py-3.5 px-5 rounded-full bg-neutral-950 text-white flex items-center justify-between shadow-float hover:bg-[#EF5A30] transition-colors"
+                className="w-full py-3.5 px-5 rounded-full liquid-glass-prominent text-white flex items-center justify-between hover:bg-[#EF5A30] transition-all duration-200 active:scale-[0.98]"
               >
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-white/20 text-xs font-bold flex items-center justify-center">
@@ -1355,39 +1420,39 @@
             </div>
           )}
 
-          {/* AMBIENT FROSTED GLASS BLUR UNDER PILL (Matching user's reference) */}
+          {/* AMBIENT FROSTED GLASS BLUR UNDER PILL (iOS 26 Liquid Glass Material) */}
           <div
             className={`absolute bottom-0 left-0 right-0 pointer-events-none transition-all duration-300 z-20 ${
               isFloatingNav
-                ? "h-24 opacity-100 backdrop-blur-[6px] bg-gradient-to-t from-[#FFFBF8]/80 via-[#FFFBF8]/30 to-transparent"
+                ? "h-24 opacity-100 liquid-glass-ambient-blur"
                 : "h-0 opacity-0"
             }`}
           />
 
-          {/* DYNAMIC BOTTOM NAVIGATION BAR: Wide Frosted Blur Pill (Scroll Up) vs Docked Bar (Scroll Down) */}
+          {/* DYNAMIC BOTTOM NAVIGATION BAR: Liquid Glass Stadium Dock (Scroll Up) vs Docked Bar (Scroll Down) */}
           <nav
             className={`absolute z-30 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               isFloatingNav
-                ? "bottom-3 left-3 right-3 h-[62px] rounded-[31px] bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_12px_36px_rgba(0,0,0,0.12)] px-2 flex items-center justify-center"
+                ? "bottom-3 left-3 right-3 h-[62px] rounded-[31px] liquid-glass-dock px-2 flex items-center justify-center"
                 : "bottom-0 left-0 right-0 translate-x-0 h-16 rounded-none bg-white/95 backdrop-blur-md border-t border-neutral-200/90 shadow-none px-6 flex items-center justify-around"
             }`}
           >
-            <div className={isFloatingNav ? "flex items-center gap-2 p-1 rounded-full bg-white/45 backdrop-blur-md border border-white/50 shadow-inner" : "flex items-center justify-around w-full"}>
+            <div className={isFloatingNav ? "flex items-center gap-2 p-1 rounded-full liquid-glass-capsule" : "flex items-center justify-around w-full"}>
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;
                 const IconComp = item.icon;
 
                 if (isFloatingNav) {
-                  // Elevated floating circular buttons matching user's reference image
+                  // Elevated Liquid Glass circular buttons
                   return (
                     <button
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
                       title={item.label}
-                      className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
+                      className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 ${
                         isActive
-                          ? "bg-neutral-950 text-white shadow-md scale-105"
-                          : "bg-white text-neutral-700 hover:text-neutral-950 shadow-sm border border-neutral-100/80 hover:bg-neutral-50"
+                          ? "liquid-glass-btn-active scale-105"
+                          : "liquid-glass-btn-inactive"
                       }`}
                     >
                       <IconComp className="w-5 h-5" />
