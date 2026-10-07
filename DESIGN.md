@@ -131,11 +131,36 @@ Matches the reference design's vertical chronological stepper with solid circula
 │  └─────────────────────────┴────────┘─┘  │
 ├──────────────────────────────────────────┤
 │  ┌────────────────────────────────────┐  │
-│  │ 🛒 View Cart • 2 items • Rs. 1,270 >│  │  <-- Floating Cart Capsule
+│  │ View Cart • 2 items • Rs. 1,270  → │  │  <-- Floating Cart Capsule
 │  └────────────────────────────────────┘  │
-│  [ 🏠 Menu ]      [ 📋 Orders ]    [ 👤 ] │
+│                                          │
+│  [State 1: Scrolled Up / Top — Floating Pill]
+│        ┌─────────────────────────┐       │
+│        │ (⌂)   (🎁)   (⏱)   (👤)  │       │  <-- Frosted Capsule with Circular Tabs
+│        └─────────────────────────┘       │
+│                                          │
+│  [State 2: Scrolled Down — Attached Dock]│
+│  ┌────────────────────────────────────┐  │
+│  │   ⌂         🎁        ⏱        👤   │  │  <-- Docked Flush Edge Bar
+│  │  Menu     Perks    Tracker   Profile│  │
+│  └────────────────────────────────────┘  │
 └──────────────────────────────────────────┘
 ```
+
+### 3.6 Adaptive Bottom Navigation & Vector Icon System
+- **Adaptive Dual-State Dock Architecture:**
+  - **Scroll-Up / Initial View (Floating Pill):**
+    - Transforms into a detached, elevated glassmorphism capsule centered horizontally (`bottom-3.5 left-1/2 -translate-x-1/2 rounded-full p-1.5 bg-white/75 backdrop-blur-2xl border border-white/80 shadow-[0_14px_36px_rgba(0,0,0,0.16)]`).
+    - **Active Tab:** Solid black circular button (`w-11 h-11 rounded-full bg-neutral-950 text-white shadow-md scale-105`).
+    - **Inactive Tabs:** White circular buttons with subtle borders (`w-11 h-11 rounded-full bg-white text-neutral-700 shadow-sm border border-neutral-100/80 hover:bg-neutral-50`).
+    - **Active Order Dot:** Glowing `#EF5A30` pulse indicator on Tracker button when an order is in progress.
+  - **Scroll-Down View (Attached Dock):**
+    - Smoothly anchors flush against the bottom edge (`bottom-0 left-0 right-0 h-16 rounded-none bg-white/95 backdrop-blur-md border-t border-neutral-200/90 shadow-none px-6 flex items-center justify-around`).
+    - Displays clean vector icon above text label with Coral Salmon active highlight.
+  - **Motion Curve:** `transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]`.
+- **Iconography Standard (Zero Emojis):**
+  - All cartoonish emojis are replaced by clean Lucide vector icons (`viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"`).
+  - Consistent optical weight, scalable, crisp on Retina displays, and zero platform-dependent emoji rendering variance.
 
 #### Wireframe B: Customization Bottom Sheet Drawer
 ```
