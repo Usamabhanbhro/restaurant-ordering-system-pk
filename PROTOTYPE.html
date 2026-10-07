@@ -297,6 +297,52 @@
           <circle cx="6.5" cy="6.5" r="2.5" />
           <circle cx="17.5" cy="17.5" r="2.5" />
         </svg>
+      ),
+      ArrowLeft: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="m12 19-7-7 7-7" />
+          <path d="M19 12H5" />
+        </svg>
+      ),
+      Minus: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M5 12h14" />
+        </svg>
+      ),
+      Plus: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M5 12h14" />
+          <path d="M12 5v14" />
+        </svg>
+      ),
+      CreditCard: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <rect width="20" height="14" x="2" y="5" rx="2" />
+          <line x1="2" x2="22" y1="10" y2="10" />
+        </svg>
+      ),
+      Ticket: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+          <path d="M13 5v2" />
+          <path d="M13 17v2" />
+          <path d="M13 11v2" />
+        </svg>
+      ),
+      Trash: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M3 6h18" />
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+        </svg>
+      ),
+      Store: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" />
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+          <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" />
+          <path d="M2 7h20" />
+        </svg>
       )
     };
 
@@ -714,7 +760,8 @@
       const [cart, setCart] = useState([]);
       const [customizingItem, setCustomizingItem] = useState(null);
       const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-      const [selectedSlot, setSelectedSlot] = useState("");
+      const [showPaymentPicker, setShowPaymentPicker] = useState(false);
+      const [selectedSlot, setSelectedSlot] = useState(() => getAvailableSlots().find(s => s.status !== 'full') || getAvailableSlots()[0]);
       const [selectedMethod, setSelectedMethod] = useState("EASYPAISA");
       const [claimedTxnId, setClaimedTxnId] = useState("");
       const [termsAccepted, setTermsAccepted] = useState(false);
@@ -762,13 +809,44 @@
       // Find my latest active order
       const myActiveOrder = orders.find(o => o.customerEmail === userProfile.email && o.state !== 'SERVED' && o.state !== 'VOIDED');
 
-      // Cart total calculation
+      // Cart total calculation & voucher perk
       const cartSubtotal = cart.reduce((sum, item) => {
         const modTotal = (item.selectedModifiers || []).reduce((mSum, m) => mSum + m.priceDelta, 0);
         return sum + (item.price + modTotal) * item.quantity;
       }, 0);
 
+      const voucherDiscount = promoApplied ? 50 : 0;
+      const cartFinalTotal = Math.max(0, cartSubtotal - voucherDiscount);
       const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
+
+      // Cart Stepper & Quantity Updates
+      const updateCartItemQuantity = (index, delta) => {
+        setCart(prev => {
+          const next = [...prev];
+          const target = next[index];
+          if (!target) return prev;
+          const newQty = target.quantity + delta;
+          if (newQty <= 0) {
+            next.splice(index, 1);
+          } else {
+            next[index] = { ...target, quantity: newQty };
+          }
+          if (next.length === 0) {
+            setShowCheckoutModal(false);
+          }
+          return next;
+        });
+      };
+
+      const removeCartItem = (index) => {
+        setCart(prev => {
+          const next = prev.filter((_, i) => i !== index);
+          if (next.length === 0) {
+            setShowCheckoutModal(false);
+          }
+          return next;
+        });
+      };
 
       // Copy Helper
       const handleCopy = (text) => {
@@ -780,7 +858,9 @@
       // Submit Order
       const handlePlaceOrder = () => {
         if (!selectedSlot) return alert("Please select a pickup time slot");
-        if (!claimedTxnId.trim()) return alert("Please enter the transaction reference ID");
+        if (!claimedTxnId.trim() && selectedMethod !== "CASH") {
+          return alert("Please enter the transaction reference ID (or select Cash at Counter)");
+        }
         if (!termsAccepted) return alert("Please agree to the same-day counter pickup terms");
 
         const newOrder = {
@@ -795,12 +875,12 @@
             mods: (c.selectedModifiers || []).map(m => m.nameEn),
             note: c.note || ""
           })),
-          total: cartSubtotal,
+          total: cartFinalTotal,
           slot: selectedSlot.time,
           breakSlot: selectedSlot.breakSlot,
           state: "PENDING_PAYMENT",
           paymentMethod: selectedMethod,
-          txnId: claimedTxnId.trim(),
+          txnId: selectedMethod === "CASH" ? "CASH-ON-COUNTER" : claimedTxnId.trim(),
           hasScreenshot: true,
           createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
           kitchenStartAt: selectedSlot.time,
@@ -1442,92 +1522,195 @@
             </div>
           )}
 
-          {/* CHECKOUT & PAKISTANI PAYMENT DRAWER */}
+          {/* CHECKOUT & CART DRAWER (Inspired by reference design, respecting QueueLess design ideology) */}
           {showCheckoutModal && (
             <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center">
-              <div className="w-full max-w-[430px] max-h-[92vh] bg-[#FFFBF8] rounded-t-[2.5rem] shadow-float overflow-hidden flex flex-col animate-slide-up">
+              <div className="w-full max-w-[430px] h-full max-h-[96vh] bg-[#FFFBF8] rounded-t-[2.5rem] shadow-float overflow-hidden flex flex-col animate-slide-up">
                 
-                {/* Header */}
-                <div className="p-4 border-b border-neutral-200 flex items-center justify-between bg-white">
-                  <div>
-                    <h3 className="font-extrabold text-sm text-neutral-900">Slot & Direct Venue Payment</h3>
-                    <p className="text-[10px] text-neutral-500">Zero App Fees • Direct Venue Transfer</p>
-                  </div>
-                  <button onClick={() => setShowCheckoutModal(false)} className="text-xs font-bold p-1">
-                    <Icons.X className="w-4 h-4" />
+                {/* Top App Header: Back, Brand & User Avatar */}
+                <div className="p-4 border-b border-neutral-200/80 flex items-center justify-between bg-white shrink-0">
+                  <button
+                    onClick={() => setShowCheckoutModal(false)}
+                    className="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center transition-colors"
+                    title="Return to Menu"
+                  >
+                    <Icons.ArrowLeft className="w-4 h-4" />
                   </button>
+
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#FF6B42] to-[#EF5A30] flex items-center justify-center text-white shadow-sm">
+                      <Icons.Flame className="w-4 h-4 fill-white" />
+                    </div>
+                    <span className="font-extrabold text-sm text-neutral-900 tracking-tight">Queue<span className="text-[#EF5A30]">Less</span></span>
+                    <span className="text-neutral-300 font-bold">•</span>
+                    <span className="font-extrabold text-sm text-neutral-900">Cart</span>
+                  </div>
+
+                  <div className="w-8 h-8 rounded-full bg-neutral-900 text-white font-extrabold text-xs flex items-center justify-center shadow-xs">
+                    AA
+                  </div>
                 </div>
 
+                {/* Scrollable Cart Content Area */}
                 <div className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
                   
-                  {/* Slot Carousel */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-extrabold text-neutral-900">Select Today's Pickup Slot</span>
-                      <span className="text-[10px] text-[#EF5A30] font-bold">Cutoff: 10m Prep Lead</span>
+                  {/* Section: Your Order Header */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-black text-neutral-900 tracking-tight flex items-center gap-1.5">
+                        <span>Your Order</span>
+                        <span className="w-2 h-2 rounded-full bg-[#EF5A30] inline-block"></span>
+                      </h2>
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-0.5">
+                        <Icons.Store className="w-3.5 h-3.5 text-[#EF5A30]" />
+                        <span>{venue.name} • Counter Pickup</span>
+                      </div>
                     </div>
-
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                      {availableSlots.map((s, idx) => (
-                        <button
-                          key={idx}
-                          disabled={s.status === 'full'}
-                          onClick={() => setSelectedSlot(s)}
-                          className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
-                            selectedSlot.time === s.time
-                              ? "bg-neutral-900 text-white border-neutral-900 shadow-md"
-                              : (s.status === 'full' ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed" : "bg-white text-neutral-800 border-neutral-200 hover:border-neutral-400")
-                          }`}
-                        >
-                          <p className="font-black text-xs">{s.time}</p>
-                          <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
-                          <span className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
-                            s.status === 'available' ? 'bg-emerald-100 text-emerald-800' : (s.status === 'filling' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-200 text-neutral-500')
-                          }`}>
-                            {s.status}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    <span className="px-3 py-1 rounded-full bg-neutral-100 text-neutral-600 font-bold text-xs">
+                      {cartItemCount} {cartItemCount === 1 ? "Item" : "Items"}
+                    </span>
                   </div>
 
-                  {/* Payment Methods */}
-                  <div className="space-y-2 pt-2 border-t border-neutral-200">
-                    <span className="text-xs font-extrabold text-neutral-900">Venue Direct Payment Rails</span>
-                    
-                    <div className="grid grid-cols-3 gap-2">
-                      {venue.paymentMethods.map(pm => (
-                        <button
-                          key={pm.id}
-                          onClick={() => setSelectedMethod(pm.kind)}
-                          className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
-                            selectedMethod === pm.kind
-                              ? "bg-neutral-900 text-white border-neutral-900"
-                              : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
-                          }`}
-                        >
-                          {pm.kind}
-                        </button>
-                      ))}
-                    </div>
+                  {/* Cart Items List Container Card */}
+                  {cart.length > 0 ? (
+                    <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft divide-y divide-neutral-100">
+                      {cart.map((item, idx) => {
+                        const modTotal = (item.selectedModifiers || []).reduce((s, m) => s + m.priceDelta, 0);
+                        const itemTotal = (item.price + modTotal) * item.quantity;
+                        const modsText = (item.selectedModifiers || []).map(m => m.nameEn).join(" • ");
 
-                    {/* Active Payment Details Card */}
-                    {(() => {
-                      const activePM = venue.paymentMethods.find(m => m.kind === selectedMethod) || venue.paymentMethods[0];
-                      return (
-                        <div className="p-3.5 rounded-2xl bg-white border border-neutral-200/90 shadow-sm space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-neutral-400 uppercase">{activePM.label}</span>
-                            <span className="text-xs font-extrabold text-[#EF5A30]">Amount: Rs. {cartSubtotal}</span>
+                        return (
+                          <div key={idx} className={`flex items-center justify-between gap-3 ${idx > 0 ? "pt-3.5" : ""} ${idx < cart.length - 1 ? "pb-3.5" : ""}`}>
+                            {/* Food Thumbnail */}
+                            <img
+                              src={item.image || "https://images.unsplash.com/photo-1550547660-d9450f859349?w=300&q=80"}
+                              alt={item.nameEn}
+                              className="w-14 h-14 rounded-2xl object-cover shrink-0 border border-neutral-100/80 shadow-xs"
+                            />
+
+                            {/* Details */}
+                            <div className="flex-1 min-w-0 pr-1">
+                              <h4 className="font-extrabold text-sm text-neutral-900 truncate">{item.nameEn}</h4>
+                              <p className="text-[11px] text-neutral-400 truncate mt-0.5">
+                                {modsText || item.note || item.description || "Freshly Prepared"}
+                              </p>
+                              <span className="font-black text-sm text-[#EF5A30] mt-1 block">
+                                Rs. {itemTotal}
+                              </span>
+                            </div>
+
+                            {/* Stepper Pill matching reference screenshot */}
+                            <div className="flex items-center bg-neutral-100 rounded-full p-1 gap-1.5 shrink-0 shadow-inner">
+                              <button
+                                onClick={() => updateCartItemQuantity(idx, -1)}
+                                title={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
+                                className="w-7 h-7 rounded-full bg-white text-neutral-700 hover:text-red-500 flex items-center justify-center shadow-xs transition-transform active:scale-95"
+                              >
+                                {item.quantity === 1 ? (
+                                  <Icons.Trash className="w-3.5 h-3.5 text-neutral-400 hover:text-red-500" />
+                                ) : (
+                                  <Icons.Minus className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                              <span className="w-4 text-center text-xs font-black text-neutral-900">{item.quantity}</span>
+                              <button
+                                onClick={() => updateCartItemQuantity(idx, 1)}
+                                title="Increase quantity"
+                                className="w-7 h-7 rounded-full bg-[#EF5A30] text-white hover:bg-[#D94820] flex items-center justify-center shadow-xs transition-transform active:scale-95"
+                              >
+                                <Icons.Plus className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
-                          
-                          <div>
-                            <p className="text-[11px] text-neutral-500">Account Title: <strong className="text-neutral-800">{activePM.accountTitle}</strong></p>
-                            <div className="flex items-center justify-between mt-1 p-2 rounded-xl bg-neutral-100 font-mono text-xs font-bold">
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center bg-white rounded-3xl border border-neutral-100 shadow-soft">
+                      <Icons.ShoppingBag className="w-10 h-10 text-neutral-300 mx-auto mb-2" />
+                      <p className="text-xs font-bold text-neutral-600">Your cart is empty</p>
+                    </div>
+                  )}
+
+                  {/* Payment Method Card */}
+                  {(() => {
+                    const activePM = venue.paymentMethods.find(m => m.kind === selectedMethod) || venue.paymentMethods[0];
+                    return (
+                      <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-700 shrink-0">
+                              <Icons.CreditCard className="w-5 h-5 text-neutral-800" />
+                            </div>
+                            <div>
+                              <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">Payment</span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs font-extrabold text-neutral-900">
+                                  {selectedMethod === "EASYPAISA" && "Easypaisa • 0300-1234567"}
+                                  {selectedMethod === "SADAPAY" && "SadaPay • 0300-9876543"}
+                                  {selectedMethod === "BANK" && "Meezan Raast • 000123"}
+                                  {selectedMethod === "CASH" && "Cash on Pickup"}
+                                </span>
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-neutral-100 text-neutral-500">
+                                  Default
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setShowPaymentPicker(!showPaymentPicker)}
+                            className="text-xs font-bold text-[#EF5A30] hover:underline"
+                          >
+                            {showPaymentPicker ? "Done" : "Change"}
+                          </button>
+                        </div>
+
+                        {/* Expandable Payment Rail Selector */}
+                        {showPaymentPicker && (
+                          <div className="pt-3 border-t border-neutral-100 space-y-2.5">
+                            <span className="text-[11px] font-bold text-neutral-600 block">Select Venue Payment Rail:</span>
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {venue.paymentMethods.map(pm => (
+                                <button
+                                  key={pm.id}
+                                  onClick={() => setSelectedMethod(pm.kind)}
+                                  className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
+                                    selectedMethod === pm.kind
+                                      ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
+                                      : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
+                                  }`}
+                                >
+                                  {pm.kind}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => setSelectedMethod("CASH")}
+                                className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
+                                  selectedMethod === "CASH"
+                                    ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
+                                    : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
+                                }`}
+                              >
+                                CASH
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Direct Settlement Details (Easypaisa/SadaPay/Raast) */}
+                        {selectedMethod !== "CASH" ? (
+                          <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-100 space-y-2 text-xs">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-neutral-500">Account Title: <strong className="text-neutral-800">{activePM.accountTitle}</strong></span>
+                              <span className="font-black text-[#EF5A30]">Amount: Rs. {cartFinalTotal}</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-neutral-200/80 font-mono text-xs font-bold">
                               <span>{activePM.accountNumber}</span>
                               <button
                                 onClick={() => handleCopy(activePM.accountNumber)}
-                                className="px-2 py-0.5 rounded-md bg-white border text-[10px] font-sans font-bold hover:bg-neutral-50"
+                                className="px-2 py-0.5 rounded-md bg-neutral-100 border text-[10px] font-sans font-bold hover:bg-neutral-200 transition-colors"
                               >
                                 {copiedText === activePM.accountNumber ? (
                                   <span className="flex items-center gap-1 text-emerald-600">
@@ -1542,60 +1725,167 @@
                                 )}
                               </button>
                             </div>
-                          </div>
 
-                          <p className="text-[10px] text-neutral-400 leading-tight">{activePM.instructions}</p>
-                        </div>
-                      );
-                    })()}
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <label className="text-[11px] font-bold text-neutral-700">Transaction Reference ID *</label>
+                                <button
+                                  type="button"
+                                  onClick={() => setClaimedTxnId(`EP-${Math.floor(1000000 + Math.random() * 9000000)}`)}
+                                  className="text-[10px] font-bold text-[#EF5A30] hover:underline"
+                                >
+                                  Auto-fill Test ID
+                                </button>
+                              </div>
+                              <input
+                                type="text"
+                                placeholder="e.g. EP-9823411 or Bank Txn ID"
+                                value={claimedTxnId}
+                                onChange={(e) => setClaimedTxnId(e.target.value)}
+                                className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#EF5A30] focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-800 flex items-center gap-2">
+                            <Icons.AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                            <span>Pay exact amount (Rs. {cartFinalTotal}) in cash at register counter upon collection.</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Pickup Slot Selection Card */}
+                  <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Icons.Clock className="w-4 h-4 text-[#EF5A30]" />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Pickup Slot (Anti-Queue)</span>
+                      </div>
+                      <span className="text-[10px] text-[#EF5A30] font-bold">10m Prep Lead</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                      {availableSlots.map((s, idx) => {
+                        const isSel = selectedSlot && selectedSlot.time === s.time;
+                        return (
+                          <button
+                            key={idx}
+                            disabled={s.status === 'full'}
+                            onClick={() => setSelectedSlot(s)}
+                            className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
+                              isSel
+                                ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
+                                : (s.status === 'full' ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed" : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400")
+                            }`}
+                          >
+                            <p className="font-black text-xs">{s.time}</p>
+                            <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
+                            <span className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
+                              s.status === 'available' ? 'bg-emerald-100 text-emerald-800' : (s.status === 'filling' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-200 text-neutral-500')
+                            }`}>
+                              {s.status}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {/* Transaction ID & Screenshot */}
-                  <div className="space-y-2 pt-2 border-t border-neutral-200">
-                    <div>
-                      <label className="text-xs font-bold text-neutral-900">Transaction Reference ID *</label>
+                  {/* Voucher Discount Code Card */}
+                  <div className="bg-white rounded-3xl p-3.5 border border-neutral-100/90 shadow-soft flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 flex-1">
+                      <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#EF5A30] flex items-center justify-center shrink-0">
+                        <Icons.Ticket className="w-4 h-4" />
+                      </div>
                       <input
                         type="text"
-                        placeholder="e.g. EP-9876543210 or Bank Txn ID"
-                        value={claimedTxnId}
-                        onChange={(e) => setClaimedTxnId(e.target.value)}
-                        className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#EF5A30] focus:outline-none"
+                        placeholder="Voucher code (e.g. FAST20)"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                        className="w-full text-xs font-bold text-neutral-800 bg-transparent focus:outline-none placeholder:text-neutral-400 uppercase"
                       />
                     </div>
 
-                    <div className="p-3 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/50 text-center">
-                      <p className="text-[11px] font-bold text-neutral-700">Receipt Screenshot (Optional)</p>
-                      <p className="text-[9px] text-neutral-400">Kept 30 days for cashier dispute verification</p>
-                      <div className="mt-2 text-xs text-[#EF5A30] font-bold cursor-pointer flex items-center justify-center gap-1.5">
-                        <Icons.Paperclip className="w-3.5 h-3.5" />
-                        <span>Receipt Attached</span>
+                    {promoApplied ? (
+                      <button
+                        onClick={() => { setPromoApplied(false); setPromoCode(""); }}
+                        className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 font-extrabold text-xs flex items-center gap-1 hover:bg-emerald-100 transition-colors"
+                      >
+                        <Icons.Check className="w-3.5 h-3.5" /> Applied (Remove)
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setPromoApplied(true);
+                          if (!promoCode.trim()) setPromoCode("FAST20");
+                        }}
+                        className="px-4 py-1.5 rounded-full bg-neutral-950 text-white font-extrabold text-xs hover:bg-[#EF5A30] transition-colors"
+                      >
+                        Apply
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Order Summary Card (Directly matching reference screenshot) */}
+                  <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-3 text-xs">
+                    <h4 className="font-extrabold text-sm text-neutral-900">Order Summary</h4>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-neutral-600">
+                        <span>Subtotal</span>
+                        <span className="font-bold text-neutral-900">Rs. {cartSubtotal}</span>
                       </div>
+                      <div className="flex items-center justify-between text-neutral-600">
+                        <span>Counter Pickup Fee</span>
+                        <span className="font-bold text-emerald-600">Free</span>
+                      </div>
+                      {promoApplied && (
+                        <div className="flex items-center justify-between text-emerald-600 font-bold">
+                          <span className="flex items-center gap-1.5">
+                            <Icons.Ticket className="w-3.5 h-3.5" />
+                            <span>Voucher Discount ({promoCode || "FAST20"})</span>
+                          </span>
+                          <span>-Rs. {voucherDiscount}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="border-t border-neutral-100 pt-3 flex items-center justify-between">
+                      <div>
+                        <span className="font-extrabold text-base text-neutral-950 block">Total</span>
+                        <span className="text-[10px] text-neutral-400">Includes all local taxes & fees</span>
+                      </div>
+                      <span className="text-xl font-black text-neutral-950">Rs. {cartFinalTotal}</span>
                     </div>
                   </div>
 
                   {/* Terms Acknowledgment */}
-                  <div className="flex items-start gap-2 pt-2">
+                  <div className="flex items-start gap-2 px-1">
                     <input
                       type="checkbox"
                       id="terms"
                       checked={termsAccepted}
                       onChange={(e) => setTermsAccepted(e.target.checked)}
-                      className="mt-0.5 accent-[#EF5A30]"
+                      className="mt-0.5 accent-[#EF5A30] rounded cursor-pointer"
                     />
-                    <label htmlFor="terms" className="text-[10px] text-neutral-500 leading-tight">
-                      I understand orders are same-day counter pickup. Orders held 30m past pickup are no-show with no refund (TERMS_DRAFT).
+                    <label htmlFor="terms" className="text-[10px] text-neutral-500 leading-tight cursor-pointer select-none">
+                      I understand orders are prepared for same-day counter pickup. Orders held 30m past pickup slot are counter no-shows (TERMS_DRAFT).
                     </label>
                   </div>
                 </div>
 
-                {/* Bottom Checkout CTA */}
-                <div className="p-4 bg-white border-t border-neutral-200">
+                {/* Bottom Sticky Action CTA: Signature Vibrant Coral Pill */}
+                <div className="p-4 bg-white/95 backdrop-blur-md border-t border-neutral-100 shrink-0">
                   <button
                     onClick={handlePlaceOrder}
-                    className="w-full py-3.5 rounded-full bg-neutral-900 hover:bg-[#EF5A30] text-white font-extrabold text-xs transition-colors flex items-center justify-between px-6 shadow-md"
+                    className="w-full py-4 px-6 rounded-full bg-[#EF5A30] hover:bg-[#D94820] text-white font-extrabold text-sm flex items-center justify-between shadow-[0_8px_24px_rgba(239,90,48,0.35)] transition-all active:scale-[0.99]"
                   >
-                    <span>Submit Payment Claim</span>
-                    <span>Rs. {cartSubtotal}</span>
+                    <span className="flex items-center gap-2">
+                      Place Order <Icons.ArrowRight className="w-4 h-4" />
+                    </span>
+                    <span className="text-base font-black">Rs. {cartFinalTotal}</span>
                   </button>
                 </div>
               </div>
