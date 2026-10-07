@@ -81,69 +81,75 @@
       animation: slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    /* --- iOS 26 Liquid Glass Design System (Dynamic Material, Specular Highlights & Ambient Diffusion) --- */
-    .liquid-glass-dock {
-      background: rgba(255, 255, 255, 0.45);
-      backdrop-filter: blur(28px) saturate(190%);
-      -webkit-backdrop-filter: blur(28px) saturate(190%);
-      border: 1px solid rgba(255, 255, 255, 0.65);
+    /* --- iOS 26 Liquid Glass Design System --- */
+    .liquid-glass-pill {
+      background: rgba(255, 255, 255, 0.52);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.7);
       box-shadow: 
-        inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.9),
-        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.04),
-        0 14px 36px -4px rgba(0, 0, 0, 0.14),
-        0 4px 12px -2px rgba(0, 0, 0, 0.06);
+        0 10px 30px -4px rgba(0, 0, 0, 0.08),
+        0 4px 12px -2px rgba(0, 0, 0, 0.04);
     }
 
-    .liquid-glass-capsule {
-      background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(20px) saturate(190%);
-      -webkit-backdrop-filter: blur(20px) saturate(190%);
-      border: 1px solid rgba(255, 255, 255, 0.75);
-      box-shadow: 
-        inset 0 1px 1px 0 rgba(255, 255, 255, 0.95),
-        0 2px 8px rgba(0, 0, 0, 0.04);
+    .liquid-gradient-blur {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      pointer-events: none;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: linear-gradient(
+        to top,
+        rgba(255, 251, 248, 0.7) 0%,
+        rgba(255, 251, 248, 0.3) 50%,
+        rgba(255, 251, 248, 0) 100%
+      );
+      mask-image: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 0.9) 20%,
+        rgba(0, 0, 0, 0.6) 45%,
+        rgba(0, 0, 0, 0.25) 70%,
+        rgba(0, 0, 0, 0.05) 90%,
+        rgba(0, 0, 0, 0) 100%
+      );
+      -webkit-mask-image: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 0.9) 20%,
+        rgba(0, 0, 0, 0.6) 45%,
+        rgba(0, 0, 0, 0.25) 70%,
+        rgba(0, 0, 0, 0.05) 90%,
+        rgba(0, 0, 0, 0) 100%
+      );
     }
 
     .liquid-glass-btn-active {
-      background: #0A0A0A;
+      background: #111111;
       color: #FFFFFF;
-      box-shadow: 
-        inset 0 1px 1px rgba(255, 255, 255, 0.25),
-        0 4px 14px rgba(0, 0, 0, 0.22);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
     }
 
     .liquid-glass-btn-inactive {
-      background: rgba(255, 255, 255, 0.92);
-      color: #374151;
-      border: 1px solid rgba(255, 255, 255, 0.9);
-      box-shadow: 
-        inset 0 1px 1px rgba(255, 255, 255, 1),
-        0 2px 6px rgba(0, 0, 0, 0.06);
+      background: #FFFFFF;
+      color: #262626;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     }
 
     .liquid-glass-btn-inactive:hover {
-      background: #FFFFFF;
-      color: #111827;
-      transform: translateY(-1px);
-      box-shadow: 
-        inset 0 1px 1px rgba(255, 255, 255, 1),
-        0 4px 10px rgba(0, 0, 0, 0.09);
+      background: #FAFAFA;
+      color: #000000;
     }
 
     .liquid-glass-prominent {
-      background: rgba(15, 15, 15, 0.95);
-      backdrop-filter: blur(24px) saturate(160%);
-      -webkit-backdrop-filter: blur(24px) saturate(160%);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      box-shadow: 
-        inset 0 1px 1.2px 0 rgba(255, 255, 255, 0.35),
-        0 12px 32px -4px rgba(0, 0, 0, 0.32);
-    }
-
-    .liquid-glass-ambient-blur {
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      background: linear-gradient(to top, rgba(255, 251, 248, 0.88) 0%, rgba(255, 251, 248, 0.4) 60%, rgba(255, 251, 248, 0) 100%);
+      background: rgba(18, 18, 18, 0.92);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.25);
     }
   </style>
 </head>
@@ -1401,7 +1407,7 @@
 
           {/* STICKY FLOATING CART CAPSULE (Uber Eats / Buy Bao Style) */}
           {cartItemCount > 0 && activeTab === "menu" && (
-            <div className={`absolute left-4 right-4 z-20 animate-slide-up transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isFloatingNav ? "bottom-20" : "bottom-[74px]"}`}>
+            <div className={`absolute left-4 right-4 z-20 animate-slide-up transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isFloatingNav ? "bottom-[84px]" : "bottom-[74px]"}`}>
               <button
                 onClick={() => setShowCheckoutModal(true)}
                 className="w-full py-3.5 px-5 rounded-full liquid-glass-prominent text-white flex items-center justify-between hover:bg-[#EF5A30] transition-all duration-200 active:scale-[0.98]"
@@ -1420,30 +1426,28 @@
             </div>
           )}
 
-          {/* AMBIENT FROSTED GLASS BLUR UNDER PILL (iOS 26 Liquid Glass Material) */}
+          {/* AMBIENT PROGRESSIVE GRADIENT BLUR (Smoothly fades to transparent with zero hard edges or banding) */}
           <div
-            className={`absolute bottom-0 left-0 right-0 pointer-events-none transition-all duration-300 z-20 ${
+            className={`pointer-events-none transition-all duration-300 z-20 ${
               isFloatingNav
-                ? "h-24 opacity-100 liquid-glass-ambient-blur"
-                : "h-0 opacity-0"
+                ? "liquid-gradient-blur opacity-100"
+                : "opacity-0 h-0"
             }`}
           />
 
-          {/* DYNAMIC BOTTOM NAVIGATION BAR: Liquid Glass Stadium Dock (Scroll Up) vs Docked Bar (Scroll Down) */}
+          {/* DYNAMIC BOTTOM NAVIGATION BAR: Liquid Glass Floating Pill (Scroll Up) vs Docked Bar (Scroll Down) */}
           <nav
             className={`absolute z-30 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               isFloatingNav
-                ? "bottom-3 left-3 right-3 h-[62px] rounded-[31px] liquid-glass-dock px-2 flex items-center justify-center"
-                : "bottom-0 left-0 right-0 translate-x-0 h-16 rounded-none bg-white/95 backdrop-blur-md border-t border-neutral-200/90 shadow-none px-6 flex items-center justify-around"
+                ? "bottom-5 left-1/2 -translate-x-1/2 w-fit"
+                : "bottom-0 left-0 right-0 h-16 rounded-none bg-white/95 backdrop-blur-md border-t border-neutral-200/90 shadow-none px-6 flex items-center justify-around"
             }`}
           >
-            <div className={isFloatingNav ? "flex items-center gap-2 p-1 rounded-full liquid-glass-capsule" : "flex items-center justify-around w-full"}>
-              {navItems.map((item) => {
-                const isActive = activeTab === item.id;
-                const IconComp = item.icon;
-
-                if (isFloatingNav) {
-                  // Elevated Liquid Glass circular buttons
+            {isFloatingNav ? (
+              <div className="w-fit inline-flex items-center gap-1.5 p-1.5 rounded-full liquid-glass-pill">
+                {navItems.map((item) => {
+                  const isActive = activeTab === item.id;
+                  const IconComp = item.icon;
                   return (
                     <button
                       key={item.id}
@@ -1451,7 +1455,7 @@
                       title={item.label}
                       className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 ${
                         isActive
-                          ? "liquid-glass-btn-active scale-105"
+                          ? "liquid-glass-btn-active"
                           : "liquid-glass-btn-inactive"
                       }`}
                     >
@@ -1461,8 +1465,13 @@
                       )}
                     </button>
                   );
-                } else {
-                  // Attached docked bar with icon and label
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center justify-around w-full">
+                {navItems.map((item) => {
+                  const isActive = activeTab === item.id;
+                  const IconComp = item.icon;
                   return (
                     <button
                       key={item.id}
@@ -1478,9 +1487,9 @@
                       )}
                     </button>
                   );
-                }
-              })}
-            </div>
+                })}
+              </div>
+            )}
           </nav>
 
           {/* ITEM CUSTOMIZATION BOTTOM SHEET DRAWER */}
