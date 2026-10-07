@@ -827,7 +827,7 @@
         <div className="relative flex-1 flex flex-col overflow-hidden h-full bg-[#FFFBF8] text-neutral-900">
           
           {/* Scrollable Container with direction detection */}
-          <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto no-scrollbar pb-28">
+          <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto no-scrollbar pb-36">
             
             {/* Top Hero Banner */}
             <div className="relative h-44 w-full overflow-hidden bg-neutral-900">
@@ -1256,7 +1256,7 @@
 
           {/* STICKY FLOATING CART CAPSULE (Uber Eats / Buy Bao Style) */}
           {cartItemCount > 0 && activeTab === "menu" && (
-            <div className={`absolute left-4 right-4 z-20 animate-slide-up transition-all duration-300 ${isFloatingNav ? "bottom-20" : "bottom-18"}`}>
+            <div className={`absolute left-4 right-4 z-20 animate-slide-up transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isFloatingNav ? "bottom-20" : "bottom-[74px]"}`}>
               <button
                 onClick={() => setShowCheckoutModal(true)}
                 className="w-full py-3.5 px-5 rounded-full bg-neutral-950 text-white flex items-center justify-between shadow-float hover:bg-[#EF5A30] transition-colors"
