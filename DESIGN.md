@@ -56,8 +56,8 @@ The product deliberately stops at order dispatch, kitchen display, and payment v
 **Design principles:**
 - **Verification Flow:** Operator cross-references the student's claimed transaction ID and amount against the venue's bank app:
   - If verified: Tap `Confirm` (`PENDING_PAYMENT → SCHEDULED`).
-  - If incorrect amount: Tap `Reject → WRONG_AMOUNT` (no strike; student notified to re-submit before cutoff).
-  - If not found: Tap `Reject → NOT_FOUND` (strike applied after 5-min undo window; 2nd consecutive rejection voids order).
+  - If incorrect amount: Tap `Reject → WRONG_AMOUNT` (no strike; student notified to send remaining amount before cutoff).
+  - If not found: Tap `Reject → NOT_FOUND` (admin PIN required; strike applied after 5-min undo window; 2nd consecutive rejection voids order).
 - **Refunds Owed Lane:** Displays tickets where payment was received but the order was cancelled by the student before kitchen start or voided by admin. Operator manually transfers funds via bank app and taps `Refund Done` (`REFUND_MARKED_DONE`).
 
 ### 2.4 The Admin & Forward-Deployed Engineer (FDE)
