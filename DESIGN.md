@@ -105,6 +105,128 @@ Matches the reference design's vertical chronological stepper with solid circula
 
 ---
 
+### 3.5 Detailed Screen Wireframe Specifications
+
+#### Wireframe A: Customer PWA — Menu & Discovery
+```
+┌──────────────────────────────────────────┐
+│  [⚡ Logo]  Brewery Cafe Gulberg    [👤] │
+│  Pickup at Counter • 10-15m • 🟢 Open    │
+├──────────────────────────────────────────┤
+│  [ 🔍 Search coffee, burgers, fries... ] │
+├──────────────────────────────────────────┤
+│  (🔥 All) (🍔 Burgers) (☕ Coffee) (🍟)   │  <-- Sticky Pill Carousel
+├──────────────────────────────────────────┤
+│  POPULAR PICKS                           │
+│  ┌────────────────────────────────────┐  │
+│  │ Double Smash Burger     ┌────────┐ │  │
+│  │ Ziada Cheese            │ [IMG]  │ │  │
+│  │ 2x 80g smashed beef...  │        │ │  │
+│  │ Rs. 750                 │  (+)   │ │  │
+│  └─────────────────────────┴────────┘─┘  │
+│  ┌────────────────────────────────────┐  │
+│  │ Spanish Iced Latte      ┌────────┐ │  │
+│  │ Artisanal clear ice     │ [IMG]  │ │  │
+│  │ Rs. 520                 │  (+)   │ │  │
+│  └─────────────────────────┴────────┘─┘  │
+├──────────────────────────────────────────┤
+│  ┌────────────────────────────────────┐  │
+│  │ 🛒 View Cart • 2 items • Rs. 1,270 >│  │  <-- Floating Cart Capsule
+│  └────────────────────────────────────┘  │
+│  [ 🏠 Menu ]      [ 📋 Orders ]    [ 👤 ] │
+└──────────────────────────────────────────┘
+```
+
+#### Wireframe B: Customization Bottom Sheet Drawer
+```
+┌──────────────────────────────────────────┐
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │ [======== Full Food Image ========]│  │
+│  │ Double Smash Burger           [✕]  │  │
+│  │ Rs. 750                            │  │
+│  ├────────────────────────────────────┤  │
+│  │ CHEESE & ADD-ONS (Optional)        │  │
+│  │ [x] Extra Melted Cheddar  +Rs. 120 │  │
+│  │ [ ] Smoked Beef Bacon     +Rs. 180 │  │
+│  ├────────────────────────────────────┤  │
+│  │ EXCLUSIONS (Allergy / Diet)        │  │
+│  │ [x] No Onion (Pyaz Na Dalein)      │  │
+│  │ [ ] No Pickles                     │  │
+│  ├────────────────────────────────────┤  │
+│  │ SPECIAL NOTE (Max 40 chars)        │  │
+│  │ [ Cut in half please             ] │  │
+│  ├────────────────────────────────────┤  │
+│  │  [-]  1  [+]   [ Add to Order • Rs 870 ] │
+│  └────────────────────────────────────┘  │
+└──────────────────────────────────────────┘
+```
+
+#### Wireframe C: Slot Selection & Direct Venue Payment
+```
+┌──────────────────────────────────────────┐
+│  ← Checkout & Pickup Slot                │
+├──────────────────────────────────────────┤
+│  SELECT SAME-DAY PICKUP TIME             │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐  │
+│  │  13:30   │ │  13:45   │ │  14:00   │  │
+│  │ (Avail)  │ │ (Filling)│ │  (Full)  │  │
+│  └──────────┘ └──────────┘ └──────────┘  │
+├──────────────────────────────────────────┤
+│  PAY DIRECTLY TO VENUE                   │
+│  (•) Easypaisa   ( ) SadaPay   ( ) Bank  │
+│  ┌────────────────────────────────────┐  │
+│  │ Title: Brewery Cafe Gulberg        │  │
+│  │ Number: 0300-1234567   [📋 Copy]   │  │
+│  │ Instructions: Send exact Rs. 870   │  │
+│  └────────────────────────────────────┘  │
+│  Enter Transaction ID *                  │
+│  [ e.g. EP-9876543210                ]  │
+│  Upload Receipt Screenshot (Optional)    │
+│  [ 📎 Drop screenshot or tap here    ]  │
+├──────────────────────────────────────────┤
+│  [x] I agree to same-day pickup terms &  │
+│      30-min no-show policy (TERMS)       │
+│  ┌────────────────────────────────────┐  │
+│  │       Submit Payment Claim         │  │  <-- Black Pill CTA
+│  └────────────────────────────────────┘  │
+└──────────────────────────────────────────┘
+```
+
+#### Wireframe D: Live Order Tracking (Buy Bao Timeline + Digital Counter Ticket)
+```
+┌──────────────────────────────────────────┐
+│  ← Order Details                         │
+├──────────────────────────────────────────┤
+│  ┌────────────────────────────────────┐  │
+│  │ ⚡ COUNTER PICKUP TICKET           │  │
+│  │ #108                               │  │  <-- Big bold pickup code
+│  │ Pickup Slot: 13:30 (Break Slot #2) │  │
+│  │ Show this code at the pickup desk  │  │
+│  └────────────────────────────────────┘  │
+├──────────────────────────────────────────┤
+│  ORDER TIMELINE                          │
+│                                          │
+│  (●) 13:12 • Awaiting Confirmation       │
+│   │  Operator is verifying your payment  │
+│   │                                      │
+│  (●) 13:14 • Confirmed & Scheduled       │
+│   │  Scheduled for 13:30 pickup          │
+│   │                                      │
+│  (🟢) 13:20 • Being Prepared             │
+│   │  Kitchen active • 10m cook timer     │
+│   │                                      │
+│  (○) 13:28 • Ready for Pickup            │
+│   │  Order placed on pickup acrylic stand│
+│   │                                      │
+│  (○) 13:30 • Collected                  │
+├──────────────────────────────────────────┤
+│  [ Cancel Order (Before 13:20) ]         │
+└──────────────────────────────────────────┘
+```
+
+---
+
 ## 4. Unified Staff Dashboard (Toast / Square KDS Style)
 
 The staff interface is restyled from a dark console into a crisp, high-contrast commercial kitchen screen:
