@@ -250,6 +250,89 @@ Matches the reference design's vertical chronological stepper with solid circula
 └──────────────────────────────────────────┘
 ```
 
+#### Wireframe E: Customer Authentication Bottom Sheet (Login & Register)
+```
+┌──────────────────────────────────────────┐
+│                   ────                   │  <-- Drag Handle Pill
+│  [⚡ Logo] QueueLess       [✕ Close]     │
+│  Welcome back                            │
+│  Sign in to track orders & campus perks  │
+├──────────────────────────────────────────┤
+│  [ G  Continue with Google ]             │  <-- Social Login Button
+│  ─────────────── or ───────────────      │
+├──────────────────────────────────────────┤
+│  EMAIL OR MOBILE NUMBER                  │
+│  [ student@nu.edu.pk / 0300...        ]  │
+│                                          │
+│  PASSWORD                                │
+│  [ •••••••••••••••••            👁️ ]     │
+│                                          │
+│  [x] Remember me      Forgot password?   │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │              Sign In               │  │  <-- Terracotta / Black Pill CTA
+│  └────────────────────────────────────┘  │
+│                                          │
+│  Don't have an account? Sign up          │
+└──────────────────────────────────────────┘
+```
+
+#### Wireframe F: 6-Digit Verification & Deferred Onboarding
+```
+┌──────────────────────────────────────────┐
+│                   ────                   │
+│  < Back                    [✕ Close]     │
+│  (1) Details ─── (2) Verify ─── (3) Callout
+│  ✓ Done          ● Active       ○ Next   │
+├──────────────────────────────────────────┤
+│             [ 🛡️ Verification ]           │
+│  Enter 6-Digit Code                      │
+│  Sent to alina.solvaeica@gmail.com       │
+│                                          │
+│  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐     │
+│  │ 8 │ │ 4 │ │ 9 │ │ 2 │ │ 0 │ │ 1 │     │  <-- Segmented PIN Inputs
+│  └───┘ └───┘ └───┘ └───┘ └───┘ └───┘     │
+│                                          │
+│  Resend code in 00:49                    │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │        Verify & Continue           │  │  <-- Terracotta Pill CTA
+│  └────────────────────────────────────┘  │
+│                                          │
+│  Code expires in 10 minutes. Check spam. │
+└──────────────────────────────────────────┘
+```
+
+---
+
+### 3.7 Customer Authentication & Onboarding System (NovaPass & Vela Synthesis)
+
+QueueLess implements an authentication and onboarding workflow synthesized from modern security-first consumer apps (NovaPass and Vela), tailored specifically for the Pakistani campus and cafe ecosystem:
+
+1. **Non-Blocking Guest Browsing:**
+   - Scanning a table QR or counter acrylic tag allows instant, anonymous menu browsing.
+   - Walk-up in-venue ordering does not force account creation.
+   - Authentication is triggered **only** when a customer proceeds to checkout on a scheduled remote pre-order (F1), claims an institutional discount (F2), or accesses their perks wallet (F3).
+2. **Form Factor (iOS-Style Bottom Sheet Drawer):**
+   - Renders as a tactile bottom sheet on mobile (`rounded-t-[32px]`) with a top drag handle pill (`w-12 h-1.5 rounded-full bg-neutral-300`).
+   - Floats with a progressive liquid glass backdrop filter (`backdrop-blur-md bg-black/40`), ensuring the customer can tap outside or hit `✕` to dismiss and immediately return to browsing.
+3. **Registration Credentials (3-Field Minimum):**
+   - **Email:** `CITEXT UNIQUE` (any provider; `.edu.pk` needed only for campus discounts).
+   - **Pakistani Mobile Phone:** Format `^(\+92|0)?3[0-9]{9}$` with country badge `🇵🇰 +92`.
+   - **Password:** Minimum 8 characters with criteria indicators, hashed server-side with Argon2id.
+4. **Social Sign-In (Google-Only):**
+   - Includes a clean **"Continue with Google"** button per project direction, matching youth demographic expectations while avoiding Apple/OAuth sprawl.
+5. **Stepped Verification (Vela-Style Stepper):**
+   - `(1) Details ────── (2) Verify Email ────── (3) Profile`
+   - High-contrast segmented 6-digit PIN input with automatic advance, backspace recoil, and paste support.
+   - 10-minute validity window with a 60-second resend countdown timer.
+6. **Deferred Onboarding ("After Hand"):**
+   - Display name and optional institutional affiliation are gathered **after** registration.
+   - Staff requires `display_name` to call out tickets at the pickup counter (`orders.customer_name_snapshotted`).
+   - Campus affiliation (FAST, LUMS, IBA, NUST, SZABIST) can be selected immediately or deferred to the Profile perks tab.
+7. **Identity Layer Isolation:**
+   - Identity data (`customers`, `email_verification_codes`, `password_reset_tokens`) is managed under the `app_identity_user` role and is completely decoupled from tenant-scoped venue tables (`app_runtime_user`).
+
 ---
 
 ## 4. Unified Staff Dashboard (Toast / Square KDS Style)
