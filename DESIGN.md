@@ -59,6 +59,15 @@ The official visual identity for QueueLess is based on the **Speed Cup "Q"** emb
 - **Cards & Drawers:** Food cards and content containers use high-radius geometry (`rounded-2xl` and `rounded-3xl`).
 - **Elevation / Shadows:** Soft, diffuse ambient shadows (`box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); border: 1px solid #F0EFEA;`) instead of harsh black borders.
 
+### 2.4 Strict No-Emoji Policy
+> [!IMPORTANT]
+> **Strict No-Emoji Mandate:** No emojis shall be used anywhere in the project (UI components, labels, badges, alerts, buttons, navigation pills, mock data, wireframes, or documentation) unless explicitly asked for by the user.
+> 
+> - **Iconography:** Always use crisp SVG vector icons (Lucide icons / custom vector paths with deliberate stroke and fill).
+> - **Region & Country Identifiers:** Use standard ISO/typographic badges (e.g., `PK +92`) rather than flag emojis.
+> - **Status Indicators:** Use CSS-styled circular badges or colored semantic dots (`bg-emerald-500`, `bg-amber-500`, `bg-[#EF5A30]`) instead of colored circle emojis.
+> - **Wireframes & Documentation:** Use clean text, bracket labels (e.g., `[Search]`, `[Copy]`, `[User]`, `[Ticket]`, `[Close]`), or ASCII indicators rather than emojis.
+
 ---
 
 ## 3. Component Architecture & UI Anatomy
@@ -110,12 +119,12 @@ Matches the reference design's vertical chronological stepper with solid circula
 #### Wireframe A: Customer PWA — Menu & Discovery
 ```
 ┌──────────────────────────────────────────┐
-│  [⚡ Logo]  Brewery Cafe Gulberg    [👤] │
-│  Pickup at Counter • 10-15m • 🟢 Open    │
+│  [Logo]   Brewery Cafe Gulberg    [User] │
+│  Pickup at Counter • 10-15m • [Open]     │
 ├──────────────────────────────────────────┤
-│  [ 🔍 Search coffee, burgers, fries... ] │
+│  [ Search coffee, burgers, fries... ]    │
 ├──────────────────────────────────────────┤
-│  (🔥 All) (🍔 Burgers) (☕ Coffee) (🍟)   │  <-- Sticky Pill Carousel
+│  (All)  (Burgers)  (Coffee)  (Sides)     │  <-- Sticky Category Pill Row
 ├──────────────────────────────────────────┤
 │  POPULAR PICKS                           │
 │  ┌────────────────────────────────────┐  │
@@ -136,13 +145,12 @@ Matches the reference design's vertical chronological stepper with solid circula
 │                                          │
 │  [State 1: Scrolled Up / Top — Floating Pill]
 │        ┌─────────────────────────┐       │
-│        │ (⌂)   (🎁)   (⏱)   (👤)  │       │  <-- Frosted Capsule with Circular Tabs
+│        │ (Menu) (Perk) (Trk) (Usr) │     │  <-- Frosted Capsule with Circular Tabs
 │        └─────────────────────────┘       │
 │                                          │
 │  [State 2: Scrolled Down — Attached Dock]│
 │  ┌────────────────────────────────────┐  │
-│  │   ⌂         🎁        ⏱        👤   │  │  <-- Docked Flush Edge Bar
-│  │  Menu     Perks    Tracker   Profile│  │
+│  │   Menu     Perks    Tracker   Profile │  │  <-- Docked Flush Edge Bar
 │  └────────────────────────────────────┘  │
 └──────────────────────────────────────────┘
 ```
@@ -202,13 +210,13 @@ Matches the reference design's vertical chronological stepper with solid circula
 │  (•) Easypaisa   ( ) SadaPay   ( ) Bank  │
 │  ┌────────────────────────────────────┐  │
 │  │ Title: Brewery Cafe Gulberg        │  │
-│  │ Number: 0300-1234567   [📋 Copy]   │  │
+│  │ Number: 0300-1234567   [Copy]      │  │
 │  │ Instructions: Send exact Rs. 870   │  │
 │  └────────────────────────────────────┘  │
 │  Enter Transaction ID *                  │
 │  [ e.g. EP-9876543210                ]  │
 │  Upload Receipt Screenshot (Optional)    │
-│  [ 📎 Drop screenshot or tap here    ]  │
+│  [ Drop screenshot or tap here        ]  │
 ├──────────────────────────────────────────┤
 │  [x] I agree to same-day pickup terms &  │
 │      30-min no-show policy (TERMS)       │
@@ -224,7 +232,7 @@ Matches the reference design's vertical chronological stepper with solid circula
 │  ← Order Details                         │
 ├──────────────────────────────────────────┤
 │  ┌────────────────────────────────────┐  │
-│  │ ⚡ COUNTER PICKUP TICKET           │  │
+│  │ COUNTER PICKUP TICKET              │  │
 │  │ #108                               │  │  <-- Big bold pickup code
 │  │ Pickup Slot: 13:30 (Break Slot #2) │  │
 │  │ Show this code at the pickup desk  │  │
@@ -238,7 +246,7 @@ Matches the reference design's vertical chronological stepper with solid circula
 │  (●) 13:14 • Confirmed & Scheduled       │
 │   │  Scheduled for 13:30 pickup          │
 │   │                                      │
-│  (🟢) 13:20 • Being Prepared             │
+│  (*) 13:20 • Being Prepared (Cooking)    │
 │   │  Kitchen active • 10m cook timer     │
 │   │                                      │
 │  (○) 13:28 • Ready for Pickup            │
@@ -254,7 +262,7 @@ Matches the reference design's vertical chronological stepper with solid circula
 ```
 ┌──────────────────────────────────────────┐
 │                   ────                   │  <-- Drag Handle Pill
-│  [⚡ Logo] QueueLess       [✕ Close]     │
+│  [Logo] QueueLess             [Close]    │
 │  Welcome back                            │
 │  Sign in to track orders & campus perks  │
 ├──────────────────────────────────────────┤
@@ -265,7 +273,7 @@ Matches the reference design's vertical chronological stepper with solid circula
 │  [ student@nu.edu.pk / 0300...        ]  │
 │                                          │
 │  PASSWORD                                │
-│  [ •••••••••••••••••            👁️ ]     │
+│  [ •••••••••••••••••          [Show] ]   │
 │                                          │
 │  [x] Remember me      Forgot password?   │
 │                                          │
@@ -281,11 +289,10 @@ Matches the reference design's vertical chronological stepper with solid circula
 ```
 ┌──────────────────────────────────────────┐
 │                   ────                   │
-│  < Back                    [✕ Close]     │
-│  (1) Details ─── (2) Verify ─── (3) Callout
-│  ✓ Done          ● Active       ○ Next   │
+│  < Back                      [Close]     │
+│  [x] Done        (*) Active     ( ) Next │
 ├──────────────────────────────────────────┤
-│             [ 🛡️ Verification ]           │
+│             [ Verification ]             │
 │  Enter 6-Digit Code                      │
 │  Sent to alina.solvaeica@gmail.com       │
 │                                          │
@@ -315,10 +322,10 @@ QueueLess implements an authentication and onboarding workflow synthesized from 
    - Authentication is triggered **only** when a customer proceeds to checkout on a scheduled remote pre-order (F1), claims an institutional discount (F2), or accesses their perks wallet (F3).
 2. **Form Factor (iOS-Style Bottom Sheet Drawer):**
    - Renders as a tactile bottom sheet on mobile (`rounded-t-[32px]`) with a top drag handle pill (`w-12 h-1.5 rounded-full bg-neutral-300`).
-   - Floats with a progressive liquid glass backdrop filter (`backdrop-blur-md bg-black/40`), ensuring the customer can tap outside or hit `✕` to dismiss and immediately return to browsing.
+   - Floats with a progressive liquid glass backdrop filter (`backdrop-blur-md bg-black/40`), ensuring the customer can tap outside or hit [X] to dismiss and immediately return to browsing.
 3. **Registration Credentials (3-Field Minimum):**
    - **Email:** `CITEXT UNIQUE` (any provider; `.edu.pk` needed only for campus discounts).
-   - **Pakistani Mobile Phone:** Format `^(\+92|0)?3[0-9]{9}$` with country badge `🇵🇰 +92`.
+   - **Pakistani Mobile Phone:** Format `^(\+92|0)?3[0-9]{9}$` with country badge `PK +92`.
    - **Password:** Minimum 8 characters with criteria indicators, hashed server-side with Argon2id.
 4. **Social Sign-In (Google-Only):**
    - Includes a clean **"Continue with Google"** button per project direction, matching youth demographic expectations while avoiding Apple/OAuth sprawl.
@@ -341,7 +348,7 @@ The staff interface is restyled from a dark console into a crisp, high-contrast 
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  ⚡ QueueLess  •  Brewery Cafe Gulberg                                 [Shift Active 🔔]   [Remote: Active 🟢]   [Admin ⚙️] │
+│  QueueLess  •  Brewery Cafe Gulberg                                    [Shift Active]      [Remote: Active]      [Admin]   │
 ├───────────────────────┬───────────────────────┬───────────────────────┬───────────────────────┬────────────────────────┤
 │  PAYMENTS TO CONFIRM  │       SCHEDULED       │       PREPARING       │         READY         │      REFUNDS OWED      │
 │         (1)           │          (2)          │          (1)          │          (1)          │          (0)           │
@@ -349,8 +356,8 @@ The staff interface is restyled from a dark console into a crisp, high-contrast 
 │ ORDER #108 • 13:30    │ ORDER #105 • 13:20    │ ORDER #102 • 13:10    │ ORDER #99 • 13:00     │ No refunds pending     │
 │ Ahmad Ali (FAST)      │ Hamza Khan            │ Bilal Tariq           │ Sara Noor             │                        │
 │ Rs. 750.00            │ Rs. 450.00            │ Rs. 1,200.00          │ Rs. 650.00            │                        │
-│ Easypaisa: 987654     │ Starts in: 4 mins     │ ⏱️ Elapsed: 6m (🟢)   │ ⏱️ Ready: 2m ago      │                        │
-│ [Screenshot 👁️]      │                       │ 2x Smash Burger       │ 1x Iced Latte         │                        │
+│ Easypaisa: 987654     │ Starts in: 4 mins     │ Elapsed: 6m (Cooking) │ Ready: 2m ago         │                        │
+│ [Screenshot]          │                       │ 2x Smash Burger       │ 1x Iced Latte         │                        │
 │                       │                       │ • Ziada Cheese        │ • Oat Milk            │                        │
 │ [CONFIRM]  [REJECT]   │ [UNDO CONFIRM (5m)]   │ [BUMP READY]          │ [MARK SERVED]         │                        │
 └───────────────────────┴───────────────────────┴───────────────────────┴───────────────────────┴────────────────────────┤
