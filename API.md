@@ -111,30 +111,80 @@ Authentication:
 }
 ```
 
-### 1.4 `POST /api/v1/auth/email-code`
+### 1.4 `POST /api/v1/auth/register`
 - **Visibility:** Public (Rate limited; bot check required)
-- **Purpose:** Send passwordless email sign-in code.
-- **Request:** `{ "email": "student@szabist.pk", "bot_token": "cf-turnstile-token" }`
-- **Response:** Always `202 Accepted` (prevents account enumeration). Code expires in 10 minutes (max 5 verification attempts).
+- **Purpose:** Create customer account with email, phone number, and password.
+- **Request:**
+```json
+{
+  "email": "student@gmail.com",
+  "phone": "03001234567",
+  "password": "Password123!",
+  "bot_token": "cf-turnstile-token"
+}
+```
+- **Validation Rules:**
+  - `email`: Valid email format (any provider; `.edu.pk` required only for institutional discounts).
+  - `phone`: Required Pakistani mobile format `^(\+92|0)?3[0-9]{9}$`.
+  - `password`: Minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 digit.
+- **Response (`201 Created`):**
+```json
+{
+  "success": true,
+  "data": {
+    "token": "jwt-token",
+    "customer": {
+      "id": "cust-uuid",
+      "email": "student@gmail.com",
+      "phone": "03001234567",
+      "display_name": null,
+      "email_verified": false
+    }
+  }
+}
+```
+- Dispatches a 6-digit email verification code to the customer's email address.
 
-### 1.5 `POST /api/v1/auth/verify-code`
-- **Visibility:** Public (Rate limited)
-- **Purpose:** Verifies email code and returns session token and customer profile.
-- **Request:** `{ "email": "student@szabist.pk", "code": "849201" }`
+### 1.5 `POST /api/v1/auth/login`
+- **Visibility:** Public (Rate limited; bot check required)
+- **Purpose:** Sign in with email or phone number and password.
+- **Request:**
+```json
+{
+  "identifier": "student@gmail.com",
+  "password": "Password123!",
+  "bot_token": "cf-turnstile-token"
+}
+```
 - **Responses:**
-  - `200 OK`: Returns `{ "token": "jwt-token", "customer": { "id": "uuid", "email": "student@szabist.pk", "display_name": "Ahmad" } }`
-  - `400 Bad Request`: `INVALID_CODE` (tracks attempts, locks after 5 failed attempts) or `CODE_EXPIRED`.
+  - `200 OK`: Returns `{ "token": "jwt-token", "customer": { "id": "uuid", "email": "student@gmail.com", "phone": "03001234567", "display_name": "Ahmad Ali", "email_verified": true } }`
+  - `401 Unauthorized`: `INVALID_CREDENTIALS` (locks after 5 consecutive failed attempts for 15 minutes).
 
-### 1.6 `GET /api/v1/customers/me` & `PATCH /api/v1/customers/me`
+### 1.6 `POST /api/v1/auth/verify-email`
 - **Auth:** Customer Bearer Token
-- **Purpose:** Read or update customer profile display name and optional phone number.
-- **Request (PATCH):** `{ "display_name": "Ahmad Ali", "phone": "03001234567" }`
+- **Purpose:** Verifies email address via 6-digit code sent upon registration.
+- **Request:** `{ "code": "849201" }`
+- **Responses:**
+  - `200 OK`: `{ "email_verified": true }`
+  - `400 Bad Request`: `INVALID_CODE` (max 5 failed attempts) or `CODE_EXPIRED` (10-minute validity).
 
-### 1.7 `DELETE /api/v1/customers/me`
+### 1.7 `POST /api/v1/auth/forgot-password` & `POST /api/v1/auth/reset-password`
+- **Visibility:** Public (Rate limited)
+- **Purpose:** Request password reset code to verified email, and submit new password.
+- **Forgot Request:** `{ "email": "student@gmail.com", "bot_token": "cf-turnstile-token" }`
+- **Reset Request:** `{ "email": "student@gmail.com", "code": "849201", "new_password": "NewPassword123!" }`
+
+### 1.8 `GET /api/v1/customers/me` & `PATCH /api/v1/customers/me`
+- **Auth:** Customer Bearer Token
+- **Purpose:** Read or update customer profile. Used during onboarding to set `display_name` (or update phone).
+- **Request (PATCH):** `{ "display_name": "Ahmad Ali" }`
+- **Requirement for Orders:** `display_name` must be set before placing a pre-order so staff can call out the ticket name at the counter.
+
+### 1.9 `DELETE /api/v1/customers/me`
 - **Auth:** Customer Bearer Token
 - **Purpose:** Account deletion request. Sets `deleted_at`; data purged per retention schedule.
 
-### 1.8 `POST /api/v1/venues/:tenant_slug/orders`
+### 1.10 `POST /api/v1/venues/:tenant_slug/orders`
 - **Auth:** Customer Bearer Token
 - **Headers:** `X-Device-Id: <uuid>`
 - **Purpose:** Creates a remote pre-order in `PENDING_PAYMENT`. Reserves slot capacity atomically.
@@ -357,8 +407,9 @@ WebSocket connection on `/ws` with channel authentication and isolation.
 | Endpoint / Action | Rule & Limit (Delegated: Owner May Override) | Violation Action |
 |---|---|---|
 | `/auth/email-code` | Max 3 requests per email per 15 minutes; max 10 requests per IP per hour | `429 RATE_LIMITED` |
-| `/auth/email-code` & Order creation | Cloudflare Turnstile bot check (`bot_token`) | `400 BOT_CHALLENGE_FAILED` |
-| `/auth/verify-code` | Max 5 wrong attempts per code | Code invalidated; `400 CODE_EXPIRED` |
+| `/auth/register` & `/auth/login` | Cloudflare Turnstile bot check (`bot_token`) | `400 BOT_CHALLENGE_FAILED` |
+| `/auth/login` | Max 5 failed password attempts per 15 minutes | Account locked for 15 min; `401 INVALID_CREDENTIALS` |
+| `/auth/verify-email` | Max 5 wrong attempts per code | Code invalidated; `400 CODE_EXPIRED` |
 | Order Creation | Max 5 submissions per customer per 10 minutes | `429 RATE_LIMITED` |
 | Open Orders | Max 2 open orders in `PENDING_PAYMENT` per customer | `429 TOO_MANY_OPEN_ORDERS` |
 | Payment Claims | Transaction ID uniqueness (`payment_claims_txn_uq`) | `409 DUPLICATE_TRANSACTION` |

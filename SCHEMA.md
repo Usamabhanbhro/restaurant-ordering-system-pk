@@ -180,16 +180,18 @@ CREATE EXTENSION IF NOT EXISTS citext;
 CREATE TABLE customers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email CITEXT UNIQUE NOT NULL,
-  email_verified_at TIMESTAMPTZ NULL,
-  display_name VARCHAR(50) NULL,
-  phone VARCHAR(20) NULL,
+  phone VARCHAR(20) NOT NULL,                                       -- Mandatory at registration (format: ^(\+92|0)?3[0-9]{9}$)
+  password_hash TEXT NOT NULL,                                      -- Hashed with Argon2id (OWASP recommended)
+  email_verified_at TIMESTAMPTZ NULL,                               -- Timestamp when email verification code was confirmed
+  display_name VARCHAR(50) NULL,                                    -- Asked during onboarding / first order for pickup callout
   token_version INT NOT NULL DEFAULT 1,
   deleted_at TIMESTAMPTZ NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+CREATE UNIQUE INDEX customers_phone_uq ON customers (phone) WHERE deleted_at IS NULL;
 
-CREATE TABLE email_login_codes (
+CREATE TABLE email_verification_codes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email CITEXT NOT NULL,
   code_hash TEXT NOT NULL,
@@ -198,7 +200,17 @@ CREATE TABLE email_login_codes (
   consumed_at TIMESTAMPTZ NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX email_login_codes_email_idx ON email_login_codes (email);
+CREATE INDEX email_verification_codes_email_idx ON email_verification_codes (email);
+
+CREATE TABLE password_reset_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  consumed_at TIMESTAMPTZ NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX password_reset_tokens_customer_idx ON password_reset_tokens (customer_id);
 ```
 
 ---
@@ -374,7 +386,7 @@ REVOKE UPDATE, DELETE ON order_lifecycle_events FROM app_runtime_user;
 
 ### Step 1: Enable RLS on All Tenant Tables
 
-RLS is enabled on every table containing tenant data. The cross-venue identity tables (`customers`, `email_login_codes`) do NOT have RLS because they do not have a `tenant_id` and are partitioned strictly by database role (`app_identity_user` only; `app_runtime_user` has no SELECT/INSERT/UPDATE/DELETE grants on identity tables).
+RLS is enabled on every table containing tenant data. The cross-venue identity tables (`customers`, `email_verification_codes`, `password_reset_tokens`) do NOT have RLS because they do not have a `tenant_id` and are partitioned strictly by database role (`app_identity_user` only; `app_runtime_user` has no SELECT/INSERT/UPDATE/DELETE grants on identity tables).
 
 ```sql
 ALTER TABLE zones ENABLE ROW LEVEL SECURITY;

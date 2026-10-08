@@ -889,6 +889,7 @@
       const userProfile = {
         name: "Ahmad Ali",
         email: "ahmad.ali@nu.edu.pk",
+        phone: "+92 300 1234567",
         affiliation: "FAST-NUCES",
         badge: "Verified Student"
       };
@@ -1394,7 +1395,7 @@
                   </div>
                   <div>
                     <h3 className="font-extrabold text-sm text-neutral-900">{userProfile.name}</h3>
-                    <p className="text-xs text-neutral-500">{userProfile.email}</p>
+                    <p className="text-xs text-neutral-500">{userProfile.email} • {userProfile.phone}</p>
                     <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#EF5A30]">
                       <Icons.GraduationCap className="w-3 h-3 text-[#EF5A30]" />
                       <span>{userProfile.affiliation} ({userProfile.badge})</span>

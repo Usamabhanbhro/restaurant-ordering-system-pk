@@ -45,7 +45,7 @@
  │  ┌─────────────────────────────────────────────────────────┐  │
  │  │ Tenants | Venue Settings | Orders (versioned) | Claims  │  │
  │  ├─────────────────────────────────────────────────────────┤  │
- │  │ Identity Layer (customers, login_codes) — role-isolated  │  │
+ │  │ Identity (customers, verification, pwd_reset) — isolated │  │
  │  └─────────────────────────────────────────────────────────┘  │
  └───────────────────────────────────────────────────────────────┘
                                 ▲
@@ -64,7 +64,7 @@
 ## 2. Cross-Venue Identity Layer Boundary
 
 To support student profiles across multiple campus venues without breaking per-tenant data isolation:
-- **Separation of Concerns:** Profile tables (`customers`, `email_login_codes`) contain **no `tenant_id`** and exist outside tenant RLS.
+- **Separation of Concerns:** Profile tables (`customers`, `email_verification_codes`, `password_reset_tokens`) contain **no `tenant_id`** and exist outside tenant RLS.
 - **Role Isolation:** Reached strictly via the dedicated `app_identity_user` database role. The tenant runtime role (`app_runtime_user`) has zero SELECT, INSERT, UPDATE, or DELETE privileges on identity tables.
 - **Opaque References:** Venue tables store only an opaque `customer_ref` (UUID) and `customer_name_snapshotted`. The customer's email address is **never copied** into venue tables.
 - **Privacy Enforcement:** Staff and tenant reporting can never enumerate or inspect student emails from the tenant database connection.

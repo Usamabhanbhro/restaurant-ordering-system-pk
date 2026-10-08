@@ -10,9 +10,10 @@ QueueLess collects the following data categories in the normal course of operati
 
 | Category | Details | Notes |
 |---|---|---|
-| Verified email | One verified email per profile (any provider; institution-issued email used only to claim a discount affiliation, F2). | Passwordless email OTP; no passwords stored. |
-| Display name | Optional profile field. | Minimal by design. |
-| Optional phone number | Provided by the customer in their profile. | Used for optional loyalty/contact purposes. |
+| Verified email | One verified email per profile (any provider; institution-issued email used only to claim a discount affiliation, F2). | Verified via 6-digit verification code. |
+| Phone number | Mandatory mobile phone number provided at registration. | Stored in identity layer for account authentication and operational venue contact. |
+| Password hash | One-way cryptographic hash of customer account password. | Hashed with Argon2id; plain passwords are never stored, transmitted in logs, or retrievable. |
+| Display name | Profile field gathered during onboarding or first order. | Displayed on counter pickup ticket and staff KDS for customer callout. |
 | Affiliations | Future feature (F2). | Requires a profile and an institution-issued email to claim. |
 | Random device ID | Random identifier stored in the browser; paired with IP address for rate limits and ban-evasion matching. | No browser fingerprinting in v1. |
 | IP address | Collected solely for rate limiting and abuse detection. | Disclosed alongside random device ID. |
@@ -30,7 +31,7 @@ QueueLess collects the following data categories in the normal course of operati
 ## What We Do Not Collect
 
 - Payment card numbers, bank credentials, or any payment processing data.
-- Passwords (sign-in is via passwordless email one-time codes).
+- Plaintext passwords (passwords are hashed irreversibly using Argon2id with unique salt).
 - WhatsApp numbers for authentication (WhatsApp is not used).
 
 ## Cross-Border Data Processing

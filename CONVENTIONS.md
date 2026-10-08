@@ -67,7 +67,7 @@
 ## Database Conventions
 
 - Every tenant table includes: `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`, `tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE`, `created_at TIMESTAMPTZ DEFAULT NOW()`, `updated_at TIMESTAMPTZ DEFAULT NOW()`.
-- Tables without `tenant_id`: cross-venue identity tables (`customers`, `email_login_codes`) exist outside tenant isolation and belong to the identity layer.
+- Tables without `tenant_id`: cross-venue identity tables (`customers`, `email_verification_codes`, `password_reset_tokens`) exist outside tenant isolation and belong to the identity layer.
 - All timestamps stored as `TIMESTAMP WITH TIME ZONE` in UTC. Frontend converts to local timezone for display.
 - Foreign keys always include explicit `ON DELETE CASCADE`, `ON DELETE RESTRICT`, or `ON DELETE SET NULL` — never leave the default ambiguous.
 - Indexes are created explicitly for all foreign key columns and any column used in `WHERE` clauses in hot-path queries and scheduler polling.
@@ -77,8 +77,8 @@
 
 ## Database Roles & Access Separation
 
-- **`app_runtime_user` (Tenant Runtime Role):** Standard application database user. Operates with RLS enabled on all tenant tables via `SET LOCAL app.current_tenant_id = ?`. Has `REVOKE UPDATE, DELETE ON order_lifecycle_events, customer_standing_events`. Has **NO ACCESS** to cross-venue identity tables (`customers`, `email_login_codes`).
-- **`app_identity_user` (Identity Layer Role):** Isolated database role with exclusive access to the cross-venue identity layer (`customers`, `email_login_codes`). Operates independently of tenant context. The tenant runtime role cannot query identity tables, ensuring cross-venue profile isolation (brief v6 §1.1).
+- **`app_runtime_user` (Tenant Runtime Role):** Standard application database user. Operates with RLS enabled on all tenant tables via `SET LOCAL app.current_tenant_id = ?`. Has `REVOKE UPDATE, DELETE ON order_lifecycle_events, customer_standing_events`. Has **NO ACCESS** to cross-venue identity tables (`customers`, `email_verification_codes`, `password_reset_tokens`).
+- **`app_identity_user` (Identity Layer Role):** Isolated database role with exclusive access to the cross-venue identity layer (`customers`, `email_verification_codes`, `password_reset_tokens`). Operates independently of tenant context. The tenant runtime role cannot query identity tables, ensuring cross-venue profile isolation (brief v6 §1.1).
 
 ## Migration Rules
 
@@ -93,7 +93,7 @@
   - `operator`: Sees Orders (kitchen lanes: scheduled, preparing, ready) & Payments tabs (`payments_to_confirm`, `refunds_owed`); confirms/rejects payment claims; moves tickets; marks ready, served, refund done; pauses/unpauses remote orders; restores confirmed or rejected payment within 5-minute undo window (delegated: owner may override). *(Superseded: TRASH ticket — in v1 undo covers confirm and reject; there is no kitchen TRASH in v1; rejecting a claim is the v1 equivalent of discarding an unpaid order; TRASH stays a post-v1 table-service action per owner brief v6 §2.2/§8).*
   - `admin`: All operator capabilities plus Admin tab (venue settings, menu management, 86 toggle, payment methods, staff accounts, blocked customers list, customer block/unblock) and post-verification voids.
   - Forward-Deployed Engineer (FDE) access is a platform support role scoped to one venue at a time, audit logged (never uses `BYPASSRLS`; brief v5 §1.1, brief v6 §5).
-- **Customers (Customer PWA):** Stateless session tokens signed with the venue's public key (in-venue anonymous ordering). Remote pre-orders sign in via passwordless email one-time code (`Authorization: Bearer <token>`; token versioned, code expires in 10 minutes, max 5 attempts; verified email from any provider). Cross-venue profile isolation enforced via `app_identity_user` role.
+- **Customers (Customer PWA):** Stateless session tokens signed with the venue's public key (in-venue anonymous ordering). Remote pre-orders register and sign in via email, mandatory phone, and password (`Authorization: Bearer <token>`; token versioned, password hashed with Argon2id; verified email from any provider; display name and affiliations set afterwards). Cross-venue profile isolation enforced via `app_identity_user` role.
 - **Abuse Velocity Gate (Post-v1 TABLE_SERVICE):** Triggered on second order within 4 minutes; requires signing in with email one-time code. *(Supersedes: WhatsApp OTP — WhatsApp is not used anywhere; owner brief v4 §5.4/§6).*
 
 ## WebSocket Conventions

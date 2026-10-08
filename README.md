@@ -60,7 +60,7 @@ QueueLess acts as an **order intake and kitchen dispatch sidecar**:
 
 ### 📱 Customer Progressive Web App (PWA)
 - **Zero App Store Download:** Instant-loading mobile browser experience accessed via `order.cafe.pk/{tenant_slug}` or counter acrylic QR.
-- **Passwordless Authentication:** Frictionless sign-in via 6-digit email one-time code (profile per [ADR-0009](./docs/adr/ADR-0009.md)).
+- **Streamlined Customer Account Creation:** Fast signup via email, Pakistani mobile phone, and password (profile per [ADR-0009](./docs/adr/0009-profile-perks-wallet.md)), with display name and institutional affiliations gathered after registration.
 - **Intelligent Slot Scheduling:** Dynamic slot calculation based on venue operating hours, prep lead time, and atomic slot capacity counters.
 - **Transparent 5-Stage Timeline:** Live status tracking with real-time WebSocket updates and email notifications.
 - **Graceful Cancellation:** One-tap cancellation before kitchen start time (`kitchen_start_at`) with automatic refund queueing.
@@ -75,7 +75,7 @@ QueueLess acts as an **order intake and kitchen dispatch sidecar**:
 ### 🛡️ Multi-Layer Abuse & Fraud Defenses
 - **Bot Mitigation:** Cloudflare Turnstile bot gating on sign-in and order placement.
 - **Open Unpaid Caps:** Maximum 2 open orders in `PENDING_PAYMENT` per customer.
-- **Strict Rate Limits:** In-process rate limiting on sign-in codes (3/15 min email, 10/hr IP) and order submission (5/10 min).
+- **Strict Rate Limits:** In-process rate limiting on login attempts (5 failed attempts locks account for 15 min), verification codes (3/15 min email, 10/hr IP), and order submission (5/10 min).
 - **Fair Strike Policy:** Strikes accrue **only** on `NOT_FOUND` payment rejections that survive the 5-minute undo window. 3 strikes in 30 days automatically blocks remote ordering at that venue.
 - **Anti-Duplication:** Unique constraints on transaction IDs (`payment_claims_txn_uq`) and client idempotency keys (`orders_idem_uq`).
 
@@ -121,7 +121,7 @@ QueueLess acts as an **order intake and kitchen dispatch sidecar**:
         │  │ Tenant Tables (venue_settings, orders, payment_claims)   │  │
         │  │ Protected by app_runtime_user + Strict RLS              │  │
         │  ├─────────────────────────────────────────────────────────┤  │
-        │  │ Cross-Venue Identity Layer (customers, login_codes)     │  │
+        │  │ Cross-Venue Identity (customers, verification, pwd_reset) │  │
         │  │ Isolated behind app_identity_user role (No tenant_id)   │  │
         │  └─────────────────────────────────────────────────────────┘  │
         └───────────────────────────────────────────────────────────────┘

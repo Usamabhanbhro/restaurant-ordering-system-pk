@@ -112,7 +112,7 @@ An order placed for a chosen pickup slot at a `COUNTER_PICKUP` venue. Orders are
 _Avoid_: remote order, online order
 
 **Profile**:
-A perks wallet. Holds entitlements (e.g. an affiliation discount) for the operator/admin to see; not an ordering identity — in-venue ordering stays anonymous. Fields: display name, verified email (any provider; institution-issued for F2), optional phone number, and affiliations. Login is passwordless email one-time code — no passwords, no WhatsApp.
+A perks wallet and remote ordering identity. Holds entitlements (e.g. an affiliation discount) for the operator/admin to see; not used for in-venue ordering (in-venue ordering stays anonymous). Registration fields: verified email (any provider; institution-issued for F2), mandatory phone number, and password (Argon2id). Display name and affiliations are collected afterwards. No WhatsApp.
 _Avoid_: account, login
 
 **Legacy POS**:

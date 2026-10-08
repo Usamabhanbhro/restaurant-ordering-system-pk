@@ -36,7 +36,7 @@ QueueLess enables customers to browse menus, select pickup slots, and order via 
   - Ready orders are held for `noshow_hold_minutes` (default 30 min) past `pickup_at`; if uncollected, order is marked `NO_SHOW` with no refund (terms displayed before payment).
   - Unreviewed payment claims expire at `pickup_at` (`EXPIRED_UNREVIEWED`), not `kitchen_start_at`. Unclaimed orders expire at `claim_deadline_at` (`EXPIRED_NO_CLAIM`). Neither expiry triggers a strike.
 - **FR-1.6a (Notifications):** Primary order updates occur live in the PWA. System shall send transactional emails upon payment confirmation, rejection, order ready for pickup, or order expiration.
-- **FR-1.7 (User Profiles — F3):** Customers sign in via passwordless email one-time code (code valid for 10 min, max 5 attempts). Profiles are stored in the cross-venue identity layer with `app_identity_user` role isolation. Venue tables store only `customer_ref` and `customer_name_snapshotted`.
+- **FR-1.7 (User Profiles — F3):** Customers create an account using email, Pakistani mobile phone number, and password (hashed with Argon2id). Display name and institutional affiliation are collected afterwards (during onboarding or prior to first pre-order for counter ticket callout). Profiles are stored in the cross-venue identity layer with `app_identity_user` role isolation. Venue tables store only `customer_ref` and `customer_name_snapshotted`.
 - **FR-1.8 (Price Integrity):** The client sends `menu_version` with each order. If menu prices changed, order rejects with `409 PRICE_CHANGED` and returns current prices.
 - **FR-1.9 (Tax and Prices):** Prices are set by the venue without app-level tax computation. Cart and payment views display the venue-configurable note: default *"Prices are set by the venue."*
 
@@ -83,7 +83,7 @@ Staff access is delivered via a single responsive web application (desktop and p
 - **FR-4.4:** Configure operating hours, lead times, slot length, slot capacity, payment methods, staff PINs, and customer standing.
 
 ### 2.5 Security, Abuse & Rate Limiting (v1 Defaults — Delegated: Owner May Override)
-- **FR-5.1:** Max 3 email sign-in code requests per email per 15 minutes; max 10 per IP per hour.
+- **FR-5.1:** Max 5 failed password attempts per 15 minutes before temporary lockout; email verification codes capped at max 3 requests per 15 minutes and max 10 per IP per hour.
 - **FR-5.2:** Cloudflare Turnstile bot challenge on sign-in and order creation.
 - **FR-5.3:** Max 5 order submissions per customer per 10 minutes.
 - **FR-5.4:** Max 2 open orders in `PENDING_PAYMENT` per customer.
@@ -128,7 +128,7 @@ v1 is done when every acceptance criterion below passes and the engineer has com
 ### 3.5 Security and Data
 21. **Given** a customer token, **then** the customer cannot read another customer's order. **Given** staff of venue A, **then** they cannot read venue B's orders (an automated RLS test runs on every change).
 22. **Given** any order, **then** the audit log shows every transition with actor and time, and no runtime role can update or delete audit rows.
-23. **Given** email-code abuse (more than 5 wrong attempts, or requests above the limit), **then** further attempts are rejected.
+23. **Given** authentication abuse (more than 5 failed password attempts, wrong verification codes, or requests above the rate limit), **then** further attempts are rejected and temporary lockout applies.
 24. **Given** payment screenshots past `screenshot_delete_after`, **then** they are deleted by the scheduler.
 
 ### 3.6 Operations
