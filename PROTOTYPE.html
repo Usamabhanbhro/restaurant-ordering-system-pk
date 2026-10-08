@@ -897,7 +897,6 @@
       if (!isOpen) return null;
 
       const [mode, setMode] = useState(initialMode); // 'WELCOME' | 'LOGIN' | 'REGISTER' | 'VERIFY_EMAIL' | 'ONBOARDING' | 'FORGOT_PASSWORD'
-      const [carouselIdx, setCarouselIdx] = useState(0);
 
       // Form fields
       const [email, setEmail] = useState("");
@@ -911,37 +910,6 @@
       const [affiliation, setAffiliation] = useState("FAST-NUCES");
       const [resendTimer, setResendTimer] = useState(59);
       const [errorMessage, setErrorMessage] = useState("");
-
-      // Onboarding carousel slides inspired by onboarding.jpg
-      const carouselSlides = [
-        {
-          title: "Skip Campus Queues",
-          desc: "Pre-order from class or home and collect at your chosen slot without waiting in line.",
-          tag: "Counter Pickup",
-          icon: Icons.Zap
-        },
-        {
-          title: "Live Kitchen Tracking",
-          desc: "Watch your order move live from operator verification to the kitchen hotline and pickup tray.",
-          tag: "Real-Time 5-Stage",
-          icon: Icons.Clock
-        },
-        {
-          title: "Student Perks & Discounts",
-          desc: "Connect your campus email to unlock institutional partner discounts and special deals.",
-          tag: "Campus Partnerships",
-          icon: Icons.GraduationCap
-        }
-      ];
-
-      // Auto-slide carousel in welcome mode
-      useEffect(() => {
-        if (mode !== "WELCOME") return;
-        const timer = setInterval(() => {
-          setCarouselIdx(prev => (prev + 1) % carouselSlides.length);
-        }, 4000);
-        return () => clearInterval(timer);
-      }, [mode]);
 
       // Resend OTP countdown
       useEffect(() => {
@@ -1120,31 +1088,17 @@
             <div className="p-5 overflow-y-auto no-scrollbar space-y-4 flex-1">
               {mode === "WELCOME" && (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-3xl bg-neutral-50/80 border border-neutral-200/70 text-center relative overflow-hidden">
-                    <div className="w-12 h-12 rounded-2xl bg-orange-100 text-[#EF5A30] flex items-center justify-center mx-auto mb-3 shadow-xs">
-                      {React.createElement(carouselSlides[carouselIdx].icon, { className: "w-6 h-6" })}
+                  <div className="text-center pt-3 pb-2 space-y-2">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6B42] to-[#EF5A30] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20">
+                      <Icons.Zap className="w-7 h-7 fill-white" />
                     </div>
-                    <span className="inline-block text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-orange-50 text-[#EF5A30] border border-orange-200/50 mb-1.5">
-                      {carouselSlides[carouselIdx].tag}
-                    </span>
-                    <h3 className="font-extrabold text-base text-neutral-900">
-                      {carouselSlides[carouselIdx].title}
-                    </h3>
-                    <p className="text-xs text-neutral-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
-                      {carouselSlides[carouselIdx].desc}
-                    </p>
-
-                    <div className="flex items-center justify-center gap-1.5 mt-4">
-                      {carouselSlides.map((_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setCarouselIdx(i)}
-                          className={`h-1.5 rounded-full transition-all duration-300 ${
-                            carouselIdx === i ? "w-6 bg-[#EF5A30]" : "w-1.5 bg-neutral-300"
-                          }`}
-                        />
-                      ))}
+                    <div>
+                      <h3 className="font-black text-xl text-neutral-900 tracking-tight">
+                        Welcome to Queue<span className="text-[#EF5A30]">Less</span>
+                      </h3>
+                      <p className="text-xs text-neutral-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
+                        Pre-order meals, skip counter lines, and pick up fresh at your scheduled slot.
+                      </p>
                     </div>
                   </div>
 
