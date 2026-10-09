@@ -1,5 +1,6 @@
 # DESIGN.md — Product Design Document & Design System
 
+> **Changelog (2026-10-09):** ratify frontend architecture stack — Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4, Vaul bottom sheets, Motion (motion/react), Radix UI primitives, Lucide SVG vector iconography, Zustand, TanStack Query v5, Cloudflare Images CDN; added Section 2.5 Liquid Glass Materials & Motion Tokens.
 > **Changelog (2026-10-07):** updated visual design system and component architecture inspired by modern consumer food apps (Buy Bao reference, Starbucks, and Uber Eats). Retains all v1 remote ordering lifecycle rules, 5 dashboard lanes, and Pakistani market constraints.
 
 ---
@@ -67,6 +68,30 @@ The official visual identity for QueueLess is based on the **Speed Cup "Q"** emb
 > - **Region & Country Identifiers:** Use standard ISO/typographic badges (e.g., `PK +92`) rather than flag emojis.
 > - **Status Indicators:** Use CSS-styled circular badges or colored semantic dots (`bg-emerald-500`, `bg-amber-500`, `bg-[#EF5A30]`) instead of colored circle emojis.
 > - **Wireframes & Documentation:** Use clean text, bracket labels (e.g., `[Search]`, `[Copy]`, `[User]`, `[Ticket]`, `[Close]`), or ASCII indicators rather than emojis.
+
+### 2.5 Liquid Glass Materials & Motion Design Tokens (Tailwind v4 + Motion)
+
+To achieve world-class visual fluidity without sacrificing mobile battery or performance on Pakistani cellular connections (Jazz, Zong, Telenor 4G):
+
+- **Liquid Glass Surface Material:**
+  - Dynamic translucent blurs with high saturation: `backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);`
+  - Subtle light-catching rim: `border: 1px solid rgba(255, 255, 255, 0.25);`
+  - Floating ambient drop shadow: `box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.08);`
+  - Applied to the sticky bottom floating navigation pill, sticky top search header, and modal action bars.
+- **Gesture Physics & Drawers (`vaul`):**
+  - Native iOS-style bottom sheets for Cart, Customizer, and Auth modals.
+  - Native touch velocity tracking: flicking down dismisses the sheet cleanly without sluggish animation delays.
+  - Snap points (`snapPoints={[0.5, 0.95]}`) with background scale-down (`shouldScaleBackground={true}`) to give native app tactile depth.
+- **Spring Physics System (`motion/react`):**
+  - GPU-accelerated transforms (`transform: translate3d(x, y, 0) scale(s)`) with zero layout reflows.
+  - Interactive tactile springs:
+    - **Pill Tab Morph:** `transition: { type: 'spring', stiffness: 400, damping: 30 }` using shared `layoutId="activeCategoryPill"`.
+    - **Quantity Stepper Bump:** `whileTap={{ scale: 0.92 }}` with subtle bounce on count change.
+    - **Success Ping:** Scale spring from 0.8 to 1.05 and settling at 1.0.
+- **Instant Media Delivery & Next-Gen Formats:**
+  - All food photography and venue imagery served via `next/image` connected to Cloudflare Images / Imgix CDN.
+  - Automatic conversion to AVIF and WebP with aggressive size-budgeting (<45KB per hero item thumbnail).
+  - BlurHash / low-quality image placeholder (LQIP) during network fetch ensures zero Cumulative Layout Shift (CLS) on 3G/4G connections.
 
 ---
 

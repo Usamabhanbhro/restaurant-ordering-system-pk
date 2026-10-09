@@ -5,6 +5,9 @@
 ### Modern In-Venue Pre-Ordering & Kitchen Management for Pakistan's F&B Market
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15_App_Router-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Fastify](https://img.shields.io/badge/Fastify-5.x-000000?style=for-the-badge&logo=fastify&logoColor=white)](https://fastify.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-SQL--First-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
@@ -26,6 +29,7 @@
 
 ---
 
+> **Changelog (2026-10-09):** ratify frontend architecture stack — Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4, Vaul bottom sheets, Motion (motion/react), Radix UI primitives, Lucide SVG vector iconography, Zustand, TanStack Query v5, Cloudflare Images CDN; enforce strict no-emoji policy.
 > **Changelog (2026-10-06):** applied owner brief v6 (v1 remote ordering data model, API, 5 dashboard lanes, acceptance criteria, FDE runbook, draft customer terms).
 
 ---
@@ -90,43 +94,38 @@ QueueLess acts as an **order intake and kitchen dispatch sidecar**:
 ### Multi-Tenant Database & Role Isolation
 
 ```
-                              [ Customer PWA ] (Mobile Browser)
-                                      │
-                              HTTPS / WebSockets
-                                      │
-                                      ▼
-        ┌───────────────────────────────────────────────────────────────┐
-        │               Load Balancer & Edge Proxy (Cloudflare)         │
-        └──────────────────────────────┬────────────────────────────────┘
-                                       │
-                           ┌───────────┴───────────┐
-                           ▼                       ▼
-                ┌─────────────────────┐ ┌─────────────────────┐
-                │ Public Read Path    │ │ Sensitive State Path│
-                │ / Redis Cache       │ │ / RLS Transaction   │
-                └─────────────────────┘ └─────────────────────┘
-                                       │
-                           PostgreSQL Connection Pool
-                                       │
-                                       ▼
-        ┌───────────────────────────────────────────────────────────────┐
-        │            Fastify Backend Application (Node.js)              │
-        │   Customer Module │ KDS Module │ Payments │ 30s Scheduler     │
-        └──────────────────────────────┬────────────────────────────────┘
-                                       │
-                                       ▼
-        ┌───────────────────────────────────────────────────────────────┐
-        │                      PostgreSQL 16 Database                   │
-        │  ┌─────────────────────────────────────────────────────────┐  │
-        │  │ Tenant Tables (venue_settings, orders, payment_claims)   │  │
-        │  │ Protected by app_runtime_user + Strict RLS              │  │
-        │  ├─────────────────────────────────────────────────────────┤  │
-        │  │ Cross-Venue Identity (customers, verification, pwd_reset) │  │
-        │  │ Isolated behind app_identity_user role (No tenant_id)   │  │
-        │  └─────────────────────────────────────────────────────────┘  │
-        └───────────────────────────────────────────────────────────────┘
+  [ Next.js 15 PWA ] (Mobile Diners)       [ Unified Staff Web App ] (Kitchen/Cashier)
+         │                                            │
+         │  HTTPS (SSR <300ms) / WS                   │  HTTPS / WebSockets
+         └──────────────────────┬─────────────────────┘
+                                │
+                                ▼
+  ┌───────────────────────────────────────────────────────────────┐
+  │         Edge Proxy, CDN & Media Pipeline (Cloudflare)         │
+  │     Cloudflare Turnstile Bot Defense │ Cloudflare Images      │
+  └─────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+  ┌───────────────────────────────────────────────────────────────┐
+  │            Fastify Backend Application Layer (Node.js)        │
+  │   Customer Module │ KDS Module │ Payments │ 30s Scheduler     │
+  └─────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+  ┌───────────────────────────────────────────────────────────────┐
+  │                      PostgreSQL 16 Database                   │
+  │  ┌─────────────────────────────────────────────────────────┐  │
+  │  │ Tenant Tables (venue_settings, orders, payment_claims)   │  │
+  │  │ Protected by app_runtime_user + Strict RLS              │  │
+  │  ├─────────────────────────────────────────────────────────┤  │
+  │  │ Cross-Venue Identity (customers, verification, pwd_reset) │  │
+  │  │ Isolated behind app_identity_user role (No tenant_id)   │  │
+  │  └─────────────────────────────────────────────────────────┘  │
+  └───────────────────────────────────────────────────────────────┘
 ```
 
+- **Frontend & Visual Architecture:** Powered by **Next.js 15 (App Router / SSR)** + **React 19**, styled with **Tailwind CSS v4** and Liquid Glass CSS tokens (`backdrop-filter: blur(20px)`), animated with **Motion** (`motion/react`) spring physics, interactive sliding drawers via **Vaul**, accessible components from **Radix UI**, and vector iconography from **Lucide SVG** under a **Strict No-Emoji Policy**.
+- **State & Data Caching:** High-speed client cache via **Zustand** (cart/session) and **TanStack Query v5** (stale-while-revalidate menu cache and 0ms optimistic UI).
 - **Tenant Isolation:** Enforced via PostgreSQL Row-Level Security (`SET LOCAL app.current_tenant_id = ?`).
 - **Identity Privacy:** Customer profiles live in separate tables without `tenant_id` and are queryable **only** by the `app_identity_user` role. Venue tables hold only opaque `customer_ref` UUIDs and display name snapshots.
 

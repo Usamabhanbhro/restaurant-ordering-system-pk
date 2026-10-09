@@ -1,16 +1,23 @@
 # CONVENTIONS.md — Coding Standards & Project Conventions
 
+> **Changelog (2026-10-09):** ratify frontend architecture stack — Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4, Vaul bottom sheets, Motion (motion/react), Radix UI primitives, Lucide SVG icons, Zustand client state, TanStack Query v5 data caching, Cloudflare Images CDN; enforce strict no-emoji policy.
 > **Changelog (2026-10-06):** applied owner brief v6 (HTTP status codes 422 & 503 added; operator and admin staff roles clarified; app_identity_user role for cross-venue identity layer; undo covers confirm and reject; no TRASH in v1).
 
 ## Language & Runtime
 
 - **Language:** TypeScript 5.x (strict mode enabled)
 - **Runtime:** Node.js 20 LTS
+- **Frontend Framework:** Next.js 15 (App Router / Server-Side Rendering) + React 19
+- **Styling & Design Tokens:** Tailwind CSS v4 + Liquid Glass CSS variables
+- **Sheet Drawers & Physics:** Vaul + Motion (`motion/react`)
+- **UI Primitives & Iconography:** Radix UI Primitives + Lucide SVG (Strict No-Emoji Mandate)
+- **Client State & Cache:** Zustand (local UI/session) + TanStack Query v5 (server state caching)
 - **Backend Framework:** Fastify 5.x
 - **Database:** PostgreSQL 16+
 - **ORM / Query Builder:** Drizzle ORM (SQL-first, type-safe, migration-friendly)
+- **Media Delivery & Optimization:** Cloudflare Images / Imgix CDN + `next/image`
 - **Package Manager:** pnpm
-- **Monorepo:** Turborepo (if multi-package); otherwise flat `src/` structure for MVP
+- **Monorepo:** Turborepo (`apps/web` customer PWA & dashboard, `apps/api` Fastify backend, `packages/db`, `packages/types`)
 
 ## TypeScript Rules
 
@@ -20,6 +27,31 @@
 - All function parameters and return types must be explicitly typed. No implicit `any` via missing annotations.
 - Use `as const` assertions for literal enums and status strings.
 - Barrel exports (`index.ts`) are permitted only at the `src/` top level and inside `src/api/`. Avoid deep barrel chains.
+
+## Frontend Architecture & Component Conventions
+
+- **Next.js 15 App Router & Server Components:**
+  - Pages and layout containers default to Server Components for instant HTML rendering (<300ms paint) and zero client bundle penalty for static menu catalogs.
+  - Mark components with `'use client'` strictly at the boundary of interaction (bottom sheet drawers, cart stores, animated steppers, form handlers).
+  - Use `next/image` with BlurHash/LQIP placeholders and Cloudflare Images/Imgix CDN for automatic AVIF/WebP responsive delivery.
+- **Gesture Physics & Drawers (Vaul):**
+  - All sliding modal sheets (Cart Drawer, Modifier Customizer, Auth Sheet) must use `vaul` (`Drawer.Root`, `Drawer.Portal`, `Drawer.Content`).
+  - Enable native velocity tracking, snap points (`['360px', '1']`), and background scale-down (`shouldScaleBackground`).
+  - Include an accessible grab handle (`<div className="w-12 h-1.5 bg-neutral-200 rounded-full mx-auto my-2" />`).
+- **Motion & Animations (`motion/react`):**
+  - Use hardware-accelerated transforms (`translate3d`, `scale`, `opacity`) via Framer Motion / `motion/react`.
+  - Prefer spring physics (`transition: { type: 'spring', stiffness: 350, damping: 30 }`) over linear timing functions.
+  - Never animate layout-triggering properties (`width`, `height`, `top`, `left`, `margin`). Use `layoutId` for morphing pill tabs and sticky active indicators.
+- **Headless UI Primitives & Accessibility (Radix UI):**
+  - Implement complex accessible interactions (dialogs, tabs, popovers, dropdowns) using headless `@radix-ui/react-*` primitives.
+  - Ensure strict keyboard navigability (Esc to dismiss, Tab trapping, arrow-key tab cycling).
+- **Iconography & Strict No-Emoji Mandate:**
+  - Icons MUST strictly use Lucide SVG (`lucide-react`) or custom vector SVG curves.
+  - **Zero Emojis:** Do not use emoji characters anywhere in UI text, buttons, alerts, badges, or code. Emojis render inconsistently across Android, iOS, Windows, and Linux.
+  - Country/region badges use styled text pills (e.g. `PK +92`), not flag emojis.
+- **State Management & Data Caching:**
+  - **Zustand:** Used for local client state (Cart store `useCartStore`, Active slot `useSlotStore`, Diner session `useAuthStore`). Keep actions colocated with state and avoid monolithic stores.
+  - **TanStack Query v5:** Used for server state caching (menu catalog, venue status, active order timeline). Configure `staleTime: 60_000` for menus and optimistic mutations for cart interactions.
 
 ## Naming Conventions
 

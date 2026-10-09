@@ -1,17 +1,19 @@
 # ARCHITECTURE.md — System Architecture & Component Interactions
 
+> **Changelog (2026-10-09):** ratified modern frontend architecture stack: Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4 + Liquid Glass tokens, Vaul + Motion gesture physics, Radix UI + Lucide vector SVG primitives, Zustand + TanStack Query v5 caching, and Cloudflare Images CDN.
 > **Changelog (2026-10-06):** applied owner brief v6 (v1 remote ordering lifecycle state machine, scheduler engine, cross-venue identity boundary, minimal operations outage handling, supersessions).
 
 ## 1. System Topology Overview
 
 ```
-                        [ Customer PWA ] (Mobile Browser)
+              [ Customer PWA & Staff Web ] (Next.js 15 SSR / React 19)
                                 │
                         HTTPS / WSS
                                 │
                                 ▼
  ┌───────────────────────────────────────────────────────────────┐
  │               Load Balancer & Edge Proxy (Cloudflare)         │
+ │          + Cloudflare Images CDN (AVIF/WebP Resizing + LQIP)  │
  └──────────────────────────────┬────────────────────────────────┘
                                 │
                     ┌───────────┴───────────┐
@@ -58,6 +60,34 @@
  │   └───────────────────────┘       └───────────────────────┘   │
  └───────────────────────────────────────────────────────────────┘
 ```
+
+### 1.1 Ratified Frontend & Client Architecture Stack (Graphic Beauty & High Speed)
+
+To achieve world-class aesthetic beauty (benchmarked against Starbucks, Uber Eats, and Buy Bao) while guaranteeing sub-1-second loads and 60fps responsiveness on spotty campus 4G networks, the production client stack is ratified across six foundational pillars:
+
+1. **Frontend Framework: Next.js 15 (App Router / SSR) + React 19**
+   - **Server-Side Rendering (SSR) & Streaming:** Pre-renders venue menu HTML on the edge/server. When a diner scans a counter QR, they see a fully painted, appetizing catalog in `<300ms` before client JavaScript finishes downloading.
+   - **`next/image` Optimization:** Automatically serves next-generation AVIF/WebP formats with responsive image resizing and BlurHash/LQIP placeholders, completely eliminating Cumulative Layout Shift (CLS).
+
+2. **Styling & Visual Polish: Tailwind CSS v4 + CSS Liquid Glass Tokens**
+   - **Zero Runtime Overhead:** Compiles to ultra-lean static CSS with zero CSS-in-JS runtime calculation penalty.
+   - **Liquid Glass Materials:** Native hardware-accelerated translucent filters (`backdrop-filter: blur(20px) saturate(180%)`) paired with diffuse ambient shadows and crisp 1px borders (`border: 1px solid rgba(255,255,255,0.2)`).
+
+3. **Gesture Physics & Bottom Sheets: Vaul + Motion (`motion/react`)**
+   - **Vaul Drawer Primitive:** Native touch tracking, velocity-aware dragging, snap points, and background scale-down animations for the Cart Drawer, Modifier Customizer, and Auth Modal.
+   - **Motion (Framer Motion):** Hardware-accelerated GPU spring animations (`transform: translate3d`) for tab pills morphing, quantity steppers bouncing, and smooth checkout expansions without dropped frames.
+
+4. **UI Primitives & Vector Icons: Radix UI Primitives + Lucide SVG**
+   - **Headless Accessibility:** Radix provides robust keyboard navigation, focus trapping, and screen-reader compliance without rigid preset visual styles.
+   - **Vector SVG Icons:** 100% scalable vector SVGs adhering strictly to the project's **Strict No-Emoji Mandate** (mathematical vector paths, zero cross-platform emoji rendering bugs).
+
+5. **Client State & Cache Management: Zustand + TanStack Query v5**
+   - **TanStack Query (React Query):** Stale-while-revalidate caching renders cached menus in `0ms` and powers **Optimistic UI** (cart item counts, quantity modifications, and slot toggles respond immediately in 0ms before network acknowledgement).
+   - **Zustand:** Ultra-lean (~1KB) client state store for Cart, Active Slot, and Diner Session with zero boilerplate and zero re-render waste.
+
+6. **Real-Time Engine & Media Delivery:**
+   - **WebSocket Hub:** Dedicated low-latency WebSocket connection (`ws`) for live 5-stage order progress timelines and kitchen KDS tickets.
+   - **Cloudflare Images / Imgix:** Dynamic CDN edge resizing for diner payment proof screenshots and high-resolution food assets.
 
 ---
 

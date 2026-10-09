@@ -1,5 +1,6 @@
 # CLAUDE.md — Project Intelligence File
 
+> **Changelog (2026-10-09):** ratified modern frontend architecture stack: Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4, Vaul + Motion gesture physics, Radix UI + Lucide vector SVG primitives, Zustand + TanStack Query v5 caching, and Cloudflare Images CDN.
 > **Changelog (2026-10-06):** applied owner brief v6 (v1 remote ordering data model, API, 5 dashboard lanes, acceptance criteria, FDE runbook, draft customer terms, role isolation).
 
 > This file is the authoritative context document for AI-assisted development on this codebase.
@@ -25,8 +26,11 @@
 - **Backend:** Fastify (Node.js/TypeScript)
 - **Database:** PostgreSQL with Row-Level Security (RLS) for multi-tenancy
 - **Real-time:** WebSockets for KDS state sync and customer order status
-- **Frontend (Customer):** Progressive Web App (PWA) — no native app, no app store download
-- **Frontend (Staff):** One React web app (desktop/phone browsers) running Orders, Payments, Admin tabs on a single dashboard screen. *(v1 is a web app only. Electron is deferred to v2. Supersedes: separate KDS/cashier/admin apps, "optimized for Android tablet browsers", and loaner-tablet assumptions — tablets are optional. Staff roles: operator and admin; floor_staff returns post-v1.)*
+- **Frontend (Customer):** Next.js 15 (App Router / SSR) + React 19 Progressive Web App (PWA) with streaming hydration, Workbox service worker caching, and automatic `next/image` AVIF/WebP optimization — zero native app store download
+- **Frontend (Staff):** Next.js 15 / React 19 responsive web app (desktop/tablet/phone browsers) sharing design tokens with PWA, running Orders, Payments, Admin tabs on a single screen *(v1 web app; Electron deferred to v2)*
+- **UI & Styling:** Tailwind CSS v4 + Liquid Glass tokens, Vaul (iOS-style bottom sheets), Motion (GPU spring physics), Radix UI primitives, Lucide SVG vector icons (strictly zero emojis)
+- **State & Data Caching:** Zustand (~1KB client state) + TanStack Query v5 (stale-while-revalidate 0ms cache, optimistic updates)
+- **Media Delivery:** Cloudflare Images / Imgix with dynamic resizing and BlurHash/LQIP placeholders
 - **Hosting:** Cloud-hosted (AWS/equivalent), no on-premise deployments
 - **Offline strategy:** PWA Service Worker caches menu for offline browsing; ordering requires connectivity
 
