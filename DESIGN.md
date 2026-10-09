@@ -266,7 +266,8 @@ Matches the reference design's vertical chronological stepper with solid circula
 │  Welcome back                            │
 │  Sign in to track orders & campus perks  │
 ├──────────────────────────────────────────┤
-│  [ G  Continue with Google ]             │  <-- Social Login Button
+│  [ G  Continue with Google   ]           │  <-- Social Login Buttons
+│  [ f  Continue with Facebook ]           │
 │  ─────────────── or ───────────────      │
 ├──────────────────────────────────────────┤
 │  EMAIL OR MOBILE NUMBER                  │
@@ -327,8 +328,8 @@ QueueLess implements an authentication and onboarding workflow synthesized from 
    - **Email:** `CITEXT UNIQUE` (any provider; `.edu.pk` needed only for campus discounts).
    - **Pakistani Mobile Phone:** Format `^(\+92|0)?3[0-9]{9}$` with country badge `PK +92`.
    - **Password:** Minimum 8 characters with criteria indicators, hashed server-side with Argon2id.
-4. **Social Sign-In (Google-Only):**
-   - Includes a clean **"Continue with Google"** button per project direction, matching youth demographic expectations while avoiding Apple/OAuth sprawl.
+4. **Social Sign-In & Sign-Up (Google & Facebook):**
+   - Includes official vector-badged **"Continue with Google"** and **"Continue with Facebook"** buttons (and corresponding sign-up variants), catering directly to Pakistani campus diners and young professionals without Apple/OAuth sprawl.
 5. **Stepped Verification (Vela-Style Stepper):**
    - `(1) Details ────── (2) Verify Email ────── (3) Profile`
    - High-contrast segmented 6-digit PIN input with automatic advance, backspace recoil, and paste support.
