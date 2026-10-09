@@ -53,43 +53,43 @@ Because building a full-stack, multi-tenant digital ordering and KDS sidecar can
 
 To maintain focus and avoid burnout across sessions, work is organized into 7 distinct development sittings:
 
-#### Sitting 1: Monorepo Foundation & Workspace Setup (Current Priority)
+#### Sitting 1: Monorepo Foundation & Workspace Setup (`e557de1` - COMPLETED)
 *Focus: Establish the Turborepo workspace skeleton and shared compilation pipelines.*
-- [ ] Initialize `pnpm-workspace.yaml` (`apps/*`, `packages/*`).
-- [ ] Create root `package.json` with pinned `pnpm@12.6.0` and scripts (`build`, `dev`, `lint`, `check-types`, `clean`).
-- [ ] Configure `turbo.json` caching pipeline for builds, type checks, and persistent dev daemons.
-- [ ] Update `.gitignore` for Turborepo and Next.js artifacts.
-- [ ] Scaffold `packages/tsconfig` with base, Next.js, and Node shared tsconfigs.
+- [x] Initialize `pnpm-workspace.yaml` (`apps/*`, `packages/*`).
+- [x] Create root `package.json` with pinned `pnpm@12.6.0` and scripts (`build`, `dev`, `lint`, `check-types`, `clean`).
+- [x] Configure `turbo.json` caching pipeline for builds, type checks, and persistent dev daemons.
+- [x] Update `.gitignore` for Turborepo and Next.js artifacts.
+- [x] Scaffold `packages/tsconfig` with base, Next.js, and Node shared tsconfigs.
 
-#### Sitting 2: Shared Domain Types & Contracts (`packages/types`)
+#### Sitting 2: Shared Domain Types & Contracts (`packages/types` - `e557de1` - COMPLETED)
 *Focus: Single source of truth for interfaces, enums, and Zod validation schemas.*
-- [ ] Define canonical domain enums (`OrderStatus`, `PaymentMethod`, `PaymentClaimStatus`, `SlotStatus`, `StaffRole`).
-- [ ] Implement Zod schemas for order creation, modifier selections, Pakistani phone numbers (`^\+92[3][0-9]{9}$`), and transaction claims.
-- [ ] Enforce the Strict Zero-Emoji Rule across all enum labels, badges, and test fixtures.
-- [ ] Setup build and type export maps for internal package consumption.
+- [x] Define canonical domain enums (`OrderStatus`, `PaymentMethod`, `PaymentClaimStatus`, `SlotStatus`, `StaffRole`).
+- [x] Implement Zod schemas for order creation, modifier selections, Pakistani phone numbers (`^\+92[3][0-9]{9}$`), and transaction claims.
+- [x] Enforce the Strict Zero-Emoji Rule across all enum labels, badges, and test fixtures.
+- [x] Setup build and type export maps for internal package consumption.
 
-#### Sitting 3: Multi-Tenant Database Layer (`packages/db`)
+#### Sitting 3: Multi-Tenant Database Layer (`packages/db` - `e557de1` - COMPLETED)
 *Focus: PostgreSQL 16 schema definitions, Drizzle ORM setup, and dual-role security.*
-- [ ] Configure `drizzle.config.ts` and database connection factories with the `postgres` driver.
-- [ ] Implement dual-connection topologies: `app_runtime_user` (tenant tables with RLS) vs `app_identity_user` (isolated cross-venue identities).
-- [ ] Author tenant schema (`tenants`, `venue_settings`, `menu_items`, `orders`, `order_items`, `payment_claims`).
-- [ ] Author append-only lifecycle event tables (`order_lifecycle_events`, `customer_standing_events`).
-- [ ] Author cross-venue customer identity schema (`customers`, `email_verification_codes`, `password_reset_tokens`).
+- [x] Configure `drizzle.config.ts` and database connection factories with the `postgres` driver.
+- [x] Implement dual-connection topologies: `app_runtime_user` (tenant tables with RLS) vs `app_identity_user` (isolated cross-venue identities).
+- [x] Author tenant schema (`tenants`, `venue_settings`, `menu_items`, `orders`, `order_items`, `payment_claims`).
+- [x] Author append-only lifecycle event tables (`order_lifecycle_events`, `customer_standing_events`).
+- [x] Author cross-venue customer identity schema (`customers`, `email_verification_codes`, `password_reset_tokens`).
 
-#### Sitting 4: Backend Fastify API & WebSocket Hub (`apps/api`)
+#### Sitting 4: Backend Fastify API & WebSocket Hub (`apps/api` - Foundation Complete)
 *Focus: REST API endpoints and real-time push infrastructure.*
-- [ ] Setup Fastify 5.x application shell with TypeScript strict configuration.
-- [ ] Register core plugins: `@fastify/cors`, structured Pino JSON logging, `@fastify/sensible` (422, 503 error handlers).
-- [ ] Register `@fastify/websocket` and implement real-time broadcast hub (KDS swimlane events & order status timeline).
-- [ ] Implement `GET /health` with DB connection and latency check.
-- [ ] Implement public menu catalog endpoint with stale-while-revalidate caching headers.
-- [ ] Implement order intake and cashier confirm/reject endpoints with 5-minute undo tracking.
+- [x] Setup Fastify 5.x application shell with TypeScript strict configuration.
+- [x] Register core plugins: `@fastify/cors`, structured Pino JSON logging, `@fastify/sensible` (422, 503 error handlers).
+- [x] Register `@fastify/websocket` and implement real-time broadcast hub (KDS swimlane events & order status timeline).
+- [x] Implement `GET /health` with runtime service metadata.
+- [x] Implement public menu catalog endpoint with stale-while-revalidate caching headers.
+- [x] Implement order intake and cashier claim submission endpoints.
 
-#### Sitting 5: Next.js 15 Customer PWA (`apps/web`)
+#### Sitting 5: Next.js 15 Customer PWA (`apps/web` - Foundation & Splash Port Complete)
 *Focus: Mobile web ordering experience for diners.*
-- [ ] Initialize Next.js 15 (App Router) + React 19 app shell with Server Components for <300ms paint.
-- [ ] Configure Tailwind CSS v4 and Liquid Glass CSS tokens (`backdrop-filter: blur(20px)`).
-- [ ] Port verified minimal `#fc683f` splash screen component (`SplashScreen.tsx`) with Apple spring entrance.
+- [x] Initialize Next.js 15 (App Router) + React 19 app shell with Server Components for <300ms paint.
+- [x] Configure Tailwind CSS v4 and Liquid Glass CSS tokens (`backdrop-filter: blur(20px)`).
+- [x] Port verified minimal `#fc683f` splash screen component (`SplashScreen.tsx`) with Apple spring entrance.
 - [ ] Setup client cache & state: Zustand stores (`cartStore`, `authStore`, `slotStore`) + TanStack Query v5 provider.
 - [ ] Implement interactive bottom sheets using `vaul`: item modifier customizer, cart drawer, customer auth sheet.
 - [ ] Implement Pakistani manual payment checkout with one-tap copy and proof upload.
