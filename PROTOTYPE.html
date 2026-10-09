@@ -740,7 +740,7 @@
         }
       ]);
 
-      const [viewMode, setViewMode] = useState("split"); // 'split' | 'customer' | 'staff'
+      const [viewMode, setViewMode] = useState(() => (typeof window !== "undefined" && window.innerWidth < 1024) ? "customer" : "split"); // 'split' | 'customer' | 'staff'
       const [venue86List, setVenue86List] = useState({});
       const [remoteOrdersPaused, setRemoteOrdersPaused] = useState(false);
       const [undoToast, setUndoToast] = useState(null);
@@ -3101,10 +3101,10 @@
 
           {/* TAB 1: 5 OPERATIONAL LANES */}
           {activeTab === "lanes" && (
-            <div className="flex-1 p-3 grid grid-cols-5 gap-3 overflow-hidden min-h-0">
+            <div className="flex-1 p-3 flex lg:grid lg:grid-cols-5 gap-3 overflow-x-auto lg:overflow-hidden min-h-0 pb-2">
               
               {/* Lane 1: Payments to Confirm */}
-              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden min-w-[240px] lg:min-w-0 flex-1 shrink-0 lg:shrink">
                 <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-orange-400">
                   <span>PAYMENTS ({pendingClaims.length})</span>
                   <span className="text-[10px] bg-orange-950 px-1.5 py-0.5 rounded text-orange-300">New</span>
@@ -3144,7 +3144,7 @@
               </div>
 
               {/* Lane 2: Scheduled Orders */}
-              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden min-w-[240px] lg:min-w-0 flex-1 shrink-0 lg:shrink">
                 <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-blue-400">
                   <span>SCHEDULED ({scheduledOrders.length})</span>
                   <span className="text-[10px] text-slate-400">Auto-cook</span>
@@ -3177,7 +3177,7 @@
               </div>
 
               {/* Lane 3: Preparing (Kitchen Active) */}
-              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden min-w-[240px] lg:min-w-0 flex-1 shrink-0 lg:shrink">
                 <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-amber-400">
                   <span>PREPARING ({preparingOrders.length})</span>
                   <span className="text-[10px] text-emerald-400">Active</span>
@@ -3216,7 +3216,7 @@
               </div>
 
               {/* Lane 4: Ready at Counter */}
-              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden min-w-[240px] lg:min-w-0 flex-1 shrink-0 lg:shrink">
                 <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-400">
                   <span>READY ({readyOrders.length})</span>
                   <span className="text-[10px] text-slate-400">Counter</span>
@@ -3241,7 +3241,7 @@
               </div>
 
               {/* Lane 5: Refunds Owed */}
-              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden">
+              <div className="flex flex-col rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden min-w-[240px] lg:min-w-0 flex-1 shrink-0 lg:shrink">
                 <div className="px-3 py-2 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-rose-400">
                   <span>REFUNDS ({refundOrders.length})</span>
                   <span className="text-[10px] text-slate-400">Manual</span>
