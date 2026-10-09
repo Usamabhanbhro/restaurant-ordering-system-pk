@@ -6,23 +6,43 @@ node_modules/
 .env
 .env.*
 !.env.example
+*.env.local
 
 # Editor & tool caches
 .freebuff/
+.playwright-cli/
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 
 # OS files
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Build outputs & logs
 dist/
 build/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 .turbo/
 .next/
 out/
 *.tsbuildinfo
+.cache/
+
+# Local handoff notes & developer scratchpad (per project rules)
+HANDOFF.md
+handoff.md
+scratch/
+tmp/
+temp/
+
+# Temporary visual audit screenshots
+*_screenshot.png
