@@ -169,6 +169,96 @@
       border: 1px solid rgba(255, 255, 255, 0.14);
       box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.25);
     }
+
+    /* --- Opening Splash Screen (Starbucks Ambiance • Apple Fluid Motion) --- */
+    @keyframes splash-fade-down {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-splash-fade-down {
+      animation: splash-fade-down 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes splash-emblem {
+      0% {
+        opacity: 0;
+        transform: scale(0.92) translateY(14px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+    .animate-splash-emblem {
+      animation: splash-emblem 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes splash-sheen-sweep {
+      0% {
+        transform: translateX(-120%) skewX(-20deg);
+        opacity: 0;
+      }
+      20% {
+        opacity: 0.95;
+      }
+      75% {
+        transform: translateX(180%) skewX(-20deg);
+        opacity: 0.95;
+      }
+      100% {
+        transform: translateX(180%) skewX(-20deg);
+        opacity: 0;
+      }
+    }
+    .animate-splash-sheen {
+      animation: splash-sheen-sweep 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+
+    @keyframes splash-text {
+      0% {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-splash-text {
+      animation: splash-text 0.45s cubic-bezier(0.23, 1, 0.32, 1) 0.16s forwards;
+    }
+
+    @keyframes splash-footer {
+      0% {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-splash-footer {
+      animation: splash-footer 0.45s cubic-bezier(0.23, 1, 0.32, 1) 0.28s forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animate-splash-fade-down,
+      .animate-splash-emblem,
+      .animate-splash-sheen,
+      .animate-splash-text,
+      .animate-splash-footer {
+        animation: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+      }
+    }
   </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col bg-slate-900 text-slate-100">
@@ -744,6 +834,22 @@
       const [venue86List, setVenue86List] = useState({});
       const [remoteOrdersPaused, setRemoteOrdersPaused] = useState(false);
       const [undoToast, setUndoToast] = useState(null);
+      const [showSplash, setShowSplash] = useState(true);
+      const [splashExiting, setSplashExiting] = useState(false);
+
+      const handleDismissSplash = () => {
+        if (splashExiting) return;
+        setSplashExiting(true);
+        setTimeout(() => {
+          setShowSplash(false);
+          setSplashExiting(false);
+        }, 360);
+      };
+
+      const handleReplaySplash = () => {
+        setSplashExiting(false);
+        setShowSplash(true);
+      };
 
       // Trigger 5-Minute Undo Window
       const triggerUndo = (message, onUndo) => {
@@ -799,6 +905,14 @@
                 <Icons.Monitor className="w-3.5 h-3.5" />
                 <span>Staff KDS</span>
               </button>
+              <button
+                onClick={handleReplaySplash}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/80 transition-all text-xs font-semibold border-l border-slate-700/80 ml-1 pl-2.5"
+                title="Replay Opening Splash Screen"
+              >
+                <Icons.Sparkles className="w-3.5 h-3.5 text-[#EF5A30]" />
+                <span className="hidden sm:inline">Splash</span>
+              </button>
             </div>
 
             {/* Status indicator */}
@@ -851,7 +965,17 @@
                     onCancelOrder={(orderId) => {
                       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, state: 'VOIDED', refundOwed: o.state === 'SCHEDULED' } : o));
                     }}
+                    onReplaySplash={handleReplaySplash}
                   />
+
+                  {/* Opening Splash Screen (Starbucks Ambiance • Apple Fluid Motion) */}
+                  {showSplash && (
+                    <SplashScreen
+                      venue={MOCK_VENUE}
+                      isExiting={splashExiting}
+                      onDismiss={handleDismissSplash}
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -1667,9 +1791,118 @@
     }
 
     // =========================================================================
+    // OPENING SPLASH SCREEN (Starbucks Ambiance • Apple Fluid Motion)
+    // =========================================================================
+    function SplashScreen({ venue, isExiting, onDismiss }) {
+      const [greeting, setGreeting] = useState("Welcome");
+
+      useEffect(() => {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 12) setGreeting("Good morning");
+        else if (hour >= 12 && hour < 17) setGreeting("Good afternoon");
+        else setGreeting("Good evening");
+
+        // Auto-dismiss after 1.8 seconds (Apple restraint: kill latency, don't trap the user)
+        const timer = setTimeout(() => {
+          onDismiss();
+        }, 1800);
+        return () => clearTimeout(timer);
+      }, [onDismiss]);
+
+      return (
+        <div
+          onClick={onDismiss}
+          className={`absolute inset-0 z-50 flex flex-col justify-between items-center p-7 select-none cursor-pointer transition-all ${
+            isExiting
+              ? "opacity-0 scale-[1.03] -translate-y-2 pointer-events-none"
+              : "opacity-100 scale-100 translate-y-0"
+          }`}
+          style={{
+            background: "radial-gradient(circle at 50% 36%, #FFF3EC 0%, #FFFBF8 58%, #FFFFFF 100%)",
+            transitionDuration: "360ms",
+            transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)"
+          }}
+          role="dialog"
+          aria-label="QueueLess Opening Splash"
+        >
+          {/* Top Bar: Starbucks-Style Quiet Greeting + Skip Affordance */}
+          <div className="w-full flex items-center justify-between animate-splash-fade-down">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100/70 border border-orange-200/60 text-[11px] font-bold text-orange-950">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#EF5A30]"></span>
+              <span>{greeting}</span>
+            </div>
+            <span className="text-[10px] font-bold text-neutral-400 hover:text-neutral-700 tracking-wider uppercase transition-colors">
+              Skip [Tap]
+            </span>
+          </div>
+
+          {/* Center: Iconic Speed Cup 'Q' Emblem & Typographic Reveal */}
+          <div className="flex flex-col items-center text-center my-auto">
+            {/* Speed Cup Squircle with Apple Critically Damped Spring Entry */}
+            <div className="relative w-28 h-28 mb-5 animate-splash-emblem">
+              {/* Soft Ambient Radiance */}
+              <div className="absolute -inset-2.5 rounded-[34px] bg-gradient-to-tr from-[#EF5A30]/25 to-[#FF6B42]/10 blur-xl"></div>
+              
+              {/* Ceramic Squircle Vessel */}
+              <div className="relative w-full h-full rounded-[28px] overflow-hidden shadow-2xl border border-white/50 bg-[#EF5A30]">
+                <svg viewBox="0 0 512 512" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="splash-emblem-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FF6B42" />
+                      <stop offset="100%" stopColor="#EF5A30" />
+                    </linearGradient>
+                  </defs>
+                  <rect x="0" y="0" width="512" height="512" rx="128" fill="url(#splash-emblem-gradient)" />
+                  <g fill="#18181B">
+                    {/* Lightning Bolt / Wing */}
+                    <path d="M 235 125 L 140 285 L 210 285 L 145 395 L 295 240 L 225 240 Z" />
+                    {/* Circular Cup Q Loop */}
+                    <path d="M 230 150 C 310 150 370 205 370 285 C 370 335 345 375 305 395 L 340 435 L 285 435 L 255 400 C 247 401 238 402 230 402 C 215 402 200 398 185 392 L 210 355 C 217 358 223 359 230 359 C 285 359 325 325 325 285 C 325 245 285 193 230 193 C 218 193 205 197 195 203 L 195 158 C 206 153 218 150 230 150 Z" />
+                    {/* Cup Handle */}
+                    <path d="M 370 230 C 400 230 415 250 415 280 C 415 310 400 330 370 330 L 370 295 C 382 295 387 290 387 280 C 387 270 382 265 370 265 Z" />
+                  </g>
+                </svg>
+
+                {/* Ceramic Glaze Specular Sheen (Subtle light reflection sweep) */}
+                <div className="absolute inset-0 pointer-events-none animate-splash-sheen opacity-0">
+                  <div className="w-[180%] h-full bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Optical Typographic Reveal */}
+            <div className="animate-splash-text space-y-1">
+              <h1 className="text-3xl font-extrabold tracking-[-0.03em] text-[#121212] flex items-center justify-center">
+                Queue<span className="text-[#EF5A30]">Less</span>
+              </h1>
+              <p className="text-[11px] font-extrabold tracking-[0.24em] text-neutral-400 uppercase">
+                Fast Pre-Order &amp; Pickup
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom Bar: Starbucks-Style Venue Grounding Pill */}
+          <div className="w-full flex flex-col items-center gap-2 animate-splash-footer">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-md border border-neutral-200/80 shadow-soft text-xs font-semibold text-neutral-800">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EF5A30] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#EF5A30]"></span>
+              </span>
+              <span className="truncate max-w-[210px] font-bold text-neutral-900">{venue?.name || "Brewery Cafe Gulberg"}</span>
+              <span className="text-[10px] text-neutral-500 font-medium">• 10m Pickup</span>
+            </div>
+            <p className="text-[10px] text-neutral-400 font-medium tracking-wide">
+              Tap anywhere to open menu
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
     // 1. CUSTOMER PWA (Buy Bao / Uber Eats / Starbucks Hybrid)
     // =========================================================================
-    function CustomerPWA({ venue, categories, items, venue86List, remoteOrdersPaused, orders, onNewOrder, onCancelOrder }) {
+    function CustomerPWA({ venue, categories, items, venue86List, remoteOrdersPaused, orders, onNewOrder, onCancelOrder, onReplaySplash }) {
       const [activeTab, setActiveTab] = useState("menu"); // 'menu' | 'perks' | 'status' | 'profile'
       const [selectedCategory, setSelectedCategory] = useState("cat-popular");
       const [searchQuery, setSearchQuery] = useState("");
@@ -2310,6 +2543,17 @@
                       </div>
                     </div>
 
+                    {onReplaySplash && (
+                      <button
+                        type="button"
+                        onClick={onReplaySplash}
+                        className="w-full py-2.5 rounded-2xl bg-white border border-neutral-200/80 text-neutral-700 hover:text-neutral-900 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-sm"
+                      >
+                        <Icons.Sparkles className="w-3.5 h-3.5 text-[#EF5A30]" />
+                        <span>Experience Opening Splash</span>
+                      </button>
+                    )}
+
                     {/* Sign Out Button */}
                     <button
                       type="button"
@@ -2373,6 +2617,17 @@
                         <p className="text-[11px] text-neutral-500">Students at FAST, LUMS, IBA, NUST get 10% off with university email.</p>
                       </div>
                     </div>
+
+                    {onReplaySplash && (
+                      <button
+                        type="button"
+                        onClick={onReplaySplash}
+                        className="w-full py-2.5 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+                      >
+                        <Icons.Sparkles className="w-3.5 h-3.5 text-[#EF5A30]" />
+                        <span>Experience Opening Splash</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

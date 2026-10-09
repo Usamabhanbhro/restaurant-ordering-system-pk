@@ -1,6 +1,6 @@
 # DESIGN.md — Product Design Document & Design System
 
-> **Changelog (2026-10-09):** ratify frontend architecture stack — Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4, Vaul bottom sheets, Motion (motion/react), Radix UI primitives, Lucide SVG vector iconography, Zustand, TanStack Query v5, Cloudflare Images CDN; added Section 2.5 Liquid Glass Materials & Motion Tokens.
+> **Changelog (2026-10-09):** added Section 3.0 Opening Splash Screen specification inspired by Starbucks & Apple fluid motion guidelines (critically damped entrance, ceramic specular sheen, optical typography, time-of-day greeting, venue grounding, interruptible exit with tap-to-dismiss); ratify frontend architecture stack (Next.js 15, React 19, Tailwind v4, Vaul, Motion).
 > **Changelog (2026-10-07):** updated visual design system and component architecture inspired by modern consumer food apps (Buy Bao reference, Starbucks, and Uber Eats). Retains all v1 remote ordering lifecycle rules, 5 dashboard lanes, and Pakistani market constraints.
 
 ---
@@ -96,6 +96,27 @@ To achieve world-class visual fluidity without sacrificing mobile battery or per
 ---
 
 ## 3. Component Architecture & UI Anatomy
+
+### 3.0 Opening Splash Screen (Starbucks Ambiance • Apple Fluid Motion)
+- **Design Intent:**
+  - Inspired by the quiet, aromatic hospitality of the Starbucks mobile experience.
+  - Bridges the initial scan/arrival to the menu catalog without abrupt layout pops or jarring spinners.
+  - Anchors the diner immediately into their local venue while honoring Apple's core fluid motion principles.
+- **Apple Fluid Motion Specifications:**
+  - **Purpose:** *State indication & bridging content* (frequency: app launch / first QR scan).
+  - **Never `scale(0)`:** Squircle emblem enters from `scale(0.92)` with `opacity: 0` to `scale(1.0)` with `opacity: 1`.
+  - **Critically Damped Spring Entrance:** `cubic-bezier(0.16, 1, 0.3, 1)` with `0.52s` duration — responsive, dignified, zero cartoonish bounce or oscillation.
+  - **Specular Sheen Sweep:** Subtle diagonal light reflection (`skewX(-20deg)`) sweeps across the emblem surface in `1.1s`, evoking light catching polished cafe ceramics.
+  - **Optical Typographic Stagger:** QueueLess display heading (`font-extrabold tracking-[-0.03em]`) and uppercase tagline (`tracking-[0.24em]`) emerge `160ms` after the emblem with `cubic-bezier(0.23, 1, 0.32, 1)`.
+  - **Continuous Spatial Exit:** Cross-fades (`opacity: 1 -> 0`) while gently elevating (`scale(1.03) translateY(-8px)`) in `360ms`, smoothly revealing the underlying menu.
+  - **User Agency & Zero Latency:** Tapping or clicking anywhere immediately triggers the exit transition, bypassing the remainder of the 1.8s auto-dismiss timer.
+  - **Accessibility / Reduced Motion:** `@media (prefers-reduced-motion: reduce)` removes all transforms and specular sweeps, substituting a gentle opacity crossfade.
+- **Visual Composition:**
+  - **Canvas:** Warm radial gradient (`#FFF3EC` to `#FFFBF8` to pure `#FFFFFF`).
+  - **Top Bar:** Contextual time-of-day greeting badge (*"Good morning"* / *"Good afternoon"* / *"Good evening"*) + quiet *"Skip [Tap]"* indicator.
+  - **Centerpiece:** Official **Speed Cup "Q"** squircle mark with sunset gradient (`#FF6B42` to `#EF5A30`), ambient glow, and sharp charcoal `#18181B` symbol.
+  - **Bottom Anchor:** Floating Liquid Glass pill with active salmon status dot, venue title (*"Brewery Cafe Gulberg"*), and pickup expectation (*"10m Pickup"*).
+  - **Testing & Replay:** Replayable at any time via the top bar `Splash` trigger or the Customer Profile tab.
 
 ### 3.1 Customer Discovery & Menu Catalog
 - **Venue Hero Header:**
