@@ -85,15 +85,18 @@ To maintain focus and avoid burnout across sessions, work is organized into 7 di
 - [x] Implement public menu catalog endpoint with stale-while-revalidate caching headers.
 - [x] Implement order intake and cashier claim submission endpoints.
 
-#### Sitting 5: Next.js 15 Customer PWA (`apps/web` - Foundation & Splash Port Complete)
+#### Sitting 5: Next.js 15 Customer PWA (`apps/web` - COMPLETED)
 *Focus: Mobile web ordering experience for diners.*
 - [x] Initialize Next.js 15 (App Router) + React 19 app shell with Server Components for <300ms paint.
 - [x] Configure Tailwind CSS v4 and Liquid Glass CSS tokens (`backdrop-filter: blur(20px)`).
 - [x] Port verified minimal `#fc683f` splash screen component (`SplashScreen.tsx`) with Apple spring entrance.
-- [ ] Setup client cache & state: Zustand stores (`cartStore`, `authStore`, `slotStore`) + TanStack Query v5 provider.
-- [ ] Implement interactive bottom sheets using `vaul`: item modifier customizer, cart drawer, customer auth sheet.
-- [ ] Implement Pakistani manual payment checkout with one-tap copy and proof upload.
-- [ ] Implement 5-stage order status tracker connected to API WebSocket stream.
+- [x] Setup client cache & state: Zustand stores (`cartStore`, `authStore`, `slotStore`, `orderStore`) + TanStack Query v5 provider (`QueryProvider.tsx`).
+- [x] Implement interactive bottom sheets using `vaul`: item modifier customizer (`ItemCustomizerSheet.tsx`), cart & checkout drawer (`CartDrawer.tsx`), customer auth sheet (`CustomerAuthSheet.tsx`).
+- [x] Implement Pakistani manual payment checkout with one-tap copy (Easypaisa, SadaPay, Meezan Raast, Cash) and transaction reference claim.
+- [x] Implement 5-stage order status tracker (`OrderProgressTracker.tsx`) with live counter ticket and cancellation rules.
+- [x] Implement dynamic bottom dock (`FloatingBottomDock.tsx`) with scroll-direction awareness (floating pill vs docked bar) and floating cart capsule.
+- [x] Implement Perks and loyalty tab (`PerksTab.tsx`) with 5-stamp punch card and campus affiliation vouchers.
+- [x] Implement Profile tab (`ProfileTab.tsx`) with student status badge, preferences, and opening splash replay trigger.
 
 #### Sitting 6: Unified Staff KDS Dashboard (`apps/web`)
 *Focus: Responsive kitchen and cashier dashboard.*

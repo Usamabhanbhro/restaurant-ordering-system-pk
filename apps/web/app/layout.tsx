@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 export const metadata: Metadata = {
   title: "QueueLess • Fast Pre-Order & Scheduled Counter Pickup",
@@ -34,7 +35,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased bg-[#FFFBF8] text-[#18181B] selection:bg-[#fc683f]/20 selection:text-[#fc683f]">
-        {children}
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );

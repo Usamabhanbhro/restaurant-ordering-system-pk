@@ -1,17 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState, useRef, type UIEvent } from "react";
 import { SplashScreen } from "@/components/splash/SplashScreen";
-import { Flame, Utensils, Coffee, Plus, Sparkles } from "lucide-react";
+import { HeroHeader } from "@/components/customer/HeroHeader";
+import { CategoryCarousel } from "@/components/customer/CategoryCarousel";
+import { FoodCard } from "@/components/customer/FoodCard";
+import { ItemCustomizerSheet } from "@/components/customer/ItemCustomizerSheet";
+import { CartDrawer } from "@/components/customer/CartDrawer";
+import { CustomerAuthSheet } from "@/components/customer/CustomerAuthSheet";
+import { OrderProgressTracker } from "@/components/customer/OrderProgressTracker";
+import { PerksTab } from "@/components/customer/PerksTab";
+import { ProfileTab } from "@/components/customer/ProfileTab";
+import { FloatingBottomDock, type NavTabId } from "@/components/customer/FloatingBottomDock";
+
+import { MOCK_VENUE, MOCK_CATEGORIES, MOCK_ITEMS, type MenuItemData } from "@/lib/mockData";
+import { useCartStore } from "@/lib/store/cartStore";
+import { useAuthStore } from "@/lib/store/authStore";
+import { useOrderStore } from "@/lib/store/orderStore";
 
 interface CustomerPageProps {
   params: Promise<{ tenantSlug: string }>;
 }
 
 export default function CustomerPage({ params }: CustomerPageProps) {
+  // Unwrap Next.js 15 params Promise using React 19 `use` hook
+  const { tenantSlug } = use(params);
+
+  // Splash Screen State
   const [showSplash, setShowSplash] = useState(true);
   const [splashExiting, setSplashExiting] = useState(false);
+
+  // Navigation & Category Filtering
+  const [activeTab, setActiveTab] = useState<NavTabId>("menu");
   const [selectedCategory, setSelectedCategory] = useState("cat-popular");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Modals & Sheets
+  const [customizingItem, setCustomizingItem] = useState<MenuItemData | null>(null);
+  const [showCartDrawer, setShowCartDrawer] = useState(false);
+
+  // Venue Status / 86 State
+  const [venue86List] = useState<Record<string, boolean>>({});
+  const [remoteOrdersPaused] = useState(false);
+
+  // Scroll Direction Awareness for Bottom Dock (Floating Pill vs Docked Bar)
+  const [isFloatingNav, setIsFloatingNav] = useState(true);
+  const lastScrollTop = useRef(0);
+
+  // Stores
+  const { getItemCount, getSubtotal } = useCartStore();
+  const { currentUser, pendingPostAuthAction, setPendingPostAuthAction } = useAuthStore();
+  const { placeOrder, cancelOrder, getActiveOrder } = useOrderStore();
+
+  const cartItemCount = getItemCount();
+  const cartSubtotal = getSubtotal();
+  const activeOrder = getActiveOrder(currentUser?.email);
+
+  const handleScroll = (e: UIEvent<HTMLDivElement>) => {
+    const currentScrollTop = e.currentTarget.scrollTop;
+    const delta = currentScrollTop - lastScrollTop.current;
+
+    // Threshold to prevent jitter on tiny sub-pixel scrolls
+    if (Math.abs(delta) > 6) {
+      if (delta > 0 && currentScrollTop > 30) {
+        // Scrolled down -> attach flush to bottom edge
+        setIsFloatingNav(false);
+      } else if (delta < 0) {
+        // Scrolled up -> float elevated as detached pill
+        setIsFloatingNav(true);
+      }
+    }
+
+    // Always float when resting near the top
+    if (currentScrollTop <= 25) {
+      setIsFloatingNav(true);
+    }
+
+    lastScrollTop.current = currentScrollTop;
+  };
 
   const handleDismissSplash = () => {
     if (splashExiting) return;
@@ -27,132 +93,126 @@ export default function CustomerPage({ params }: CustomerPageProps) {
     setShowSplash(true);
   };
 
+  const filteredItems = MOCK_ITEMS.filter((it) => {
+    if (searchQuery.trim()) {
+      return (
+        it.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        it.nameRomanUrdu.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    if (selectedCategory === "cat-popular") return it.popular;
+    return it.categoryId === selectedCategory;
+  });
+
   return (
-    <main className="min-h-screen max-w-md mx-auto bg-[#FFFBF8] flex flex-col relative pb-24 shadow-2xl">
-      {/* Opening Splash Screen */}
-      {showSplash && (
-        <SplashScreen
-          isExiting={splashExiting}
-          onDismiss={handleDismissSplash}
-        />
-      )}
+    <div className="min-h-screen bg-[#FFFBF8] text-neutral-900 flex justify-center">
+      {/* Mobile Shell constrained to max-w-md */}
+      <main className="w-full max-w-md bg-[#FFFBF8] flex flex-col relative h-screen shadow-2xl overflow-hidden">
+        {/* 1. Opening Splash Screen */}
+        {showSplash && (
+          <SplashScreen isExiting={splashExiting} onDismiss={handleDismissSplash} />
+        )}
 
-      {/* Sticky Top Venue Header */}
-      <header className="sticky top-0 z-30 liquid-glass border-b border-neutral-200/60 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#fc683f] flex items-center justify-center text-white font-black text-sm">
-            Q
-          </div>
-          <div>
-            <h1 className="font-extrabold text-sm text-neutral-900 leading-tight">
-              Brewery Cafe Gulberg
-            </h1>
-            <p className="text-[10px] text-neutral-500 font-semibold">
-              10-15m Scheduled Pickup • Lahore
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={handleReplaySplash}
-          className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-500 transition-colors"
-          title="Replay Opening Splash"
+        {/* 2. Scrollable Body Container */}
+        <div
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto no-scrollbar pb-36 relative"
         >
-          <Sparkles className="w-4 h-4 text-[#fc683f]" />
-        </button>
-      </header>
+          {/* Top Hero Banner */}
+          <HeroHeader
+            venue={MOCK_VENUE}
+            remoteOrdersPaused={remoteOrdersPaused}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSelectTab={setActiveTab}
+          />
 
-      {/* Category Navigation Pills */}
-      <section className="px-4 pt-4 pb-2">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-          <button
-            onClick={() => setSelectedCategory("cat-popular")}
-            className={`px-3.5 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 ${
-              selectedCategory === "cat-popular"
-                ? "bg-[#18181B] text-white shadow-sm"
-                : "bg-white text-neutral-600 border border-neutral-200/80"
-            }`}
-          >
-            <Flame className="w-3.5 h-3.5 text-[#fc683f]" />
-            <span>Popular</span>
-          </button>
+          {/* TAB 1: MENU CATALOG */}
+          {activeTab === "menu" && (
+            <div className="space-y-3 pt-2">
+              {/* Category Carousel Pills */}
+              <CategoryCarousel
+                categories={MOCK_CATEGORIES}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+              />
 
-          <button
-            onClick={() => setSelectedCategory("cat-burgers")}
-            className={`px-3.5 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 ${
-              selectedCategory === "cat-burgers"
-                ? "bg-[#18181B] text-white shadow-sm"
-                : "bg-white text-neutral-600 border border-neutral-200/80"
-            }`}
-          >
-            <Utensils className="w-3.5 h-3.5" />
-            <span>Burgers</span>
-          </button>
+              {/* Food Item Cards List */}
+              <section className="px-4 space-y-3">
+                {filteredItems.map((item) => (
+                  <FoodCard
+                    key={item.id}
+                    item={item}
+                    is86ed={Boolean(venue86List[item.id])}
+                    onCustomize={setCustomizingItem}
+                  />
+                ))}
 
-          <button
-            onClick={() => setSelectedCategory("cat-coffee")}
-            className={`px-3.5 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 ${
-              selectedCategory === "cat-coffee"
-                ? "bg-[#18181B] text-white shadow-sm"
-                : "bg-white text-neutral-600 border border-neutral-200/80"
-            }`}
-          >
-            <Coffee className="w-3.5 h-3.5" />
-            <span>Specialty Coffee</span>
-          </button>
-        </div>
-      </section>
+                {filteredItems.length === 0 && (
+                  <div className="p-8 text-center bg-white rounded-3xl border border-neutral-200/80 shadow-soft">
+                    <p className="text-xs font-bold text-neutral-500">
+                      No menu items found for &quot;{searchQuery}&quot;
+                    </p>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
 
-      {/* Catalog Food Cards */}
-      <section className="px-4 py-2 space-y-3">
-        <div className="bg-white rounded-3xl p-4 border border-neutral-200/70 shadow-sm flex items-center justify-between gap-3">
-          <div className="space-y-1">
-            <span className="inline-block px-2 py-0.5 rounded-full bg-orange-100 text-[#fc683f] font-bold text-[10px] uppercase">
-              Popular
-            </span>
-            <h2 className="font-extrabold text-sm text-neutral-900">Double Smash Burger</h2>
-            <p className="text-xs text-neutral-500 font-medium">
-              Double Smash Burger • Ziada Cheese
-            </p>
-            <p className="text-xs font-bold text-neutral-400">240g</p>
-            <p className="text-sm font-black text-neutral-900 pt-1">Rs. 890</p>
-          </div>
+          {/* TAB 2: PERKS & REWARDS */}
+          {activeTab === "perks" && <PerksTab />}
 
-          <button className="w-10 h-10 rounded-2xl bg-[#18181B] text-white flex items-center justify-center shrink-0 active:scale-95 transition-transform">
-            <Plus className="w-5 h-5" />
-          </button>
+          {/* TAB 3: ORDER PROGRESS TRACKER */}
+          {activeTab === "status" && (
+            <OrderProgressTracker
+              activeOrder={activeOrder}
+              onCancelOrder={cancelOrder}
+              onBrowseMenu={() => setActiveTab("menu")}
+            />
+          )}
+
+          {/* TAB 4: USER PROFILE & HISTORY */}
+          {activeTab === "profile" && <ProfileTab onReplaySplash={handleReplaySplash} />}
         </div>
 
-        <div className="bg-white rounded-3xl p-4 border border-neutral-200/70 shadow-sm flex items-center justify-between gap-3">
-          <div className="space-y-1">
-            <span className="inline-block px-2 py-0.5 rounded-full bg-orange-100 text-[#fc683f] font-bold text-[10px] uppercase">
-              Signature
-            </span>
-            <h2 className="font-extrabold text-sm text-neutral-900">Spanish Iced Latte</h2>
-            <p className="text-xs text-neutral-500 font-medium">
-              Fresh espresso with condensed milk
-            </p>
-            <p className="text-xs font-bold text-neutral-400">350ml</p>
-            <p className="text-sm font-black text-neutral-900 pt-1">Rs. 580</p>
-          </div>
+        {/* 3. Dynamic Bottom Navigation Dock & Floating Cart Capsule */}
+        <FloatingBottomDock
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          cartItemCount={cartItemCount}
+          cartSubtotal={cartSubtotal}
+          onOpenCart={() => setShowCartDrawer(true)}
+          isFloatingNav={isFloatingNav}
+          hasActiveOrder={Boolean(activeOrder)}
+        />
 
-          <button className="w-10 h-10 rounded-2xl bg-[#18181B] text-white flex items-center justify-center shrink-0 active:scale-95 transition-transform">
-            <Plus className="w-5 h-5" />
-          </button>
-        </div>
-      </section>
+        {/* 4. Bottom Sheets & Modals */}
+        {/* Item Customizer Sheet */}
+        <ItemCustomizerSheet
+          item={customizingItem}
+          isOpen={Boolean(customizingItem)}
+          onClose={() => setCustomizingItem(null)}
+        />
 
-      {/* Floating Bottom Navigation Pill */}
-      <div className="fixed bottom-4 inset-x-0 max-w-md mx-auto px-4 z-40 pointer-events-none">
-        <div className="liquid-glass rounded-full px-6 py-3.5 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/60">
-          <span className="text-xs font-extrabold text-neutral-900">
-            Cart (0 items)
-          </span>
-          <span className="px-3 py-1 rounded-full bg-[#fc683f] text-white font-black text-xs">
-            Rs. 0
-          </span>
-        </div>
-      </div>
-    </main>
+        {/* Cart & Checkout Drawer */}
+        <CartDrawer
+          venue={MOCK_VENUE}
+          isOpen={showCartDrawer}
+          onClose={() => setShowCartDrawer(false)}
+          onOrderPlaced={placeOrder}
+          onSelectTab={setActiveTab}
+        />
+
+        {/* Customer Auth & Onboarding Sheet */}
+        <CustomerAuthSheet
+          onAuthSuccess={() => {
+            if (pendingPostAuthAction === "CHECKOUT") {
+              setPendingPostAuthAction(null);
+              setShowCartDrawer(true);
+            }
+          }}
+        />
+      </main>
+    </div>
   );
 }
