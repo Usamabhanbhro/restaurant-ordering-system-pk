@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --primary-orange: #fc683f;
+  --primary-orange-hover: #e0552d;
+  --canvas-warm: #fffbf8;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+@layer base {
+  body {
+    background-color: var(--canvas-warm);
+    color: #18181b;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Liquid Glass CSS Tokens */
+.liquid-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.08);
+}
+
+/* Apple Critically Damped Spring Animation for Splash Emblem */
+@keyframes splash-emblem {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-splash-emblem {
+  animation: splash-emblem 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-splash-emblem {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
