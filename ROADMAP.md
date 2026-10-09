@@ -1,12 +1,120 @@
-# ROADMAP.md — Phased Execution Strategy
+# ROADMAP.md — Engineering Progress & Phased Execution Strategy
 
+> **Changelog (2026-10-09):** added granular Engineering Progress & Sitting Tracker for v1 web app implementation; logged completed architecture specifications, interactive prototype, minimal splash screen refinement, and developer handoff; mapped out modular development sittings across Turborepo monorepo packages.  
 > **Changelog (2026-10-06):** applied owner brief v6 (v1 remote ordering scope locked; open items from brief v6 §10 updated in Open Decisions).
 
 QueueLess is designed to win the Pakistani market through phased defensibility. The codebase is easy to clone, but the operational execution and distribution moat are impossible to copy in a short timeframe.
 
 > **No committed timeline (owner brief v2 §1):** this is a pet project and the FYP comes first. The month ranges below are directional, not commitments.
 
-## Phase 1: The Distribution Wedge (Months 1–6)
+---
+
+## 1. Engineering Progress & Sitting Tracker (v1 Web App)
+
+Because building a full-stack, multi-tenant digital ordering and KDS sidecar cannot happen in a single sitting, engineering work is broken into self-contained development sittings.
+
+### 1.1 Completed Milestones (What We Have Done)
+
+- [x] **Comprehensive Architecture & System Specifications**
+  - [x] System Architecture Document ([ARCHITECTURE.md](file:///f:/projects/restaurant-ordering-system-pk/ARCHITECTURE.md)) defining sidecar model, 6 frontend pillars, multi-tenant PostgreSQL RLS topology, and dual-role database security.
+  - [x] Database Schema Specification ([SCHEMA.md](file:///f:/projects/restaurant-ordering-system-pk/SCHEMA.md)) defining all tables, types, append-only audit lifecycle logs, and indexes.
+  - [x] API Specification ([API.md](file:///f:/projects/restaurant-ordering-system-pk/API.md)) detailing REST endpoints, status codes (including 422, 503), and WebSocket event structures.
+  - [x] Architectural Decision Records ([docs/adr/](file:///f:/projects/restaurant-ordering-system-pk/docs/adr/)) ADR-0001 through ADR-0009 approved.
+  - [x] Forward-Deployed Engineer Runbook ([FDE_RUNBOOK.md](file:///f:/projects/restaurant-ordering-system-pk/FDE_RUNBOOK.md)) for pilot venue acrylic counter QR stand onboarding.
+  - [x] Legal & Privacy Drafts ([PRIVACY.md](file:///f:/projects/restaurant-ordering-system-pk/PRIVACY.md), [TERMS_DRAFT.md](file:///f:/projects/restaurant-ordering-system-pk/TERMS_DRAFT.md), [LEGAL_REVIEW_NOTES.md](file:///f:/projects/restaurant-ordering-system-pk/LEGAL_REVIEW_NOTES.md)).
+
+- [x] **Frontend Architecture & Design System Ratification (`64cab69`)**
+  - [x] Ratified stack: Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4, Liquid Glass tokens, Vaul bottom sheets, Motion (`motion/react`) spring physics, Radix UI primitives, Lucide SVG vector icons.
+  - [x] Codified and strictly enforced the **Strict No-Emoji Policy** across all code, tests, UI badges, mock data, and documentation ([CONVENTIONS.md](file:///f:/projects/restaurant-ordering-system-pk/CONVENTIONS.md), [DESIGN.md](file:///f:/projects/restaurant-ordering-system-pk/DESIGN.md)).
+
+- [x] **Interactive Full-Stack Prototype (`PROTOTYPE.html`)**
+  - [x] Complete simulated Customer PWA flow: category navigation, split food cards, Roman Urdu subtitles, scheduled slot selection, Pakistani manual payment proof upload, 5-stage order progress timeline.
+  - [x] Customer authentication bottom sheet: email, mandatory Pakistani mobile phone (`PK +92`), password, social auth options (`17260a7`).
+  - [x] Unified 5-lane Staff KDS: `PAYMENTS`, `SCHEDULED`, `PREPARING`, `READY`, `REFUNDS` with synthesized Web Audio chime (`playChime()`).
+  - [x] 5-minute cashier undo window with countdown toast for confirm/reject mistakes.
+  - [x] Responsive small-screen optimization: swipeable horizontal kanban board for mobile browsers (<1024px) and 5-column desktop grid (`42bf2c9`).
+  - [x] Multi-viewport Chrome DevTools QA verification ([customer_menu_screenshot.png](file:///f:/projects/restaurant-ordering-system-pk/customer_menu_screenshot.png)).
+
+- [x] **Ultra-Minimalist Splash Screen (`bd7c3d8`)**
+  - [x] Replaced multi-element greeting and venue footer with an ultra-minimal, high-impact launch screen.
+  - [x] Solid brand orange background (`#fc683f`).
+  - [x] Pure white (`#FFFFFF`) Speed Cup "Q" vector emblem centered on canvas with zero extraneous typography.
+  - [x] Apple critically damped spring entrance (`cubic-bezier(0.16, 1, 0.3, 1)` scaling `0.92 -> 1.0` in `0.52s`).
+  - [x] Tap-to-dismiss instant agency with 1.8s auto-transition.
+  - [x] Visual verification recorded ([splash_screen_screenshot.png](file:///f:/projects/restaurant-ordering-system-pk/splash_screen_screenshot.png)).
+
+- [x] **Developer & Architecture Handoff & Scaffolding Plan (`0079a85`)**
+  - [x] Developer Handoff Document ([HANDOFF.md](file:///f:/projects/restaurant-ordering-system-pk/HANDOFF.md)) with current system state, invariants, and environment notes.
+  - [x] Multi-phase, subphase-by-subphase Turborepo implementation plan ratified ([plan_scaffold_turborepo_monorepo.md](file:///C:/Users/MUET/.gemini/antigravity/brain/ef0f97ab-ba9b-4db7-b01a-4ad2a2a6be0c/plan_scaffold_turborepo_monorepo.md)).
+
+---
+
+### 1.2 Development Sittings (What Needed To Be Done)
+
+To maintain focus and avoid burnout across sessions, work is organized into 7 distinct development sittings:
+
+#### Sitting 1: Monorepo Foundation & Workspace Setup (Current Priority)
+*Focus: Establish the Turborepo workspace skeleton and shared compilation pipelines.*
+- [ ] Initialize `pnpm-workspace.yaml` (`apps/*`, `packages/*`).
+- [ ] Create root `package.json` with pinned `pnpm@12.6.0` and scripts (`build`, `dev`, `lint`, `check-types`, `clean`).
+- [ ] Configure `turbo.json` caching pipeline for builds, type checks, and persistent dev daemons.
+- [ ] Update `.gitignore` for Turborepo and Next.js artifacts.
+- [ ] Scaffold `packages/tsconfig` with base, Next.js, and Node shared tsconfigs.
+
+#### Sitting 2: Shared Domain Types & Contracts (`packages/types`)
+*Focus: Single source of truth for interfaces, enums, and Zod validation schemas.*
+- [ ] Define canonical domain enums (`OrderStatus`, `PaymentMethod`, `PaymentClaimStatus`, `SlotStatus`, `StaffRole`).
+- [ ] Implement Zod schemas for order creation, modifier selections, Pakistani phone numbers (`^\+92[3][0-9]{9}$`), and transaction claims.
+- [ ] Enforce the Strict Zero-Emoji Rule across all enum labels, badges, and test fixtures.
+- [ ] Setup build and type export maps for internal package consumption.
+
+#### Sitting 3: Multi-Tenant Database Layer (`packages/db`)
+*Focus: PostgreSQL 16 schema definitions, Drizzle ORM setup, and dual-role security.*
+- [ ] Configure `drizzle.config.ts` and database connection factories with the `postgres` driver.
+- [ ] Implement dual-connection topologies: `app_runtime_user` (tenant tables with RLS) vs `app_identity_user` (isolated cross-venue identities).
+- [ ] Author tenant schema (`tenants`, `venue_settings`, `menu_items`, `orders`, `order_items`, `payment_claims`).
+- [ ] Author append-only lifecycle event tables (`order_lifecycle_events`, `customer_standing_events`).
+- [ ] Author cross-venue customer identity schema (`customers`, `email_verification_codes`, `password_reset_tokens`).
+
+#### Sitting 4: Backend Fastify API & WebSocket Hub (`apps/api`)
+*Focus: REST API endpoints and real-time push infrastructure.*
+- [ ] Setup Fastify 5.x application shell with TypeScript strict configuration.
+- [ ] Register core plugins: `@fastify/cors`, structured Pino JSON logging, `@fastify/sensible` (422, 503 error handlers).
+- [ ] Register `@fastify/websocket` and implement real-time broadcast hub (KDS swimlane events & order status timeline).
+- [ ] Implement `GET /health` with DB connection and latency check.
+- [ ] Implement public menu catalog endpoint with stale-while-revalidate caching headers.
+- [ ] Implement order intake and cashier confirm/reject endpoints with 5-minute undo tracking.
+
+#### Sitting 5: Next.js 15 Customer PWA (`apps/web`)
+*Focus: Mobile web ordering experience for diners.*
+- [ ] Initialize Next.js 15 (App Router) + React 19 app shell with Server Components for <300ms paint.
+- [ ] Configure Tailwind CSS v4 and Liquid Glass CSS tokens (`backdrop-filter: blur(20px)`).
+- [ ] Port verified minimal `#fc683f` splash screen component (`SplashScreen.tsx`) with Apple spring entrance.
+- [ ] Setup client cache & state: Zustand stores (`cartStore`, `authStore`, `slotStore`) + TanStack Query v5 provider.
+- [ ] Implement interactive bottom sheets using `vaul`: item modifier customizer, cart drawer, customer auth sheet.
+- [ ] Implement Pakistani manual payment checkout with one-tap copy and proof upload.
+- [ ] Implement 5-stage order status tracker connected to API WebSocket stream.
+
+#### Sitting 6: Unified Staff KDS Dashboard (`apps/web`)
+*Focus: Responsive kitchen and cashier dashboard.*
+- [ ] Implement 5 operational swimlanes: `PAYMENTS`, `SCHEDULED`, `PREPARING`, `READY`, `REFUNDS`.
+- [ ] Implement responsive view modes: horizontal swipeable kanban for small mobile screens (<1024px) and full 5-column grid for tablets and desktop KDS displays (>=1024px).
+- [ ] Implement 5-minute cashier undo toast with countdown progress bar.
+- [ ] Implement Web Audio alert chime on incoming payment claims.
+- [ ] Implement Day-2 admin controls: toggle 86 out-of-stock items and pause remote venue orders.
+
+#### Sitting 7: Verification, Production Hardening & Pilot Launch
+*Focus: Automated quality gates, performance profiling, and venue onboarding.*
+- [ ] Run full workspace validation: `pnpm run check-types` and `pnpm run build` across all packages.
+- [ ] Conduct multi-device Chrome DevTools audit (LCP, responsiveness, tap targets, contrast).
+- [ ] Verify Cloudflare Turnstile bot verification on auth/checkout endpoints.
+- [ ] Execute FDE Runbook to onboard pilot venue with acrylic counter QR stands.
+
+---
+
+## 2. Commercial & Distribution Roadmap (Phased Business Strategy)
+
+### Phase 1: The Distribution Wedge (Months 1–6)
 
 **Goal:** Establish first-mover advantage via direct sales, physical hardware deployment, and concierge onboarding.
 
@@ -23,7 +131,7 @@ QueueLess is designed to win the Pakistani market through phased defensibility. 
 - [ ] **Launch Goal:** Deploy in pilot cafes with FDE onboarding
 - [ ] *(Post-v1)*: TABLE_SERVICE features (table tags, runner verification, table sessions with 30-min idle timeout, delivery-overdue alerts)
 
-## Phase 2: Operational Lock-In (Months 7–12)
+### Phase 2: Operational Lock-In (Months 7–12)
 
 **Goal:** Embed the software deeply into daily F&B operations to make switching costs existential for the venue owner.
 
@@ -35,7 +143,7 @@ QueueLess is designed to win the Pakistani market through phased defensibility. 
 - [ ] Advanced velocity-gate troll defense monitoring
 - [ ] **Growth Goal:** Expand to 100+ venues, demonstrating near-zero churn due to operational dependency.
 
-## Phase 3: Platform Moat (Months 12–24)
+### Phase 3: Platform Moat (Months 12–24)
 
 **Goal:** Leverage network effects to offer value no single-venue software competitor can match.
 
@@ -49,7 +157,9 @@ QueueLess is designed to win the Pakistani market through phased defensibility. 
 - [ ] **F1 — Pre-ordering for students (v1):** a student can order from home or class for a chosen pickup slot at a COUNTER_PICKUP venue. Pickup-slot fulfilment (not delivery), scheduled KDS queue, paid via the venue's own accounts (`PENDING_PAYMENT → SCHEDULED`); venue-configurable slot capacity and prep lead (default 10 min); cancel until kitchen start; screenshot retention 30 days; customer account required (email, phone, password registration; display name required before first order). See ADR-0007.
 - [ ] **F3 — User profiles as perks wallets (v1):** profile creation to unlock perks and discounts; prerequisite for F2. Perks wallet, not ordering identity; in-venue ordering stays anonymous; required only for remote orders (F1); registration fields: verified email, mandatory Pakistani mobile phone (`+923...`), password (Argon2id); display name and optional institutional affiliation deferred to onboarding/first order; password-authenticated. See ADR-0009.
 
-## Candidate Success Metrics (Non-Binding, owner brief v4 §7)
+---
+
+## 3. Candidate Success Metrics (Non-Binding, owner brief v4 §7)
 
 *Ideas for evaluation; non-binding, not requirements. Baselines to be measured at pilot venue.*
 
@@ -60,13 +170,17 @@ QueueLess is designed to win the Pakistani market through phased defensibility. 
 - **Reliability:** uptime; time the venue's screen was disconnected.
 - **Business:** orders per venue per day; weekly active venues; whether the pilot venue agrees to a paid plan.
 
-## Ongoing Technical Maintenance
+---
+
+## 4. Ongoing Technical Maintenance
 
 - **DB Profiling:** Monitor indexing and connection pool behavior on the shared Postgres cluster as tenant count scales.
 - **WebSocket Scaling:** Migrate from single-instance in-memory pub/sub to Redis-backed pub/sub for horizontal scalability of WebSocket connections.
 - **Hardware Lifecycle:** Define warranty, replacement, and diagnostic processes for fielded screens and counter QRs.
 
-## Risks & assumptions
+---
+
+## 5. Risks & Assumptions
 
 - A KDS running in a smartphone browser may not alert reliably when the screen is off or locked (technical risk).
 - The forward-deployed engineer (FDE) model does not scale beyond a handful of pilot venues.
@@ -75,7 +189,9 @@ QueueLess is designed to win the Pakistani market through phased defensibility. 
 - A venue's internet reliability is the venue owner's responsibility. A backend outage remains our problem (SRS NFR-2.1, 99.9%).
 - Cross-university discounts have limited real-world reach (guards and access rules stop students from visiting other campuses), so F2 stays low priority.
 
-## Open Decisions
+---
+
+## 6. Open Decisions
 
 Per owner brief v6 §10:
 
