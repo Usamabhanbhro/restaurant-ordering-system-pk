@@ -53,12 +53,16 @@ export function OrderProgressTracker({
         </h2>
       </div>
 
-      {/* Digital Counter Pickup Ticket */}
+      {/* Digital Order Ticket */}
       <div className="p-4 rounded-3xl bg-neutral-900 text-white shadow-float relative overflow-hidden">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-orange-400 flex items-center gap-1.5">
             <Zap className="w-3 h-3 text-orange-400 fill-orange-400" />
-            <span>Counter Pickup Ticket</span>
+            <span>
+              {activeOrder.mode === "IN_VENUE"
+                ? `Table #${activeOrder.tableNumber || "01"} Order Ticket`
+                : "Counter Pickup Ticket"}
+            </span>
           </span>
           <span className="text-xs font-bold text-neutral-400">
             {activeOrder.slot} ({activeOrder.breakSlot})
@@ -71,7 +75,9 @@ export function OrderProgressTracker({
         </div>
 
         <p className="text-xs text-neutral-400 mt-1">
-          Show this number at the cafe counter acrylic stand when ready.
+          {activeOrder.mode === "IN_VENUE"
+            ? `Food is being prepared for Table ${activeOrder.tableNumber || "01"}. Physical settlement at counter.`
+            : "Show this number at the cafe counter acrylic stand when ready."}
         </p>
 
         {activeOrder.items && activeOrder.items.length > 0 && (
@@ -95,12 +101,14 @@ export function OrderProgressTracker({
         </h3>
 
         <div className="space-y-4 relative pl-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-neutral-200">
-          {/* Step 1: Claim Awaiting Review */}
+          {/* Step 1: Order Claim/Submission */}
           <div className="relative">
             <span
               className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${
-                isPending
-                  ? "bg-[#EF5A30] ring-4 ring-orange-100 animate-pulse"
+                activeOrder.mode === "IN_VENUE"
+                  ? "bg-neutral-900"
+                  : isPending
+                  ? "bg-[#fd8535] ring-4 ring-orange-100 animate-pulse"
                   : "bg-neutral-900"
               }`}
             >
@@ -108,11 +116,14 @@ export function OrderProgressTracker({
             </span>
             <div>
               <p className="text-xs font-extrabold text-neutral-900">
-                1. Awaiting Payment Confirmation
+                {activeOrder.mode === "IN_VENUE"
+                  ? "1. Order Sent to Kitchen"
+                  : "1. Awaiting Payment Confirmation"}
               </p>
               <p className="text-[11px] text-neutral-500">
-                {activeOrder.paymentMethod} Txn:{" "}
-                <span className="font-mono text-neutral-800">{activeOrder.txnId}</span>
+                {activeOrder.mode === "IN_VENUE"
+                  ? `Table ${activeOrder.tableNumber || "01"} • Linked to table session`
+                  : `${activeOrder.paymentMethod} Txn: ${activeOrder.txnId}`}
               </p>
             </div>
           </div>

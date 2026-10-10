@@ -18,7 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import type { VenueData, OrderData } from "@/lib/mockData";
+import type { VenueData, OrderData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useSlotStore } from "@/lib/store/slotStore";
@@ -30,6 +30,8 @@ interface CartDrawerProps {
   onClose: () => void;
   onOrderPlaced: (order: OrderData) => void;
   onSelectTab: (tab: "menu" | "perks" | "status" | "profile") => void;
+  mode?: OrderingMode;
+  tableContext?: TableContext | null;
 }
 
 export function CartDrawer({
@@ -38,6 +40,8 @@ export function CartDrawer({
   onClose,
   onOrderPlaced,
   onSelectTab,
+  mode = "REMOTE",
+  tableContext,
 }: CartDrawerProps) {
   const {
     items,
@@ -113,41 +117,54 @@ export function CartDrawer({
   const handlePlaceOrder = () => {
     setErrorMessage("");
 
-    if (!currentUser) {
-      onClose();
-      setAuthModal("WELCOME");
-      setPendingPostAuthAction("CHECKOUT");
-      return;
-    }
+    if (mode === "REMOTE") {
+      if (!currentUser) {
+        onClose();
+        setAuthModal("WELCOME");
+        setPendingPostAuthAction("CHECKOUT");
+        return;
+      }
 
-    if (!currentUser.name || currentUser.name.trim() === "" || currentUser.name === "Guest Diner") {
-      onClose();
-      setAuthModal("ONBOARDING");
-      setPendingPostAuthAction("CHECKOUT");
-      return;
-    }
+      if (!currentUser.name || currentUser.name.trim() === "" || currentUser.name === "Guest Diner") {
+        onClose();
+        setAuthModal("ONBOARDING");
+        setPendingPostAuthAction("CHECKOUT");
+        return;
+      }
 
-    if (!selectedSlot) {
-      setErrorMessage("Please select a pickup time slot.");
-      return;
-    }
+      if (!selectedSlot) {
+        setErrorMessage("Please select a pickup time slot.");
+        return;
+      }
 
-    if (!claimedTxnId.trim() && selectedMethod !== "CASH") {
-      setErrorMessage("Please enter the transaction reference ID (or select Cash on Pickup).");
-      return;
-    }
+      if (!claimedTxnId.trim() && selectedMethod !== "CASH") {
+        setErrorMessage("Please enter the transaction reference ID (or select Cash on Pickup).");
+        return;
+      }
 
-    if (!termsAccepted) {
-      setErrorMessage("Please agree to the same-day counter pickup terms.");
-      return;
+      if (!termsAccepted) {
+        setErrorMessage("Please agree to the same-day counter pickup terms.");
+        return;
+      }
     }
 
     const orderNumber = Math.floor(100 + Math.random() * 900);
+    const assignedTable = tableContext?.tableNumber || "01";
+    const assignedZone = tableContext?.zoneSlug || "main-hall";
+
     const newOrder: OrderData = {
       id: `ORD-${orderNumber}`,
       code: `#${orderNumber}`,
-      customerName: currentUser.name,
-      customerEmail: currentUser.email,
+      customerName:
+        mode === "IN_VENUE"
+          ? currentUser?.name && currentUser.name !== "Guest Diner"
+            ? currentUser.name
+            : `Table ${assignedTable} Diner`
+          : currentUser!.name,
+      customerEmail:
+        mode === "IN_VENUE"
+          ? currentUser?.email || `table-${assignedTable}@guest.local`
+          : currentUser!.email,
       items: items.map((line) => ({
         name: line.item.nameEn,
         qty: line.quantity,
@@ -156,17 +173,26 @@ export function CartDrawer({
         note: line.note,
       })),
       total: cartFinalTotal,
-      slot: selectedSlot.time,
-      breakSlot: selectedSlot.breakSlot,
-      state: "PENDING_PAYMENT",
-      paymentMethod: selectedMethod,
-      txnId: selectedMethod === "CASH" ? "CASH-ON-COUNTER" : claimedTxnId.trim(),
-      hasScreenshot: true,
+      slot: mode === "IN_VENUE" ? selectedSlot?.time || "Immediate" : selectedSlot!.time,
+      breakSlot: mode === "IN_VENUE" ? selectedSlot?.breakSlot || `Table #${assignedTable}` : selectedSlot!.breakSlot,
+      state: mode === "IN_VENUE" ? "PREPARING" : "PENDING_PAYMENT",
+      paymentMethod: mode === "IN_VENUE" ? "COUNTER_PHYSICAL" : selectedMethod,
+      txnId:
+        mode === "IN_VENUE"
+          ? `TABLE-${assignedTable}`
+          : selectedMethod === "CASH"
+          ? "CASH-ON-COUNTER"
+          : claimedTxnId.trim(),
+      hasScreenshot: false,
       createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }),
-      kitchenStartAt: selectedSlot.time,
+      kitchenStartAt: selectedSlot?.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }),
       undoUntil: null,
       rejectionReason: null,
       refundOwed: false,
+      mode: mode,
+      zoneSlug: assignedZone,
+      tableNumber: assignedTable,
+      tableLabel: `Table ${assignedTable}${tableContext?.zoneName ? ` • ${tableContext.zoneName}` : ""}`,
     };
 
     playChime();
@@ -323,141 +349,163 @@ export function CartDrawer({
               </div>
             )}
 
-            {/* Payment Method Card */}
-            <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-700 shrink-0">
-                    <CreditCard className="w-5 h-5 text-neutral-800" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
-                      Payment Rail
-                    </span>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs font-extrabold text-neutral-900">
-                        {selectedMethod === "EASYPAISA" && "Easypaisa • 0300-1234567"}
-                        {selectedMethod === "SADAPAY" && "SadaPay • 0300-9876543"}
-                        {selectedMethod === "BANK" && "Meezan Raast • 000123"}
-                        {selectedMethod === "CASH" && "Cash on Pickup"}
+            {/* Payment Section (Shown in Remote Mode, HIDDEN in In-Venue Mode per specification) */}
+            {mode === "REMOTE" ? (
+              <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-700 shrink-0">
+                      <CreditCard className="w-5 h-5 text-neutral-800" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
+                        Payment Rail
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-neutral-100 text-neutral-500">
-                        Venue Direct
-                      </span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs font-extrabold text-neutral-900">
+                          {selectedMethod === "EASYPAISA" && "Easypaisa • 0300-1234567"}
+                          {selectedMethod === "SADAPAY" && "SadaPay • 0300-9876543"}
+                          {selectedMethod === "BANK" && "Meezan Raast • 000123"}
+                          {selectedMethod === "CASH" && "Cash on Pickup"}
+                        </span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-neutral-100 text-neutral-500">
+                          Venue Direct
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentPicker(!showPaymentPicker)}
+                    className="text-xs font-bold text-[#fd8535] hover:underline"
+                  >
+                    {showPaymentPicker ? "Done" : "Change"}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowPaymentPicker(!showPaymentPicker)}
-                  className="text-xs font-bold text-[#fd8535] hover:underline"
-                >
-                  {showPaymentPicker ? "Done" : "Change"}
-                </button>
-              </div>
-
-              {/* Expandable Payment Rail Selector */}
-              {showPaymentPicker && (
-                <div className="pt-3 border-t border-neutral-100 space-y-2.5">
-                  <span className="text-[11px] font-bold text-neutral-600 block">
-                    Select Venue Payment Rail:
-                  </span>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {venue.paymentMethods.map((pm) => (
+                {/* Expandable Payment Rail Selector */}
+                {showPaymentPicker && (
+                  <div className="pt-3 border-t border-neutral-100 space-y-2.5">
+                    <span className="text-[11px] font-bold text-neutral-600 block">
+                      Select Venue Payment Rail:
+                    </span>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {venue.paymentMethods.map((pm) => (
+                        <button
+                          key={pm.id}
+                          type="button"
+                          onClick={() => setSelectedMethod(pm.kind)}
+                          className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
+                            selectedMethod === pm.kind
+                              ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
+                              : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
+                          }`}
+                        >
+                          {pm.kind}
+                        </button>
+                      ))}
                       <button
-                        key={pm.id}
                         type="button"
-                        onClick={() => setSelectedMethod(pm.kind)}
+                        onClick={() => setSelectedMethod("CASH")}
                         className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
-                          selectedMethod === pm.kind
+                          selectedMethod === "CASH"
                             ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
                             : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
                         }`}
                       >
-                        {pm.kind}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMethod("CASH")}
-                      className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
-                        selectedMethod === "CASH"
-                          ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
-                          : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
-                      }`}
-                    >
-                      CASH
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Direct Settlement Details */}
-              {selectedMethod !== "CASH" ? (
-                <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-100 space-y-2 text-xs">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-neutral-500">
-                      Account Title:{" "}
-                      <strong className="text-neutral-800">{activePaymentMethod.accountTitle}</strong>
-                    </span>
-                    <span className="font-black text-[#fd8535]">Amount: Rs. {cartFinalTotal}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-neutral-200/80 font-mono text-xs font-bold">
-                    <span>{activePaymentMethod.accountNumber}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(activePaymentMethod.accountNumber)}
-                      className="px-2 py-0.5 rounded-md bg-neutral-100 border text-[10px] font-sans font-bold hover:bg-neutral-200 transition-colors"
-                    >
-                      {copiedText === activePaymentMethod.accountNumber ? (
-                        <span className="flex items-center gap-1 text-emerald-600">
-                          <Check className="w-3 h-3" />
-                          <span>Copied</span>
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1">
-                          <Copy className="w-3 h-3" />
-                          <span>Copy</span>
-                        </span>
-                      )}
-                    </button>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-neutral-700">
-                        Transaction Reference ID *
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setClaimedTxnId(`EP-${Math.floor(1000000 + Math.random() * 9000000)}`)
-                        }
-                        className="text-[10px] font-bold text-[#fd8535] hover:underline"
-                      >
-                        Auto-fill Test ID
+                        CASH
                       </button>
                     </div>
-                    <input
-                      type="text"
-                      placeholder="e.g. EP-9823411 or Bank Txn ID"
-                      value={claimedTxnId}
-                      onChange={(e) => setClaimedTxnId(e.target.value)}
-                      className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
-                    />
+                  </div>
+                )}
+
+                {/* Direct Settlement Details */}
+                {selectedMethod !== "CASH" ? (
+                  <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-100 space-y-2 text-xs">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-neutral-500">
+                        Account Title:{" "}
+                        <strong className="text-neutral-800">{activePaymentMethod.accountTitle}</strong>
+                      </span>
+                      <span className="font-black text-[#fd8535]">Amount: Rs. {cartFinalTotal}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-neutral-200/80 font-mono text-xs font-bold">
+                      <span>{activePaymentMethod.accountNumber}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(activePaymentMethod.accountNumber)}
+                        className="px-2 py-0.5 rounded-md bg-neutral-100 border text-[10px] font-sans font-bold hover:bg-neutral-200 transition-colors"
+                      >
+                        {copiedText === activePaymentMethod.accountNumber ? (
+                          <span className="flex items-center gap-1 text-emerald-600">
+                            <Check className="w-3 h-3" />
+                            <span>Copied</span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <Copy className="w-3 h-3" />
+                            <span>Copy</span>
+                          </span>
+                        )}
+                      </button>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-neutral-700">
+                          Transaction Reference ID *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setClaimedTxnId(`EP-${Math.floor(1000000 + Math.random() * 9000000)}`)
+                          }
+                          className="text-[10px] font-bold text-[#fd8535] hover:underline"
+                        >
+                          Auto-fill Test ID
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="e.g. EP-9823411 or Bank Txn ID"
+                        value={claimedTxnId}
+                        onChange={(e) => setClaimedTxnId(e.target.value)}
+                        className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-800 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                    <span>
+                      Pay exact amount (Rs. {cartFinalTotal}) in cash at register counter upon collection.
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* In-Venue Table Card: Confirms table and zero payment section */
+              <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-orange-100/80 text-[#fd8535] flex items-center justify-center font-black text-sm shrink-0 border border-orange-200/50">
+                    #{tableContext?.tableNumber || "01"}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
+                      Dining Location
+                    </span>
+                    <span className="text-xs font-extrabold text-neutral-900">
+                      Table {tableContext?.tableNumber || "01"}{tableContext?.zoneName ? ` • ${tableContext.zoneName}` : ""}
+                    </span>
                   </div>
                 </div>
-              ) : (
-                <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-800 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
-                  <span>
-                    Pay exact amount (Rs. {cartFinalTotal}) in cash at register counter upon collection.
-                  </span>
-                </div>
-              )}
-            </div>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  Table Order
+                </span>
+              </div>
+            )}
 
             {/* Pickup Slot Selection Card */}
             <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-2.5">
@@ -636,8 +684,9 @@ export function CartDrawer({
                 htmlFor="terms"
                 className="text-[10px] text-neutral-500 leading-tight cursor-pointer select-none"
               >
-                I understand orders are prepared for same-day counter pickup. Orders held 30m past
-                pickup slot are counter no-shows (TERMS_DRAFT).
+                {mode === "IN_VENUE"
+                  ? `I confirm this order is for Table ${tableContext?.tableNumber || "01"}. Payment will be settled at the counter physically.`
+                  : "I understand orders are prepared for same-day counter pickup. Orders held 30m past pickup slot are counter no-shows (TERMS_DRAFT)."}
               </label>
             </div>
           </div>
@@ -655,7 +704,8 @@ export function CartDrawer({
               }`}
             >
               <span className="flex items-center gap-2">
-                Place Order <ArrowRight className="w-4 h-4" />
+                {mode === "IN_VENUE" ? "Send Order to Kitchen" : "Place Order"}{" "}
+                <ArrowRight className="w-4 h-4" />
               </span>
               <span className="text-base font-black">Rs. {cartFinalTotal}</span>
             </button>

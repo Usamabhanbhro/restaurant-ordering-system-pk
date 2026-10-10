@@ -1,7 +1,7 @@
 "use client";
 
 import { Star, Search, AlertTriangle, ShoppingBag } from "lucide-react";
-import type { VenueData } from "@/lib/mockData";
+import type { VenueData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
 
 interface HeroHeaderProps {
@@ -12,6 +12,8 @@ interface HeroHeaderProps {
   onSelectTab: (tab: "menu" | "perks" | "status" | "profile") => void;
   onOpenCart?: () => void;
   showSearch?: boolean;
+  mode?: OrderingMode;
+  tableContext?: TableContext | null;
 }
 
 export function HeroHeader({
@@ -21,6 +23,8 @@ export function HeroHeader({
   onSearchChange,
   onOpenCart,
   showSearch = true,
+  mode = "REMOTE",
+  tableContext,
 }: HeroHeaderProps) {
   const { getItemCount } = useCartStore();
   const cartItemCount = getItemCount();
@@ -75,12 +79,17 @@ export function HeroHeader({
           <h1 className="font-extrabold text-base sm:text-lg text-neutral-900 tracking-tight leading-tight">
             {venue.name}
           </h1>
-          {/* Rating moved under cafe name */}
+          {/* Rating moved under cafe name + Table badge in In-Venue mode */}
           <div className="flex items-center gap-2 mt-1">
             <span className="px-2 py-0.5 rounded-full bg-[#f9b318] text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
               <Star className="w-3 h-3 text-white fill-white" />
               <span>{venue.rating}</span>
             </span>
+            {mode === "IN_VENUE" && tableContext && (
+              <span className="px-2.5 py-0.5 rounded-full bg-[#1546d9] text-white text-[11px] font-extrabold flex items-center gap-1 shadow-xs">
+                <span>Table {tableContext.tableNumber}</span>
+              </span>
+            )}
           </div>
         </div>
       </div>

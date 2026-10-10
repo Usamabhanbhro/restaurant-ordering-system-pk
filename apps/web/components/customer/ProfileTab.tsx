@@ -7,18 +7,39 @@ import {
   LogOut,
   Zap,
 } from "lucide-react";
+import type { OrderingMode, TableContext } from "@/lib/mockData";
 import { useAuthStore } from "@/lib/store/authStore";
 
 interface ProfileTabProps {
   onReplaySplash: () => void;
+  mode?: OrderingMode;
+  tableContext?: TableContext | null;
 }
 
-export function ProfileTab({ onReplaySplash }: ProfileTabProps) {
+export function ProfileTab({
+  onReplaySplash,
+  mode = "REMOTE",
+  tableContext,
+}: ProfileTabProps) {
   const { currentUser, setCurrentUser, setAuthModal, setPendingPostAuthAction, signOut } =
     useAuthStore();
 
   return (
     <div className="p-4 space-y-4">
+      {mode === "IN_VENUE" && (
+        <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/60 text-xs text-blue-900 flex items-center justify-between">
+          <div>
+            <p className="font-extrabold text-[#1546d9]">In-Venue Table Mode</p>
+            <p className="text-[11px] text-blue-700">
+              Table {tableContext?.tableNumber || "01"}{tableContext?.zoneName ? ` (${tableContext.zoneName})` : ""} • No account required
+            </p>
+          </div>
+          <span className="px-2 py-0.5 rounded-full bg-[#1546d9] text-white font-extrabold text-[10px]">
+            Active
+          </span>
+        </div>
+      )}
+
       {currentUser ? (
         <>
           {/* User Profile Card */}

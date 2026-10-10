@@ -71,6 +71,14 @@ export interface OrderLineItem {
   note: string;
 }
 
+export type OrderingMode = "REMOTE" | "IN_VENUE";
+
+export interface TableContext {
+  zoneSlug: string;
+  tableNumber: string;
+  zoneName?: string;
+}
+
 export interface OrderData {
   id: string;
   code: string;
@@ -89,6 +97,10 @@ export interface OrderData {
   undoUntil: number | null;
   rejectionReason: string | null;
   refundOwed: boolean;
+  mode?: OrderingMode;
+  zoneSlug?: string;
+  tableNumber?: string;
+  tableLabel?: string;
 }
 
 export const MOCK_VENUE: VenueData = {

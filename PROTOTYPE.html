@@ -1829,6 +1829,11 @@
       const [promoCode, setPromoCode] = useState("");
       const [promoApplied, setPromoApplied] = useState(false);
 
+      // Two-Mode Architecture State: Remote vs In-Venue (Table QR)
+      const [orderingMode, setOrderingMode] = useState("REMOTE"); // 'REMOTE' | 'IN_VENUE'
+      const [tableContext, setTableContext] = useState({ zoneSlug: "indoor-main", tableNumber: "04", zoneName: "Indoor Main" });
+      const [activeInVenueOrderId, setActiveInVenueOrderId] = useState(null);
+
       // Scroll-aware Dynamic Navigation (Floating Pill vs Docked Bar)
       const [isFloatingNav, setIsFloatingNav] = useState(true);
       const scrollRef = useRef(null);
@@ -1923,8 +1928,14 @@
 
       const availableSlots = getAvailableSlots();
 
-      // Find my latest active order
-      const myActiveOrder = currentUser ? orders.find(o => o.customerEmail === currentUser.email && o.state !== 'SERVED' && o.state !== 'VOIDED') : null;
+      // Find my latest active order: In-Venue order resolves by table/session, Remote resolves by account email
+      const myActiveOrder = orderingMode === "IN_VENUE"
+        ? (activeInVenueOrderId
+            ? orders.find(o => o.id === activeInVenueOrderId && o.state !== 'SERVED' && o.state !== 'VOIDED')
+            : orders.find(o => o.mode === "IN_VENUE" && o.tableNumber === tableContext.tableNumber && o.state !== 'SERVED' && o.state !== 'VOIDED'))
+        : (currentUser
+            ? orders.find(o => o.mode !== "IN_VENUE" && o.customerEmail === currentUser.email && o.state !== 'SERVED' && o.state !== 'VOIDED')
+            : null);
 
       // Cart total calculation & voucher perk
       const cartSubtotal = cart.reduce((sum, item) => {
@@ -1974,29 +1985,43 @@
 
       // Submit Order
       const handlePlaceOrder = () => {
-        if (!currentUser) {
-          setShowCheckoutModal(false);
-          setAuthModal("WELCOME");
-          setPendingPostAuthAction("CHECKOUT");
-          return;
+        if (orderingMode === "REMOTE") {
+          if (!currentUser) {
+            setShowCheckoutModal(false);
+            setAuthModal("WELCOME");
+            setPendingPostAuthAction("CHECKOUT");
+            return;
+          }
+          if (!currentUser.name || currentUser.name.trim() === "" || currentUser.name === "Guest Diner") {
+            setShowCheckoutModal(false);
+            setAuthModal("ONBOARDING");
+            setPendingPostAuthAction("CHECKOUT");
+            return;
+          }
+          if (!selectedSlot) return alert("Please select a pickup time slot");
+          if (!claimedTxnId.trim() && selectedMethod !== "CASH") {
+            return alert("Please enter the transaction reference ID (or select Cash at Counter)");
+          }
+          if (!termsAccepted) return alert("Please agree to the same-day counter pickup terms");
         }
-        if (!currentUser.name || currentUser.name.trim() === "" || currentUser.name === "Guest Diner") {
-          setShowCheckoutModal(false);
-          setAuthModal("ONBOARDING");
-          setPendingPostAuthAction("CHECKOUT");
-          return;
-        }
-        if (!selectedSlot) return alert("Please select a pickup time slot");
-        if (!claimedTxnId.trim() && selectedMethod !== "CASH") {
-          return alert("Please enter the transaction reference ID (or select Cash at Counter)");
-        }
-        if (!termsAccepted) return alert("Please agree to the same-day counter pickup terms");
+
+        const orderNumber = Math.floor(100 + Math.random() * 900);
+        const assignedTable = tableContext ? tableContext.tableNumber : "04";
+        const assignedZone = tableContext ? tableContext.zoneSlug : "indoor-main";
 
         const newOrder = {
-          id: `ORD-${Math.floor(100 + Math.random() * 900)}`,
-          code: `#${Math.floor(100 + Math.random() * 900)}`,
-          customerName: currentUser.name,
-          customerEmail: currentUser.email,
+          id: `ORD-${orderNumber}`,
+          code: `#${orderNumber}`,
+          customerName:
+            orderingMode === "IN_VENUE"
+              ? currentUser && currentUser.name !== "Guest Diner"
+                ? currentUser.name
+                : `Table ${assignedTable} Diner`
+              : currentUser.name,
+          customerEmail:
+            orderingMode === "IN_VENUE"
+              ? currentUser ? currentUser.email : `table-${assignedTable}@guest.local`
+              : currentUser.email,
           items: cart.map(c => ({
             name: c.nameEn,
             qty: c.quantity,
@@ -2005,18 +2030,31 @@
             note: c.note || ""
           })),
           total: cartFinalTotal,
-          slot: selectedSlot.time,
-          breakSlot: selectedSlot.breakSlot,
-          state: "PENDING_PAYMENT",
-          paymentMethod: selectedMethod,
-          txnId: selectedMethod === "CASH" ? "CASH-ON-COUNTER" : claimedTxnId.trim(),
-          hasScreenshot: true,
+          slot: orderingMode === "IN_VENUE" ? (selectedSlot ? selectedSlot.time : "Immediate") : selectedSlot.time,
+          breakSlot: orderingMode === "IN_VENUE" ? (selectedSlot ? selectedSlot.breakSlot : `Table #${assignedTable}`) : selectedSlot.breakSlot,
+          state: orderingMode === "IN_VENUE" ? "PREPARING" : "PENDING_PAYMENT",
+          paymentMethod: orderingMode === "IN_VENUE" ? "COUNTER_PHYSICAL" : selectedMethod,
+          txnId:
+            orderingMode === "IN_VENUE"
+              ? `TABLE-${assignedTable}`
+              : selectedMethod === "CASH"
+              ? "CASH-ON-COUNTER"
+              : claimedTxnId.trim(),
+          hasScreenshot: false,
           createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-          kitchenStartAt: selectedSlot.time,
+          kitchenStartAt: selectedSlot ? selectedSlot.time : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
           undoUntil: null,
           rejectionReason: null,
-          refundOwed: false
+          refundOwed: false,
+          mode: orderingMode,
+          zoneSlug: assignedZone,
+          tableNumber: assignedTable,
+          tableLabel: `Table ${assignedTable} • ${tableContext ? tableContext.zoneName : "Indoor Main"}`
         };
+
+        if (orderingMode === "IN_VENUE") {
+          setActiveInVenueOrderId(newOrder.id);
+        }
 
         onNewOrder(newOrder);
         setCart([]);
@@ -2089,6 +2127,11 @@
                         <Icons.Star className="w-3 h-3 text-white fill-white" />
                         <span>{venue.rating}</span>
                       </span>
+                      {orderingMode === "IN_VENUE" && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#1546d9] text-white text-[11px] font-extrabold flex items-center gap-1 shadow-xs">
+                          <span>Table {tableContext.tableNumber}</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2106,6 +2149,48 @@
                 <h1 className="text-xl font-black text-neutral-900 tracking-tight">Profile</h1>
                 <p className="text-xs text-neutral-500 font-medium">Manage your personal account and preferences</p>
               </header>
+            )}
+
+            {/* Architecture Mode Selector Bar */}
+            <div className="px-4 pt-2">
+              <div className="p-1 rounded-2xl bg-neutral-100/90 border border-neutral-200/60 flex items-center gap-1 text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setOrderingMode("REMOTE")}
+                  className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
+                    orderingMode === "REMOTE"
+                      ? "bg-white text-neutral-900 shadow-sm"
+                      : "text-neutral-500 hover:text-neutral-800"
+                  }`}
+                >
+                  <span>Remote Mode</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderingMode("IN_VENUE")}
+                  className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
+                    orderingMode === "IN_VENUE"
+                      ? "bg-[#1546d9] text-white shadow-sm"
+                      : "text-neutral-500 hover:text-neutral-800"
+                  }`}
+                >
+                  <Icons.QrCode className="w-3.5 h-3.5" />
+                  <span>In-Venue (Table #{tableContext.tableNumber})</span>
+                </button>
+              </div>
+            </div>
+
+            {/* In-Venue Table Context Notification Pill */}
+            {orderingMode === "IN_VENUE" && (
+              <div className="mx-4 mt-2 p-2.5 rounded-2xl bg-blue-50/90 border border-blue-200/80 flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-2 text-blue-950 font-bold">
+                  <Icons.MapPin className="w-3.5 h-3.5 text-[#1546d9]" />
+                  <span>Ordering to Table {tableContext.tableNumber} ({tableContext.zoneName})</span>
+                </div>
+                <span className="text-[10px] font-extrabold text-[#1546d9] uppercase tracking-wide">
+                  No Account Needed
+                </span>
+              </div>
             )}
 
             {/* TAB CONTENT: 1. MENU */}
@@ -2336,14 +2421,22 @@
                 {myActiveOrder ? (
                   <div className="space-y-4">
                     
-                    {/* Digital Counter Pickup Ticket */}
+                    {/* Digital Counter / In-Venue Order Ticket */}
                     <div className="p-4 rounded-3xl bg-neutral-900 text-white shadow-float relative overflow-hidden">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-extrabold uppercase tracking-widest text-orange-400 flex items-center gap-1.5">
                           <Icons.Zap className="w-3 h-3 text-orange-400 fill-orange-400" />
-                          <span>Counter Pickup Ticket</span>
+                          <span>
+                            {myActiveOrder.mode === "IN_VENUE"
+                              ? `Table #${myActiveOrder.tableNumber || "04"} Order Ticket`
+                              : "Counter Pickup Ticket"}
+                          </span>
                         </span>
-                        <span className="text-xs font-bold text-neutral-400">{myActiveOrder.slot} ({myActiveOrder.breakSlot})</span>
+                        <span className="text-xs font-bold text-neutral-400">
+                          {myActiveOrder.mode === "IN_VENUE"
+                            ? (myActiveOrder.tableLabel || `Table #${myActiveOrder.tableNumber || "04"}`)
+                            : `${myActiveOrder.slot} (${myActiveOrder.breakSlot})`}
+                        </span>
                       </div>
 
                       <div className="mt-3 flex items-baseline justify-between">
@@ -2351,7 +2444,11 @@
                         <span className="text-sm font-bold text-neutral-300">Rs. {myActiveOrder.total}</span>
                       </div>
 
-                      <p className="text-xs text-neutral-400 mt-1">Show this number at the cafe counter acrylic stand when ready.</p>
+                      <p className="text-xs text-neutral-400 mt-1">
+                        {myActiveOrder.mode === "IN_VENUE"
+                          ? `Food is being prepared for Table ${myActiveOrder.tableNumber || "04"}. Physical settlement at counter.`
+                          : "Show this number at the cafe counter acrylic stand when ready."}
+                      </p>
                     </div>
 
                     {/* 5-Stage Vertical Timeline (Buy Bao Stepper) */}
@@ -2363,14 +2460,25 @@
                         {/* Step 1: Claim Awaiting Review */}
                         <div className="relative">
                           <span className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
-                            myActiveOrder.state === 'PENDING_PAYMENT' ? 'bg-[#EF5A30] ring-4 ring-orange-100 animate-pulse' : 'bg-neutral-900'
+                            myActiveOrder.mode === "IN_VENUE"
+                              ? "bg-neutral-900"
+                              : myActiveOrder.state === 'PENDING_PAYMENT'
+                              ? 'bg-[#EF5A30] ring-4 ring-orange-100 animate-pulse'
+                              : 'bg-neutral-900'
                           }`}>
                             <Icons.Check className="w-3 h-3 text-white" />
                           </span>
                           <div>
-                            <p className="text-xs font-extrabold text-neutral-900">1. Awaiting Payment Confirmation</p>
+                            <p className="text-xs font-extrabold text-neutral-900">
+                              {myActiveOrder.mode === "IN_VENUE" ? "1. Order Sent to Kitchen" : "1. Awaiting Payment Confirmation"}
+                            </p>
                             <p className="text-[11px] text-neutral-500">
-                              {myActiveOrder.paymentMethod} Txn: <span className="font-mono text-neutral-800">{myActiveOrder.txnId}</span>
+                              {myActiveOrder.mode === "IN_VENUE"
+                                ? `Table ${myActiveOrder.tableNumber || "04"} • Linked to table session`
+                                : `${myActiveOrder.paymentMethod} Txn: `}
+                              {myActiveOrder.mode !== "IN_VENUE" && (
+                                <span className="font-mono text-neutral-800">{myActiveOrder.txnId}</span>
+                              )}
                             </p>
                           </div>
                         </div>
@@ -2401,7 +2509,7 @@
                           </div>
                         </div>
 
-                        {/* Step 4: Ready at Counter */}
+                        {/* Step 4: Ready at Counter / Served to Table */}
                         <div className="relative">
                           <span className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
                             myActiveOrder.state === 'READY' ? 'bg-emerald-500 ring-4 ring-emerald-100 animate-pulse' : 'bg-neutral-300'
@@ -2409,8 +2517,14 @@
                             4
                           </span>
                           <div>
-                            <p className="text-xs font-extrabold text-neutral-900">4. Ready for Pickup</p>
-                            <p className="text-[11px] text-neutral-500">Waiting on the counter tray. Please collect promptly.</p>
+                            <p className="text-xs font-extrabold text-neutral-900">
+                              {myActiveOrder.mode === "IN_VENUE" ? "4. Served to Table" : "4. Ready for Pickup"}
+                            </p>
+                            <p className="text-[11px] text-neutral-500">
+                              {myActiveOrder.mode === "IN_VENUE"
+                                ? `Delivered to Table #${myActiveOrder.tableNumber || "04"}. Enjoy your meal!`
+                                : "Waiting on the counter tray. Please collect promptly."}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -2881,129 +2995,151 @@
                     </div>
                   )}
 
-                  {/* Payment Method Card */}
-                  {(() => {
-                    const activePM = venue.paymentMethods.find(m => m.kind === selectedMethod) || venue.paymentMethods[0];
-                    return (
-                      <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-700 shrink-0">
-                              <Icons.CreditCard className="w-5 h-5 text-neutral-800" />
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">Payment</span>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs font-extrabold text-neutral-900">
-                                  {selectedMethod === "EASYPAISA" && "Easypaisa • 0300-1234567"}
-                                  {selectedMethod === "SADAPAY" && "SadaPay • 0300-9876543"}
-                                  {selectedMethod === "BANK" && "Meezan Raast • 000123"}
-                                  {selectedMethod === "CASH" && "Cash on Pickup"}
-                                </span>
-                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-neutral-100 text-neutral-500">
-                                  Default
-                                </span>
+                  {/* Payment Method Card (REMOTE) or Table Dining Location Card (IN_VENUE) */}
+                  {orderingMode === "REMOTE" ? (
+                    (() => {
+                      const activePM = venue.paymentMethods.find(m => m.kind === selectedMethod) || venue.paymentMethods[0];
+                      return (
+                        <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-700 shrink-0">
+                                <Icons.CreditCard className="w-5 h-5 text-neutral-800" />
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">Payment</span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs font-extrabold text-neutral-900">
+                                    {selectedMethod === "EASYPAISA" && "Easypaisa • 0300-1234567"}
+                                    {selectedMethod === "SADAPAY" && "SadaPay • 0300-9876543"}
+                                    {selectedMethod === "BANK" && "Meezan Raast • 000123"}
+                                    {selectedMethod === "CASH" && "Cash on Pickup"}
+                                  </span>
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-neutral-100 text-neutral-500">
+                                    Default
+                                  </span>
+                                </div>
                               </div>
                             </div>
+
+                            <button
+                              onClick={() => setShowPaymentPicker(!showPaymentPicker)}
+                              className="text-xs font-bold text-[#EF5A30] hover:underline"
+                            >
+                              {showPaymentPicker ? "Done" : "Change"}
+                            </button>
                           </div>
 
-                          <button
-                            onClick={() => setShowPaymentPicker(!showPaymentPicker)}
-                            className="text-xs font-bold text-[#EF5A30] hover:underline"
-                          >
-                            {showPaymentPicker ? "Done" : "Change"}
-                          </button>
-                        </div>
-
-                        {/* Expandable Payment Rail Selector */}
-                        {showPaymentPicker && (
-                          <div className="pt-3 border-t border-neutral-100 space-y-2.5">
-                            <span className="text-[11px] font-bold text-neutral-600 block">Select Venue Payment Rail:</span>
-                            <div className="grid grid-cols-4 gap-1.5">
-                              {venue.paymentMethods.map(pm => (
+                          {/* Expandable Payment Rail Selector */}
+                          {showPaymentPicker && (
+                            <div className="pt-3 border-t border-neutral-100 space-y-2.5">
+                              <span className="text-[11px] font-bold text-neutral-600 block">Select Venue Payment Rail:</span>
+                              <div className="grid grid-cols-4 gap-1.5">
+                                {venue.paymentMethods.map(pm => (
+                                  <button
+                                    key={pm.id}
+                                    onClick={() => setSelectedMethod(pm.kind)}
+                                    className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
+                                      selectedMethod === pm.kind
+                                        ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
+                                        : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
+                                    }`}
+                                  >
+                                    {pm.kind}
+                                  </button>
+                                ))}
                                 <button
-                                  key={pm.id}
-                                  onClick={() => setSelectedMethod(pm.kind)}
+                                  onClick={() => setSelectedMethod("CASH")}
                                   className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
-                                    selectedMethod === pm.kind
+                                    selectedMethod === "CASH"
                                       ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
                                       : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
                                   }`}
                                 >
-                                  {pm.kind}
-                                </button>
-                              ))}
-                              <button
-                                onClick={() => setSelectedMethod("CASH")}
-                                className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
-                                  selectedMethod === "CASH"
-                                    ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
-                                    : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
-                                }`}
-                              >
-                                CASH
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Direct Settlement Details (Easypaisa/SadaPay/Raast) */}
-                        {selectedMethod !== "CASH" ? (
-                          <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-100 space-y-2 text-xs">
-                            <div className="flex items-center justify-between text-[11px]">
-                              <span className="text-neutral-500">Account Title: <strong className="text-neutral-800">{activePM.accountTitle}</strong></span>
-                              <span className="font-black text-[#EF5A30]">Amount: Rs. {cartFinalTotal}</span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-neutral-200/80 font-mono text-xs font-bold">
-                              <span>{activePM.accountNumber}</span>
-                              <button
-                                onClick={() => handleCopy(activePM.accountNumber)}
-                                className="px-2 py-0.5 rounded-md bg-neutral-100 border text-[10px] font-sans font-bold hover:bg-neutral-200 transition-colors"
-                              >
-                                {copiedText === activePM.accountNumber ? (
-                                  <span className="flex items-center gap-1 text-emerald-600">
-                                    <Icons.Check className="w-3 h-3" />
-                                    <span>Copied</span>
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center gap-1">
-                                    <Icons.Copy className="w-3 h-3" />
-                                    <span>Copy</span>
-                                  </span>
-                                )}
-                              </button>
-                            </div>
-
-                            <div>
-                              <div className="flex items-center justify-between">
-                                <label className="text-[11px] font-bold text-neutral-700">Transaction Reference ID *</label>
-                                <button
-                                  type="button"
-                                  onClick={() => setClaimedTxnId(`EP-${Math.floor(1000000 + Math.random() * 9000000)}`)}
-                                  className="text-[10px] font-bold text-[#EF5A30] hover:underline"
-                                >
-                                  Auto-fill Test ID
+                                  CASH
                                 </button>
                               </div>
-                              <input
-                                type="text"
-                                placeholder="e.g. EP-9823411 or Bank Txn ID"
-                                value={claimedTxnId}
-                                onChange={(e) => setClaimedTxnId(e.target.value)}
-                                className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#EF5A30] focus:outline-none"
-                              />
                             </div>
-                          </div>
-                        ) : (
-                          <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-800 flex items-center gap-2">
-                            <Icons.AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
-                            <span>Pay exact amount (Rs. {cartFinalTotal}) in cash at register counter upon collection.</span>
-                          </div>
-                        )}
+                          )}
+
+                          {/* Direct Settlement Details (Easypaisa/SadaPay/Raast) */}
+                          {selectedMethod !== "CASH" ? (
+                            <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-100 space-y-2 text-xs">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <span className="text-neutral-500">Account Title: <strong className="text-neutral-800">{activePM.accountTitle}</strong></span>
+                                <span className="font-black text-[#EF5A30]">Amount: Rs. {cartFinalTotal}</span>
+                              </div>
+                              
+                              <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-neutral-200/80 font-mono text-xs font-bold">
+                                <span>{activePM.accountNumber}</span>
+                                <button
+                                  onClick={() => handleCopy(activePM.accountNumber)}
+                                  className="px-2 py-0.5 rounded-md bg-neutral-100 border text-[10px] font-sans font-bold hover:bg-neutral-200 transition-colors"
+                                >
+                                  {copiedText === activePM.accountNumber ? (
+                                    <span className="flex items-center gap-1 text-emerald-600">
+                                      <Icons.Check className="w-3 h-3" />
+                                      <span>Copied</span>
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center gap-1">
+                                      <Icons.Copy className="w-3 h-3" />
+                                      <span>Copy</span>
+                                    </span>
+                                  )}
+                                </button>
+                              </div>
+
+                              <div>
+                                <div className="flex items-center justify-between">
+                                  <label className="text-[11px] font-bold text-neutral-700">Transaction Reference ID *</label>
+                                  <button
+                                    type="button"
+                                    onClick={() => setClaimedTxnId(`EP-${Math.floor(1000000 + Math.random() * 9000000)}`)}
+                                    className="text-[10px] font-bold text-[#EF5A30] hover:underline"
+                                  >
+                                    Auto-fill Test ID
+                                  </button>
+                                </div>
+                                <input
+                                  type="text"
+                                  placeholder="e.g. EP-9823411 or Bank Txn ID"
+                                  value={claimedTxnId}
+                                  onChange={(e) => setClaimedTxnId(e.target.value)}
+                                  className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#EF5A30] focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-800 flex items-center gap-2">
+                              <Icons.AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                              <span>Pay exact amount (Rs. {cartFinalTotal}) in cash at register counter upon collection.</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    /* In-Venue Table Dining Card: Zero payment section, counter physical payment */
+                    <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-blue-100/80 text-[#1546d9] flex items-center justify-center font-black text-sm shrink-0 border border-blue-200/50">
+                          #{tableContext ? tableContext.tableNumber : "04"}
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
+                            Dining Location
+                          </span>
+                          <span className="text-xs font-extrabold text-neutral-900">
+                            Table {tableContext ? tableContext.tableNumber : "04"}{tableContext ? ` • ${tableContext.zoneName}` : ""}
+                          </span>
+                        </div>
                       </div>
-                    );
-                  })()}
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                        Table Order
+                      </span>
+                    </div>
+                  )}
 
                   {/* Pickup Slot Selection Card */}
                   <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-2.5">
@@ -3160,7 +3296,9 @@
                       className="mt-0.5 accent-[#EF5A30] rounded cursor-pointer"
                     />
                     <label htmlFor="terms" className="text-[10px] text-neutral-500 leading-tight cursor-pointer select-none">
-                      I understand orders are prepared for same-day counter pickup. Orders held 30m past pickup slot are counter no-shows (TERMS_DRAFT).
+                      {orderingMode === "IN_VENUE"
+                        ? `I confirm this order is for Table ${tableContext ? tableContext.tableNumber : "04"}. Payment will be settled at the counter physically.`
+                        : "I understand orders are prepared for same-day counter pickup. Orders held 30m past pickup slot are counter no-shows (TERMS_DRAFT)."}
                     </label>
                   </div>
                 </div>
@@ -3172,7 +3310,7 @@
                     className="w-full py-4 px-6 rounded-full bg-[#EF5A30] hover:bg-[#D94820] text-white font-extrabold text-sm flex items-center justify-between shadow-[0_8px_24px_rgba(239,90,48,0.35)] transition-all active:scale-[0.99]"
                   >
                     <span className="flex items-center gap-2">
-                      Place Order <Icons.ArrowRight className="w-4 h-4" />
+                      {orderingMode === "IN_VENUE" ? "Send Order to Kitchen" : "Place Order"} <Icons.ArrowRight className="w-4 h-4" />
                     </span>
                     <span className="text-base font-black">Rs. {cartFinalTotal}</span>
                   </button>
