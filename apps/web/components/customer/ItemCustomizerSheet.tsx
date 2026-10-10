@@ -88,7 +88,9 @@ export function ItemCustomizerSheet({
           <div className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
             <div>
               <h3 className="font-extrabold text-base text-neutral-900">{item.nameEn}</h3>
-              <p className="text-xs text-[#EF5A30] font-semibold">{item.nameRomanUrdu}</p>
+              {item.nameRomanUrdu && item.nameRomanUrdu.toLowerCase() !== item.nameEn.toLowerCase() && (
+                <p className="text-xs text-[#fd8535] font-semibold">{item.nameRomanUrdu}</p>
+              )}
               <p className="text-xs text-neutral-500 mt-1">{item.description}</p>
             </div>
 

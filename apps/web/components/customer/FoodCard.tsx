@@ -38,9 +38,11 @@ export function FoodCard({ item, is86ed = false, onCustomize }: FoodCardProps) {
           )}
         </div>
 
-        <p className="text-[11px] font-medium text-[#EF5A30] mt-0.5">
-          {item.nameRomanUrdu}
-        </p>
+        {item.nameRomanUrdu && item.nameRomanUrdu.toLowerCase() !== item.nameEn.toLowerCase() && (
+          <p className="text-[11px] font-medium text-[#fd8535] mt-0.5">
+            {item.nameRomanUrdu}
+          </p>
+        )}
 
         <p className="text-[11px] text-neutral-500 line-clamp-2 mt-1 leading-relaxed">
           {item.description}

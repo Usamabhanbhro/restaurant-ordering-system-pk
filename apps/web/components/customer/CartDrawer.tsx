@@ -1,11 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Drawer } from "vaul";
 import {
-  ArrowLeft,
-  Flame,
-  User,
   Store,
   CreditCard,
   Copy,
@@ -18,6 +15,8 @@ import {
   Trash2,
   ArrowRight,
   ShoppingBag,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import type { VenueData, OrderData } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
@@ -64,6 +63,41 @@ export function CartDrawer({
   const [copiedText, setCopiedText] = useState("");
   const [localPromoInput, setLocalPromoInput] = useState(promoCode);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Pickup Slots horizontal scroll affordances & arrow controls
+  const slotsScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollSlotsLeft, setCanScrollSlotsLeft] = useState(false);
+  const [canScrollSlotsRight, setCanScrollSlotsRight] = useState(false);
+
+  const checkSlotsScroll = useCallback(() => {
+    const el = slotsScrollRef.current;
+    if (!el) {
+      setCanScrollSlotsLeft(false);
+      setCanScrollSlotsRight(false);
+      return;
+    }
+    const hasLeft = el.scrollLeft > 2;
+    const hasRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 4;
+    setCanScrollSlotsLeft(hasLeft);
+    setCanScrollSlotsRight(hasRight);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(checkSlotsScroll, 150);
+      window.addEventListener("resize", checkSlotsScroll);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("resize", checkSlotsScroll);
+      };
+    }
+  }, [isOpen, checkSlotsScroll, availableSlots]);
+
+  const scrollSlotsBy = (offset: number) => {
+    if (slotsScrollRef.current) {
+      slotsScrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
+    }
+  };
 
   const cartSubtotal = getSubtotal();
   const voucherDiscount = getVoucherDiscount();
@@ -171,56 +205,11 @@ export function CartDrawer({
             <div className="w-12 h-1.5 rounded-full bg-neutral-300" />
           </div>
 
-          {/* Top App Header */}
-          <div className="p-4 border-b border-neutral-200/80 flex items-center justify-between bg-white shrink-0">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center transition-colors"
-              title="Return to Menu"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#FF6B42] to-[#EF5A30] flex items-center justify-center text-white shadow-sm">
-                <Flame className="w-4 h-4 fill-white" />
-              </div>
-              <span className="font-extrabold text-sm text-neutral-900 tracking-tight">
-                Queue<span className="text-[#EF5A30]">Less</span>
-              </span>
-              <span className="text-neutral-300 font-bold">•</span>
-              <span className="font-extrabold text-sm text-neutral-900">Cart</span>
-            </div>
-
-            {currentUser ? (
-              <div
-                className="w-8 h-8 rounded-full bg-neutral-900 text-white font-extrabold text-xs flex items-center justify-center shadow-xs"
-                title={currentUser.name}
-              >
-                {currentUser.name
-                  ? currentUser.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()
-                  : "AA"}
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  setAuthModal("WELCOME");
-                  setPendingPostAuthAction(null);
-                }}
-                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center transition-colors shadow-xs"
-                title="Sign In / Register"
-              >
-                <User className="w-4 h-4" />
-              </button>
-            )}
+          {/* Top App Header: Only "Cart" */}
+          <div className="py-3.5 px-4 border-b border-neutral-100 flex items-center justify-center bg-white shrink-0">
+            <h3 className="font-extrabold text-base text-neutral-900 tracking-tight">
+              Cart
+            </h3>
           </div>
 
           {/* Scrollable Cart Content Area */}
@@ -230,10 +219,10 @@ export function CartDrawer({
               <div>
                 <h2 className="text-lg font-black text-neutral-900 tracking-tight flex items-center gap-1.5">
                   <span>Your Order</span>
-                  <span className="w-2 h-2 rounded-full bg-[#EF5A30] inline-block" />
+                  <span className="w-2 h-2 rounded-full bg-[#fd8535] inline-block" />
                 </h2>
                 <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-0.5">
-                  <Store className="w-3.5 h-3.5 text-[#EF5A30]" />
+                  <Store className="w-3.5 h-3.5 text-[#fd8535]" />
                   <span>{venue.name} • Counter Pickup</span>
                 </div>
               </div>
@@ -275,10 +264,24 @@ export function CartDrawer({
                         <h4 className="font-extrabold text-sm text-neutral-900 truncate">
                           {line.item.nameEn}
                         </h4>
-                        <p className="text-[11px] text-neutral-400 truncate mt-0.5">
-                          {modsText || line.note || line.item.description || "Freshly Prepared"}
-                        </p>
-                        <span className="font-black text-sm text-[#EF5A30] mt-1 block">
+                        {(() => {
+                          const subtitle =
+                            modsText ||
+                            line.note ||
+                            (line.item.description &&
+                            line.item.description.trim().toLowerCase() !== line.item.nameEn.trim().toLowerCase()
+                              ? line.item.description
+                              : "");
+                          if (!subtitle || subtitle.trim().toLowerCase() === line.item.nameEn.trim().toLowerCase()) {
+                            return null;
+                          }
+                          return (
+                            <p className="text-[11px] text-neutral-400 truncate mt-0.5">
+                              {subtitle}
+                            </p>
+                          );
+                        })()}
+                        <span className="font-black text-sm text-[#fd8535] mt-1 block">
                           Rs. {itemTotal}
                         </span>
                       </div>
@@ -304,7 +307,7 @@ export function CartDrawer({
                           type="button"
                           onClick={() => updateQuantity(idx, 1)}
                           title="Increase quantity"
-                          className="w-7 h-7 rounded-full bg-[#EF5A30] text-white hover:bg-[#D94820] flex items-center justify-center shadow-xs transition-transform active:scale-95"
+                          className="w-7 h-7 rounded-full bg-[#fd8535] text-white hover:bg-[#e0681c] flex items-center justify-center shadow-xs transition-transform active:scale-95"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -348,7 +351,7 @@ export function CartDrawer({
                 <button
                   type="button"
                   onClick={() => setShowPaymentPicker(!showPaymentPicker)}
-                  className="text-xs font-bold text-[#EF5A30] hover:underline"
+                  className="text-xs font-bold text-[#fd8535] hover:underline"
                 >
                   {showPaymentPicker ? "Done" : "Change"}
                 </button>
@@ -398,7 +401,7 @@ export function CartDrawer({
                       Account Title:{" "}
                       <strong className="text-neutral-800">{activePaymentMethod.accountTitle}</strong>
                     </span>
-                    <span className="font-black text-[#EF5A30]">Amount: Rs. {cartFinalTotal}</span>
+                    <span className="font-black text-[#fd8535]">Amount: Rs. {cartFinalTotal}</span>
                   </div>
 
                   <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-neutral-200/80 font-mono text-xs font-bold">
@@ -432,7 +435,7 @@ export function CartDrawer({
                         onClick={() =>
                           setClaimedTxnId(`EP-${Math.floor(1000000 + Math.random() * 9000000)}`)
                         }
-                        className="text-[10px] font-bold text-[#EF5A30] hover:underline"
+                        className="text-[10px] font-bold text-[#fd8535] hover:underline"
                       >
                         Auto-fill Test ID
                       </button>
@@ -442,7 +445,7 @@ export function CartDrawer({
                       placeholder="e.g. EP-9823411 or Bank Txn ID"
                       value={claimedTxnId}
                       onChange={(e) => setClaimedTxnId(e.target.value)}
-                      className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#EF5A30] focus:outline-none"
+                      className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -460,89 +463,129 @@ export function CartDrawer({
             <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#EF5A30]" />
+                  <Clock className="w-4 h-4 text-[#fd8535]" />
                   <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                    Pickup Slot (Anti-Queue)
+                    Slot
                   </span>
                 </div>
-                <span className="text-[10px] text-[#EF5A30] font-bold">10m Prep Lead</span>
+                <span className="text-[10px] text-[#fd8535] font-bold">10m Prep Lead</span>
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                {availableSlots.map((s, idx) => {
-                  const isSel = selectedSlot && selectedSlot.time === s.time;
-                  return (
+              <div className="relative">
+                {/* Left Scroll Gradient Affordance & Button */}
+                {canScrollSlotsLeft && (
+                  <div className="absolute left-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-r from-white via-white/90 to-transparent pr-4 pl-0.5 pointer-events-auto">
                     <button
-                      key={idx}
                       type="button"
-                      disabled={s.status === "full"}
-                      onClick={() => setSelectedSlot(s)}
-                      className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
-                        isSel
-                          ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
-                          : s.status === "full"
-                          ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed"
-                          : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400"
-                      }`}
+                      onClick={() => scrollSlotsBy(-140)}
+                      aria-label="Scroll slots left"
+                      className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
                     >
-                      <p className="font-black text-xs">{s.time}</p>
-                      <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
-                      <span
-                        className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
-                          s.status === "available"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : s.status === "filling"
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-neutral-200 text-neutral-500"
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Scrollable Slots Track */}
+                <div
+                  ref={slotsScrollRef}
+                  onScroll={checkSlotsScroll}
+                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1"
+                >
+                  {availableSlots.map((s, idx) => {
+                    const isSel = selectedSlot && selectedSlot.time === s.time;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        disabled={s.status === "full"}
+                        onClick={() => setSelectedSlot(s)}
+                        className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
+                          isSel
+                            ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
+                            : s.status === "full"
+                            ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed"
+                            : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400"
                         }`}
                       >
-                        {s.status}
-                      </span>
+                        <p className="font-black text-xs">{s.time}</p>
+                        <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
+                        <span
+                          className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
+                            s.status === "available"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : s.status === "filling"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-neutral-200 text-neutral-500"
+                          }`}
+                        >
+                          {s.status}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Right Scroll Gradient Affordance & Button */}
+                {canScrollSlotsRight && (
+                  <div className="absolute right-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-l from-white via-white/90 to-transparent pl-4 pr-0.5 pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={() => scrollSlotsBy(140)}
+                      aria-label="Scroll slots right"
+                      className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
                     </button>
-                  );
-                })}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Voucher Discount Code Card */}
-            <div className="bg-white rounded-3xl p-3.5 border border-neutral-100/90 shadow-soft flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 flex-1">
-                <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#EF5A30] flex items-center justify-center shrink-0">
-                  <Ticket className="w-4 h-4" />
+            <div className="bg-white rounded-3xl p-3.5 border border-neutral-100/90 shadow-soft space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 flex-1">
+                  <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#fd8535] flex items-center justify-center shrink-0">
+                    <Ticket className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Enter any code for Rs. 50 off (e.g. FAST20)"
+                    value={localPromoInput}
+                    onChange={(e) => setLocalPromoInput(e.target.value)}
+                    className="w-full text-xs font-bold text-neutral-800 bg-transparent focus:outline-none placeholder:text-neutral-400 uppercase"
+                  />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Voucher code (e.g. FAST20)"
-                  value={localPromoInput}
-                  onChange={(e) => setLocalPromoInput(e.target.value)}
-                  className="w-full text-xs font-bold text-neutral-800 bg-transparent focus:outline-none placeholder:text-neutral-400 uppercase"
-                />
-              </div>
 
-              {promoApplied ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    removePromo();
-                    setLocalPromoInput("");
-                  }}
-                  className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 font-extrabold text-xs flex items-center gap-1 hover:bg-emerald-100 transition-colors"
-                >
-                  <Check className="w-3.5 h-3.5" /> Applied (Remove)
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const code = localPromoInput.trim() || "FAST20";
-                    applyPromo(code);
-                    setLocalPromoInput(code);
-                  }}
-                  className="px-4 py-1.5 rounded-full bg-neutral-950 text-white font-extrabold text-xs hover:bg-[#EF5A30] transition-colors"
-                >
-                  Apply
-                </button>
-              )}
+                {promoApplied ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removePromo();
+                      setLocalPromoInput("");
+                    }}
+                    className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 font-extrabold text-xs flex items-center gap-1 hover:bg-emerald-100 transition-colors shrink-0"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Applied (Remove)
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const code = localPromoInput.trim() || "FAST20";
+                      applyPromo(code);
+                      setLocalPromoInput(code);
+                    }}
+                    className="px-4 py-1.5 rounded-full bg-neutral-950 text-white font-extrabold text-xs hover:bg-[#fd8535] transition-colors shrink-0"
+                  >
+                    Apply
+                  </button>
+                )}
+              </div>
+              <p className="text-[10px] text-neutral-400 pl-1">
+                Any voucher code entered here applies a Rs. 50 discount to your total.
+              </p>
             </div>
 
             {/* Order Summary Card */}
@@ -587,7 +630,7 @@ export function CartDrawer({
                 id="terms"
                 checked={termsAccepted}
                 onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-0.5 accent-[#EF5A30] rounded cursor-pointer"
+                className="mt-0.5 accent-[#fd8535] rounded cursor-pointer"
               />
               <label
                 htmlFor="terms"
@@ -607,7 +650,7 @@ export function CartDrawer({
               onClick={handlePlaceOrder}
               className={`w-full py-4 px-6 rounded-full font-extrabold text-sm flex items-center justify-between transition-all active:scale-[0.99] ${
                 items.length > 0
-                  ? "bg-[#EF5A30] hover:bg-[#D94820] text-white shadow-[0_8px_24px_rgba(239,90,48,0.35)] cursor-pointer"
+                  ? "bg-[#fd8535] hover:bg-[#e0681c] text-white shadow-[0_8px_24px_rgba(253,133,53,0.35)] cursor-pointer"
                   : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
               }`}
             >

@@ -350,6 +350,16 @@
           <polyline points="12 6 12 12 16 14" />
         </svg>
       ),
+      ChevronLeft: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+      ),
+      ChevronRight: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      ),
       Gift: (props) => (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
           <rect x="3" y="8" width="18" height="4" rx="1" />
@@ -634,7 +644,7 @@
         id: "item-1",
         categoryId: "cat-burgers",
         nameEn: "Double Smash Burger",
-        nameRomanUrdu: "Double Smash Burger",
+        nameRomanUrdu: "Do Patties Smash Burger",
         description: "Two 80g smashed prime beef patties, melted cheddar, caramelized onions, house truffle mayo in glazed brioche.",
         price: 750,
         popular: true,
@@ -669,7 +679,7 @@
         id: "item-2",
         categoryId: "cat-coffee",
         nameEn: "Spanish Iced Latte",
-        nameRomanUrdu: "Spanish Iced Latte",
+        nameRomanUrdu: "Meethi Iced Latte",
         description: "Double specialty espresso shaken with sweetened condensed milk and cold whole milk over clear craft ice.",
         price: 520,
         popular: true,
@@ -1858,6 +1868,41 @@
       const scrollRef = useRef(null);
       const lastScrollTop = useRef(0);
 
+      // Pickup Slots horizontal scroll affordances & arrow controls
+      const slotsScrollRef = useRef(null);
+      const [canScrollSlotsLeft, setCanScrollSlotsLeft] = useState(false);
+      const [canScrollSlotsRight, setCanScrollSlotsRight] = useState(false);
+
+      const checkSlotsScroll = () => {
+        const el = slotsScrollRef.current;
+        if (!el) {
+          setCanScrollSlotsLeft(false);
+          setCanScrollSlotsRight(false);
+          return;
+        }
+        const hasLeft = el.scrollLeft > 2;
+        const hasRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 4;
+        setCanScrollSlotsLeft(hasLeft);
+        setCanScrollSlotsRight(hasRight);
+      };
+
+      useEffect(() => {
+        if (showCheckoutModal) {
+          const timer = setTimeout(checkSlotsScroll, 150);
+          window.addEventListener("resize", checkSlotsScroll);
+          return () => {
+            clearTimeout(timer);
+            window.removeEventListener("resize", checkSlotsScroll);
+          };
+        }
+      }, [showCheckoutModal]);
+
+      const scrollSlotsBy = (offset) => {
+        if (slotsScrollRef.current) {
+          slotsScrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
+        }
+      };
+
       const handleScroll = (e) => {
         const currentScrollTop = e.currentTarget.scrollTop;
         const delta = currentScrollTop - lastScrollTop.current;
@@ -2160,7 +2205,9 @@
                               )}
                             </div>
                             
-                            <p className="text-[11px] font-medium text-[#EF5A30] mt-0.5">{item.nameRomanUrdu}</p>
+                            {item.nameRomanUrdu && item.nameRomanUrdu.toLowerCase() !== item.nameEn.toLowerCase() && (
+                              <p className="text-[11px] font-medium text-[#fd8535] mt-0.5">{item.nameRomanUrdu}</p>
+                            )}
                             
                             <p className="text-[11px] text-neutral-500 line-clamp-2 mt-1 leading-relaxed">
                               {item.description}
@@ -2675,7 +2722,9 @@
                 <div className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
                   <div>
                     <h3 className="font-extrabold text-base text-neutral-900">{customizingItem.nameEn}</h3>
-                    <p className="text-xs text-[#EF5A30] font-semibold">{customizingItem.nameRomanUrdu}</p>
+                    {customizingItem.nameRomanUrdu && customizingItem.nameRomanUrdu.toLowerCase() !== customizingItem.nameEn.toLowerCase() && (
+                      <p className="text-xs text-[#fd8535] font-semibold">{customizingItem.nameRomanUrdu}</p>
+                    )}
                     <p className="text-xs text-neutral-500 mt-1">{customizingItem.description}</p>
                   </div>
 
@@ -2775,41 +2824,9 @@
             <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center">
               <div className="w-full max-w-[430px] h-full max-h-[96vh] bg-[#FFFBF8] rounded-t-[2.5rem] shadow-float overflow-hidden flex flex-col animate-slide-up">
                 
-                {/* Top App Header: Back, Brand & User Avatar */}
-                <div className="p-4 border-b border-neutral-200/80 flex items-center justify-between bg-white shrink-0">
-                  <button
-                    onClick={() => setShowCheckoutModal(false)}
-                    className="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center transition-colors"
-                    title="Return to Menu"
-                  >
-                    <Icons.ArrowLeft className="w-4 h-4" />
-                  </button>
-
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#FF6B42] to-[#EF5A30] flex items-center justify-center text-white shadow-sm">
-                      <Icons.Flame className="w-4 h-4 fill-white" />
-                    </div>
-                    <span className="font-extrabold text-sm text-neutral-900 tracking-tight">Queue<span className="text-[#EF5A30]">Less</span></span>
-                    <span className="text-neutral-300 font-bold">•</span>
-                    <span className="font-extrabold text-sm text-neutral-900">Cart</span>
-                  </div>
-
-                  {currentUser ? (
-                    <div 
-                      className="w-8 h-8 rounded-full bg-neutral-900 text-white font-extrabold text-xs flex items-center justify-center shadow-xs"
-                      title={currentUser.name || "Customer Account"}
-                    >
-                      {currentUser.name ? currentUser.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "AA"}
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => { setAuthModal("WELCOME"); setPendingPostAuthAction(null); }}
-                      className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center transition-colors shadow-xs"
-                      title="Sign In / Register"
-                    >
-                      <Icons.User className="w-4 h-4" />
-                    </button>
-                  )}
+                {/* Top App Header: Only "Cart" */}
+                <div className="py-3.5 px-4 border-b border-neutral-100 flex items-center justify-center bg-white shrink-0">
+                  <h3 className="font-extrabold text-base text-neutral-900 tracking-tight">Cart</h3>
                 </div>
 
                 {/* Scrollable Cart Content Area */}
@@ -2852,10 +2869,24 @@
                             {/* Details */}
                             <div className="flex-1 min-w-0 pr-1">
                               <h4 className="font-extrabold text-sm text-neutral-900 truncate">{item.nameEn}</h4>
-                              <p className="text-[11px] text-neutral-400 truncate mt-0.5">
-                                {modsText || item.note || item.description || "Freshly Prepared"}
-                              </p>
-                              <span className="font-black text-sm text-[#EF5A30] mt-1 block">
+                              {(() => {
+                                const subtitle =
+                                  modsText ||
+                                  item.note ||
+                                  (item.description &&
+                                  item.description.trim().toLowerCase() !== item.nameEn.trim().toLowerCase()
+                                    ? item.description
+                                    : "");
+                                if (!subtitle || subtitle.trim().toLowerCase() === item.nameEn.trim().toLowerCase()) {
+                                  return null;
+                                }
+                                return (
+                                  <p className="text-[11px] text-neutral-400 truncate mt-0.5">
+                                    {subtitle}
+                                  </p>
+                                );
+                              })()}
+                              <span className="font-black text-sm text-[#fd8535] mt-1 block">
                                 Rs. {itemTotal}
                               </span>
                             </div>
@@ -3021,72 +3052,112 @@
                   <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Icons.Clock className="w-4 h-4 text-[#EF5A30]" />
-                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Pickup Slot (Anti-Queue)</span>
+                        <Icons.Clock className="w-4 h-4 text-[#fd8535]" />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Slot</span>
                       </div>
-                      <span className="text-[10px] text-[#EF5A30] font-bold">10m Prep Lead</span>
+                      <span className="text-[10px] text-[#fd8535] font-bold">10m Prep Lead</span>
                     </div>
 
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                      {availableSlots.map((s, idx) => {
-                        const isSel = selectedSlot && selectedSlot.time === s.time;
-                        return (
+                    <div className="relative">
+                      {/* Left Scroll Gradient Affordance & Button */}
+                      {canScrollSlotsLeft && (
+                        <div className="absolute left-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-r from-white via-white/90 to-transparent pr-4 pl-0.5 pointer-events-auto">
                           <button
-                            key={idx}
-                            disabled={s.status === 'full'}
-                            onClick={() => setSelectedSlot(s)}
-                            className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
-                              isSel
-                                ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
-                                : (s.status === 'full' ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed" : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400")
-                            }`}
+                            type="button"
+                            onClick={() => scrollSlotsBy(-140)}
+                            aria-label="Scroll slots left"
+                            className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
                           >
-                            <p className="font-black text-xs">{s.time}</p>
-                            <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
-                            <span className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
-                              s.status === 'available' ? 'bg-emerald-100 text-emerald-800' : (s.status === 'filling' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-200 text-neutral-500')
-                            }`}>
-                              {s.status}
-                            </span>
+                            <Icons.ChevronLeft className="w-3.5 h-3.5" />
                           </button>
-                        );
-                      })}
+                        </div>
+                      )}
+
+                      {/* Scrollable Slot Track */}
+                      <div
+                        ref={slotsScrollRef}
+                        onScroll={checkSlotsScroll}
+                        className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1"
+                      >
+                        {availableSlots.map((s, idx) => {
+                          const isSel = selectedSlot && selectedSlot.time === s.time;
+                          return (
+                            <button
+                              key={idx}
+                              disabled={s.status === 'full'}
+                              onClick={() => setSelectedSlot(s)}
+                              className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
+                                isSel
+                                  ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
+                                  : (s.status === 'full' ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed" : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400")
+                              }`}
+                            >
+                              <p className="font-black text-xs">{s.time}</p>
+                              <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
+                              <span className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
+                                s.status === 'available' ? 'bg-emerald-100 text-emerald-800' : (s.status === 'filling' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-200 text-neutral-500')
+                              }`}>
+                                {s.status}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Right Scroll Gradient Affordance & Button */}
+                      {canScrollSlotsRight && (
+                        <div className="absolute right-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-l from-white via-white/90 to-transparent pl-4 pr-0.5 pointer-events-auto">
+                          <button
+                            type="button"
+                            onClick={() => scrollSlotsBy(140)}
+                            aria-label="Scroll slots right"
+                            className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
+                          >
+                            <Icons.ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Voucher Discount Code Card */}
-                  <div className="bg-white rounded-3xl p-3.5 border border-neutral-100/90 shadow-soft flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 flex-1">
-                      <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#EF5A30] flex items-center justify-center shrink-0">
-                        <Icons.Ticket className="w-4 h-4" />
+                  <div className="bg-white rounded-3xl p-3.5 border border-neutral-100/90 shadow-soft space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 flex-1">
+                        <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#fd8535] flex items-center justify-center shrink-0">
+                          <Icons.Ticket className="w-4 h-4" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Enter any code for Rs. 50 off (e.g. FAST20)"
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value)}
+                          className="w-full text-xs font-bold text-neutral-800 bg-transparent focus:outline-none placeholder:text-neutral-400 uppercase"
+                        />
                       </div>
-                      <input
-                        type="text"
-                        placeholder="Voucher code (e.g. FAST20)"
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
-                        className="w-full text-xs font-bold text-neutral-800 bg-transparent focus:outline-none placeholder:text-neutral-400 uppercase"
-                      />
-                    </div>
 
-                    {promoApplied ? (
-                      <button
-                        onClick={() => { setPromoApplied(false); setPromoCode(""); }}
-                        className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 font-extrabold text-xs flex items-center gap-1 hover:bg-emerald-100 transition-colors"
-                      >
-                        <Icons.Check className="w-3.5 h-3.5" /> Applied (Remove)
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setPromoApplied(true);
-                          if (!promoCode.trim()) setPromoCode("FAST20");
-                        }}
-                        className="px-4 py-1.5 rounded-full bg-neutral-950 text-white font-extrabold text-xs hover:bg-[#EF5A30] transition-colors"
-                      >
-                        Apply
-                      </button>
-                    )}
+                      {promoApplied ? (
+                        <button
+                          onClick={() => { setPromoApplied(false); setPromoCode(""); }}
+                          className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 font-extrabold text-xs flex items-center gap-1 hover:bg-emerald-100 transition-colors shrink-0"
+                        >
+                          <Icons.Check className="w-3.5 h-3.5" /> Applied (Remove)
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setPromoApplied(true);
+                            if (!promoCode.trim()) setPromoCode("FAST20");
+                          }}
+                          className="px-4 py-1.5 rounded-full bg-neutral-950 text-white font-extrabold text-xs hover:bg-[#fd8535] transition-colors shrink-0"
+                        >
+                          Apply
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-neutral-400 pl-1">
+                      Any voucher code entered here applies a Rs. 50 discount to your total.
+                    </p>
                   </div>
 
                   {/* Order Summary Card (Directly matching reference screenshot) */}
