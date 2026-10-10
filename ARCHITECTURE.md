@@ -1,5 +1,6 @@
 # ARCHITECTURE.md — System Architecture & Component Interactions
 
+> **Changelog (2026-10-10):** implemented Two-Mode Customer Ordering Architecture (Remote Pre-Ordering `REMOTE` with scheduled break slots vs In-Venue Table QR `IN_VENUE` with direct kitchen dispatch and counter settlement); implemented table route `apps/web/app/[tenantSlug]/t/[zoneSlug]/[tableNumber]/page.tsx`; ratified Triad Brand Color Palette (`#fd8535`, `#f9b318`, `#1546d9`) and The Velocity Platter brand mark; refined mobile UI (text-only category pills, streamlined cart drawer header, hidden mode toggle in tracker tab, bypass slot scheduler and payment proof for table orders); officially retired and archived `PROTOTYPE.html` per user directive.
 > **Changelog (2026-10-09):** ratified modern frontend architecture stack: Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4 + Liquid Glass tokens, Vaul + Motion gesture physics, Radix UI + Lucide vector SVG primitives, Zustand + TanStack Query v5 caching, and Cloudflare Images CDN.
 > **Changelog (2026-10-06):** applied owner brief v6 (v1 remote ordering lifecycle state machine, scheduler engine, cross-venue identity boundary, minimal operations outage handling, supersessions).
 
@@ -89,6 +90,24 @@ To achieve world-class aesthetic beauty (benchmarked against Starbucks, Uber Eat
    - **WebSocket Hub:** Dedicated low-latency WebSocket connection (`ws`) for live 5-stage order progress timelines and kitchen KDS tickets.
    - **Cloudflare Images / Imgix:** Dynamic CDN edge resizing for diner payment proof screenshots and high-resolution food assets.
 
+### 1.2 Two-Mode Customer Ordering Architecture
+
+The frontend application in `apps/web` operates in two distinct customer modes based on route parameters:
+
+1. **Remote Pre-Ordering Mode (`REMOTE`):**
+   - **Route Pattern:** `order.cafe.pk/[tenantSlug]`
+   - **Identity Requirement:** Authenticated customer profile (verified email, Pakistani mobile phone).
+   - **Scheduling:** Customer selects an available pickup slot (e.g. 13:30) governed by venue capacity and prep lead time.
+   - **Payment Flow:** Customer submits manual payment claim (Easypaisa, JazzCash, SadaPay, Raast) with transaction reference.
+   - **Kitchen Activation:** Order enters `PENDING_PAYMENT` in staff dashboard; cooking begins after payment confirmation.
+
+2. **In-Venue Table QR Mode (`IN_VENUE`):**
+   - **Route Pattern:** `[tenantSlug]/t/[zoneSlug]/[tableNumber]`
+   - **Identity Requirement:** 100% Anonymous (no login, registration, or phone required).
+   - **Scheduling:** Bypassed completely; order dispatches directly to the active kitchen queue.
+   - **Payment Flow:** Settle at venue counter desk via cash or physical card. Payment proof upload and slot selection cards are completely hidden from the cart drawer.
+   - **Table Binding:** Orders are linked directly to `table_id` and `zone_slug`.
+
 ---
 
 ## 2. Cross-Venue Identity Layer Boundary
@@ -143,6 +162,13 @@ Every transition executes as an atomic conditional update (`WHERE id = $id AND v
 
 ### 3.4 Refunds Owed Management
 When a paid/confirmed order is cancelled by the customer or administratively voided, `orders.refund_owed` is flagged `true`. The unified dashboard displays these in the `refunds_owed` lane. Cashiers issue manual refunds via their bank or mobile wallet app (Easypaisa/SadaPay) and tap "refund done", firing `POST /staff/orders/:order_id/refund-done` which sets `refund_owed = false`, `refund_done_at = NOW()`, and logs `REFUND_MARKED_DONE`.
+
+### 3.5 In-Venue Table Order Lifecycle
+Unlike remote pre-orders, in-venue table orders skip scheduled break slot calculations and manual payment claim verification holds:
+1. **Intake:** Diner submits order from table URL (`/[tenantSlug]/t/[zoneSlug]/[tableNumber]`) anonymously.
+2. **Dispatch:** Ticket lands directly in staff KDS with table and zone identifier (e.g. `Table 04 (Indoor Main)`).
+3. **Execution:** Kitchen prepares ticket immediately (`PREPARING` -> `READY`).
+4. **Service & Settlement:** Order is served to table (`SERVED`), and payment is settled physically at the counter desk (cash or card). Note: `PROTOTYPE.html` is officially retired; all lifecycle behavior is implemented in `apps/web`.
 
 ---
 

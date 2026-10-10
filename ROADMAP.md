@@ -1,6 +1,6 @@
 # ROADMAP.md — Engineering Progress & Phased Execution Strategy
 
-> **Changelog (2026-10-10):** ratified official Triad Brand Color Palette (`#fd8535` Kinetic Orange, `#f9b318` Saffron Amber, `#1546d9` Electric Cobalt); synchronized The Velocity Platter brand emblem across splash screen and venue badge; resolved mobile viewport feedback (clutter reduction, rating repositioning, cart trigger in hero, and category carousel discoverability).  
+> **Changelog (2026-10-10):** ratified Two-Mode Customer Ordering Architecture (Remote Pre-Ordering `REMOTE` vs In-Venue Table QR `IN_VENUE`); implemented table route `[tenantSlug]/t/[zoneSlug]/[tableNumber]` with anonymous ordering and counter settlement; refined in-venue header (removed "NO ACCOUNT NEEDED" pill), mode toggle button (removed QR icon, hidden in tracker tab), cart drawer (streamlined header to "Your Order", removed table badges, bypassed slot picker and payment proof fields for table orders), category carousel (text-only pills, Saffron Amber `#f9b318` Popular styling), and profile tab (Electric Cobalt `#1546d9` plain text Verified); ratified Triad Brand Color Palette (`#fd8535`, `#f9b318`, `#1546d9`) and synchronized The Velocity Platter brand mark; officially retired and archived `PROTOTYPE.html` per user directive; verified monorepo quality gates (`check-types` and `build` clean at commit `91f2f5f`).  
 > **Changelog (2026-10-09):** added granular Engineering Progress & Sitting Tracker for v1 web app implementation; logged completed architecture specifications, interactive prototype, minimal splash screen refinement, and developer handoff; mapped out modular development sittings across Turborepo monorepo packages.  
 > **Changelog (2026-10-06):** applied owner brief v6 (v1 remote ordering scope locked; open items from brief v6 §10 updated in Open Decisions).
 
@@ -28,7 +28,8 @@ Because building a full-stack, multi-tenant digital ordering and KDS sidecar can
   - [x] Ratified stack: Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4, Liquid Glass tokens, Vaul bottom sheets, Motion (`motion/react`) spring physics, Radix UI primitives, Lucide SVG vector icons.
   - [x] Codified and strictly enforced the **Strict No-Emoji Policy** across all code, tests, UI badges, mock data, and documentation ([CONVENTIONS.md](file:///f:/projects/restaurant-ordering-system-pk/CONVENTIONS.md), [DESIGN.md](file:///f:/projects/restaurant-ordering-system-pk/DESIGN.md)).
 
-- [x] **Interactive Full-Stack Prototype (`PROTOTYPE.html`)**
+- [x] **Interactive Full-Stack Prototype (`PROTOTYPE.html` — Officially Retired & Archived)**
+  - [x] *Status:* Served its mission as initial zero-dependency interactive proof of concept; officially retired from active updates per user directive on 2026-10-10. All subsequent features, UI polish, and architecture are implemented exclusively in the Next.js 15 Turborepo monorepo (`apps/web`).
   - [x] Complete simulated Customer PWA flow: category navigation, split food cards, Roman Urdu subtitles, scheduled slot selection, Pakistani manual payment proof upload, 5-stage order progress timeline.
   - [x] Customer authentication bottom sheet: email, mandatory Pakistani mobile phone (`PK +92`), password, social auth options (`17260a7`).
   - [x] Unified 5-lane Staff KDS: `PAYMENTS`, `SCHEDULED`, `PREPARING`, `READY`, `REFUNDS` with synthesized Web Audio chime (`playChime()`).
@@ -86,18 +87,25 @@ To maintain focus and avoid burnout across sessions, work is organized into 7 di
 - [x] Implement public menu catalog endpoint with stale-while-revalidate caching headers.
 - [x] Implement order intake and cashier claim submission endpoints.
 
-#### Sitting 5: Next.js 15 Customer PWA (`apps/web` - COMPLETED)
-*Focus: Mobile web ordering experience for diners.*
+#### Sitting 5: Next.js 15 Customer PWA (`apps/web` - COMPLETED & HARDENED)
+*Focus: Mobile web ordering experience for diners across Remote and In-Venue Table QR modes.*
 - [x] Initialize Next.js 15 (App Router) + React 19 app shell with Server Components for <300ms paint.
 - [x] Configure Tailwind CSS v4 and Liquid Glass CSS tokens (`backdrop-filter: blur(20px)`).
+- [x] Ratify Triad Brand Color Palette: Kinetic Orange (`#fd8535`), Saffron Amber (`#f9b318`), Electric Cobalt (`#1546d9`), Warm Cream Canvas (`#FFFBF8`), and Deep Slate (`#1e293b`).
+- [x] Standardize on The Velocity Platter brand logo (`brand/queueless-svg.svg`), eliminating legacy SpeedCup vectors.
 - [x] Port verified minimal `#fd8535` splash screen component (`SplashScreen.tsx`) with Apple spring entrance.
-- [x] Setup client cache & state: Zustand stores (`cartStore`, `authStore`, `slotStore`, `orderStore`) + TanStack Query v5 provider (`QueryProvider.tsx`).
+- [x] Setup client cache & state: Zustand stores (`cartStore`, `authStore`, `slotStore`, `orderStore`, `venueStore`) + TanStack Query v5 provider (`QueryProvider.tsx`).
+- [x] Implement Two-Mode Customer Ordering Architecture:
+  - [x] Remote Pre-Ordering (`REMOTE`) at `order.cafe.pk/[tenantSlug]` with customer auth, scheduled slots, and in-app payment claims.
+  - [x] In-Venue Table QR Ordering (`IN_VENUE`) at `/[tenantSlug]/t/[zoneSlug]/[tableNumber]` with anonymous ordering, direct kitchen dispatch, and counter settlement.
 - [x] Implement interactive bottom sheets using `vaul`: item modifier customizer (`ItemCustomizerSheet.tsx`), cart & checkout drawer (`CartDrawer.tsx`), customer auth sheet (`CustomerAuthSheet.tsx`).
-- [x] Implement Pakistani manual payment checkout with one-tap copy (Easypaisa, SadaPay, Meezan Raast, Cash) and transaction reference claim.
-- [x] Implement 5-stage order status tracker (`OrderProgressTracker.tsx`) with live counter ticket and cancellation rules.
-- [x] Implement dynamic bottom dock (`FloatingBottomDock.tsx`) with scroll-direction awareness (floating pill vs docked bar) and floating cart capsule.
-- [x] Implement Perks and loyalty tab (`PerksTab.tsx`) with 5-stamp punch card and campus affiliation vouchers.
-- [x] Implement Profile tab (`ProfileTab.tsx`) with student status badge, preferences, and opening splash replay trigger.
+- [x] Cart drawer polish: streamlined header to "Your Order" (removed store icons, item counts, and welcome text); pure white drawer surface; removed "Table Order" badge and `#04` square block.
+- [x] Selective table order bypassing: pickup slot scheduler and manual payment proof upload sections completely hidden for table orders with direct counter cash/card settlement.
+- [x] Category carousel & food cards: text-only category pills (icons removed); Saffron Amber (`#f9b318`) Popular pill and food card badge; Kinetic Orange (`#fd8535`) active category pills.
+- [x] Live Order Tracker tab refinements: top-right cart button conditionally hidden (`activeTab === "status"`); mode toggle and in-venue header hidden while tracking orders; slot details hidden on table tickets.
+- [x] Profile tab: Electric Cobalt (`#1546d9`) plain text "Verified" badge (green pill and checkmark removed); opening splash replay trigger.
+- [x] In-venue header polish: table and zone context preserved; "NO ACCOUNT NEEDED" pill removed; mode toggle button renders clean text with no QR icon.
+- [x] Quality gate validation: `pnpm run check-types` (0 errors across 4 packages) and `pnpm run build` (clean Next.js 15 production build). Latest commit: `91f2f5f`.
 
 #### Sitting 6: Unified Staff KDS Dashboard (`apps/web`)
 *Focus: Responsive kitchen and cashier dashboard.*

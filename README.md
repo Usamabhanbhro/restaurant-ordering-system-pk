@@ -29,6 +29,7 @@
 
 ---
 
+> **Changelog (2026-10-10):** ratified Two-Mode Customer Ordering Architecture (Remote Pre-Ordering `REMOTE` vs In-Venue Table QR `IN_VENUE`); implemented table route `[tenantSlug]/t/[zoneSlug]/[tableNumber]` with anonymous order flow and physical counter settlement; refined in-venue header (removed "NO ACCOUNT NEEDED" pill), mode toggle (removed QR icon, hidden in tracker), and cart drawer (streamlined header to "Your Order", removed table badges, bypassed slot picker and payment proof fields for table orders); updated category carousel to text-only pills with Saffron Amber `#f9b318` Popular styling; updated profile verified badge to plain text Electric Cobalt `#1546d9`; ratified Triad Brand Color Palette (`#fd8535`, `#f9b318`, `#1546d9`) and The Velocity Platter brand mark; officially retired and archived `PROTOTYPE.html` per user directive.
 > **Changelog (2026-10-09):** ratify frontend architecture stack — Next.js 15 (App Router / SSR) + React 19, Tailwind CSS v4, Vaul bottom sheets, Motion (motion/react), Radix UI primitives, Lucide SVG vector iconography, Zustand, TanStack Query v5, Cloudflare Images CDN; enforce strict no-emoji policy.
 > **Changelog (2026-10-06):** applied owner brief v6 (v1 remote ordering data model, API, 5 dashboard lanes, acceptance criteria, FDE runbook, draft customer terms).
 
@@ -60,14 +61,31 @@ QueueLess acts as an **order intake and kitchen dispatch sidecar**:
 
 ---
 
-## ✨ Core Features (v1 Remote Ordering)
+## Core Features & Two-Mode Ordering Architecture
 
-### 📱 Customer Progressive Web App (PWA)
-- **Zero App Store Download:** Instant-loading mobile browser experience accessed via `order.cafe.pk/{tenant_slug}` or counter acrylic QR.
-- **Streamlined Customer Account Creation:** Fast signup via email, Pakistani mobile phone, and password (profile per [ADR-0009](./docs/adr/0009-profile-perks-wallet.md)), with display name and institutional affiliations gathered after registration.
-- **Intelligent Slot Scheduling:** Dynamic slot calculation based on venue operating hours, prep lead time, and atomic slot capacity counters.
-- **Transparent 5-Stage Timeline:** Live status tracking with real-time WebSocket updates and email notifications.
+QueueLess supports two distinct customer ordering experiences tailored for campus and cafe dining:
+
+### Two-Mode Ordering Architecture
+- **Remote Pre-Ordering Mode (`REMOTE`):**
+  - **Access URL:** `order.cafe.pk/{tenant_slug}` or counter acrylic QR.
+  - **Authentication:** Required (verified email, Pakistani mobile phone, customer profile).
+  - **Pickup Scheduling:** Intelligent slot scheduling aligned to venue break times with 10-minute prep lead and capacity caps.
+  - **Payment Handling:** Direct Pakistani manual payment verification (Easypaisa, JazzCash, SadaPay, Raast) with transaction ID claims and optional screenshot proof.
+  - **Tracking:** 5-stage progress timeline (`PENDING_PAYMENT` -> `SCHEDULED` -> `PREPARING` -> `READY` -> `SERVED`).
+- **In-Venue Table QR Mode (`IN_VENUE`):**
+  - **Access URL:** `/{tenant_slug}/t/{zone_slug}/{table_number}` via table-mounted QR tags.
+  - **Authentication:** 100% Anonymous (no registration, login, or phone number required).
+  - **Kitchen Dispatch:** Immediate order intake into active kitchen queue; pickup slot scheduler completely bypassed.
+  - **Payment Handling:** Cash or physical card settlement at the venue counter; payment upload fields completely bypassed.
+  - **Tracking:** Streamlined in-venue timeline ("Dispatched to Kitchen" and "Served to Table") with dining location binding.
+
+### Customer Progressive Web App (PWA) in `apps/web`
+- **Zero App Store Download:** Instant-loading mobile browser experience with Server-Side Rendering (<300ms paint).
+- **Streamlined Customer Account Creation:** Fast signup via email, Pakistani mobile phone, and password (profile per [ADR-0009](./docs/adr/0009-profile-perks-wallet.md)).
+- **Intelligent Slot Scheduling:** Dynamic slot calculation based on venue operating hours, prep lead time, and atomic slot capacity counters (for remote pre-orders).
+- **Transparent Order Timeline:** Live status tracking with real-time WebSocket updates.
 - **Graceful Cancellation:** One-tap cancellation before kitchen start time (`kitchen_start_at`) with automatic refund queueing.
+- **Brand & Visual Polish:** Triad Brand Palette (`#fd8535` Kinetic Orange, `#f9b318` Saffron Amber, `#1546d9` Electric Cobalt), text-only category carousel pills, streamlined cart drawer header ("Your Order"), and Electric Cobalt plain text verified badge. Note: `PROTOTYPE.html` is officially retired; all development is active in `apps/web`.
 
 ### 🖥️ Unified Staff Web Dashboard
 - **Single-Screen Web App:** Responsive desktop and smartphone web app serving kitchen, cashier, and management roles simultaneously.

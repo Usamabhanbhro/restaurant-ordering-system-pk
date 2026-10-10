@@ -1,6 +1,6 @@
 # DESIGN.md — Product Design Document & Design System
 
-> **Changelog (2026-10-10):** ratified official Triad Brand Color Palette (`#fd8535` Kinetic Orange, `#f9b318` Saffron Amber, `#1546d9` Electric Cobalt); updated Section 2.0 brand identity with "The Velocity Platter" vector mark assets; updated Section 2.1 color tokens, Section 3.0 opening splash screen specs, Section 3.1 hero header layout, and Section 3.6 bottom dock indicators.  
+> **Changelog (2026-10-10):** ratified Two-Mode Customer Ordering Architecture (Remote Pre-Ordering `REMOTE` vs In-Venue Table QR `IN_VENUE`); refined in-venue header (removed "NO ACCOUNT NEEDED" pill), mode toggle button (removed QR icon, hidden in tracker tab), and cart drawer (streamlined header to "Your Order", removed table badges, bypassed slot picker and payment proof fields for table orders); updated category carousel to text-only pills with Saffron Amber `#f9b318` Popular styling; top-right cart button conditionally hidden in tracker tab (`activeTab === "status"`); updated profile tab verified badge to plain text Electric Cobalt `#1546d9`; ratified official Triad Brand Color Palette (`#fd8535` Kinetic Orange, `#f9b318` Saffron Amber, `#1546d9` Electric Cobalt); updated Section 2.0 brand identity with "The Velocity Platter" vector mark assets, eliminating legacy SpeedCup vectors; officially retired and archived `PROTOTYPE.html` per user directive.  
 > **Changelog (2026-10-09):** added Section 3.0 Opening Splash Screen specification inspired by Starbucks & Apple fluid motion guidelines (critically damped entrance, ceramic specular sheen, optical typography, time-of-day greeting, venue grounding, interruptible exit with tap-to-dismiss); ratify frontend architecture stack (Next.js 15, React 19, Tailwind v4, Vaul, Motion).  
 > **Changelog (2026-10-07):** updated visual design system and component architecture inspired by modern consumer food apps (Buy Bao reference, Starbucks, and Uber Eats). Retains all v1 remote ordering lifecycle rules, 5 dashboard lanes, and Pakistani market constraints.
 
@@ -118,14 +118,21 @@ To achieve world-class visual fluidity without sacrificing mobile battery or per
   - **Testing & Replay:** Replayable at any time via the Customer Profile tab.
 
 ### 3.1 Customer Discovery & Menu Catalog
-- **Venue Hero Header:**
-  - Full-width cover image with subtle bottom gradient overlay.
-  - Floating top bar contains the frosted glass **Cart Button** (`ShoppingBag` icon, label, and dynamic quantity count badge).
+- **Venue Hero Header (`HeroHeader.tsx`):**
+  - Full-width cover image with subtle warm cream bottom gradient overlay for maximum contrast.
+  - Floating top bar contains the round white floating **Cart Button** with dynamic quantity count badge; conditionally hidden in the live Order Tracker tab (`activeTab === "status"`).
   - **Venue Profile Card:** Positioned outside `overflow-hidden` container with negative top margin (`-mt-7 relative z-10`) to prevent any bottom boundary clipping of the brand emblem badge.
   - **Brand Badge:** The Velocity Platter SVG on a vibrant rounded-2xl container (`bg-gradient-to-br from-[#fd8535] to-[#e0681c] border-2 border-white shadow-xl`).
   - **Title & Metadata:** Venue name (`text-base sm:text-lg font-extrabold`) with the Saffron Amber rating badge (`#f9b318` star pill) and cuisine tags directly underneath.
+- **In-Venue Dining Header:**
+  - Displays table and zone context (e.g. `Ordering to Table 04 (Indoor Main)`).
+  - "NO ACCOUNT NEEDED" pill removed for clean header aesthetics.
+  - Mode toggle button renders clean text with no QR icon.
+  - Mode toggle and in-venue header are restricted to the menu screen (`activeTab === "menu"`) and hidden in the order tracker tab.
 - **Category Carousel:**
-  - Horizontal scrolling pill tabs with custom vector category icons.
+  - Text-only horizontal category pills (vector icons removed for clean typographic focus).
+  - Unselected "Popular" pill styled in Saffron Amber (`#f9b318`), selected in Kinetic Orange (`#fd8535`). Other category pills styled in Kinetic Orange when active.
+  - Food card "POPULAR" badge styled in Saffron Amber (`#f9b318`).
   - Dynamic gradient edge masks (fade indicators on left and right) with one-tap chevron assist buttons for clear mobile discoverability.
   - Grid wrapping toggle button (`LayoutGrid`) enabling small-screen users (320px–375px) to toggle into a 2-row wrapped view without horizontal scrolling.
 - **Food Item Cards (Split Card Layout):**
@@ -142,23 +149,30 @@ To achieve world-class visual fluidity without sacrificing mobile battery or per
 - Free-text note input with 40-char limit (`^[a-zA-Z0-9\s.,!?'-]{0,40}$`).
 - Sticky bottom footer with tactile quantity stepper (`[-] 1 [+]`) and solid black CTA: `Add to Cart • Rs. 870`.
 
-### 3.3 Slot Selection & Pakistani Payment Checkout
-- **Pickup Slot Carousel:**
-  - Horizontal time chips (`13:30`, `13:45`, `14:00`, `14:15`).
-  - Color-coded capacity labels: *"Available"*, *"Filling Fast"*, or disabled *"Full"*.
-- **Direct Venue Payment Card:**
-  - Tabbed or radio selection between venue's registered accounts: **Easypaisa**, **SadaPay**, **Meezan Bank / Raast**.
-  - Account Title, Account Number with 1-tap **"Copy Number"** button, and venue instructions.
-  - Transaction ID input field + optional receipt screenshot dropzone.
-  - Pre-payment terms display with required acknowledgment checkbox per `TERMS_DRAFT.md`.
+### 3.3 Cart Drawer & Two-Mode Checkout Mechanics (`CartDrawer.tsx`)
+- **Streamlined Header Architecture:**
+  - Header is distilled strictly to **"Your Order"** with crisp 18px bold typography.
+  - Removed item count pills, store/venue icons, subtitle breadcrumbs, and intro/welcome text.
+  - Pure white background surface for clean contrast.
+- **Remote Ordering Checkout Flow (`REMOTE`):**
+  - **Pickup Slot Carousel:** Horizontal time chips (`13:30`, `13:45`, `14:00`, `14:15`) with capacity labels (*"Available"*, *"Filling Fast"*, or disabled *"Full"*).
+  - **Direct Venue Payment Card:** Tabbed/radio selection between venue's registered accounts (**Easypaisa**, **SadaPay**, **Meezan Bank / Raast**) with 1-tap **"Copy Number"** button, transaction ID input, and terms acknowledgment. "Cash on Pickup" is strictly removed.
+- **In-Venue Table Checkout Flow (`IN_VENUE`):**
+  - **Dining Summary Card:** Displays clean table and zone context without redundant "Table Order" badge or `#04` square block.
+  - **Bypassed Elements:** Pickup slot selection card and manual payment upload fields are completely hidden.
+  - **Counter Settlement:** Diner submits order directly to the kitchen queue and pays cash or physical card at the counter desk.
 
-### 3.4 Customer Live Order Timeline (5-Stage Tracker)
-Matches the reference design's vertical chronological stepper with solid circular time nodes:
-1. **Awaiting Payment Confirmation:** Node active with pulse; message shows operator is verifying transaction ID.
-2. **Confirmed, Scheduled for HH:MM:** Node locked; displays scheduled pickup slot and target kitchen start time.
-3. **Being Prepared:** Active cooking animation; timer counting down to pickup time.
-4. **Ready for Pickup:** Prominent high-contrast **Digital Counter Ticket Card** displaying large order code (e.g. **#108**) with instructions to show at the pickup counter.
-5. **Collected:** Terminal `SERVED` state with transaction receipt summary.
+### 3.4 Customer Live Order Timeline (`OrderProgressTracker.tsx`)
+- **Remote Pre-Order 5-Stage Stepper:**
+  1. **Awaiting Payment Confirmation:** Node active with pulse; message shows operator is verifying transaction ID.
+  2. **Confirmed, Scheduled for HH:MM:** Node locked; displays scheduled pickup slot and target kitchen start time.
+  3. **Being Prepared:** Active cooking animation; timer counting down to pickup time.
+  4. **Ready for Pickup:** Prominent high-contrast **Digital Counter Ticket Card** displaying large order code (e.g. **#108**).
+  5. **Collected:** Terminal `SERVED` state with transaction receipt summary.
+- **In-Venue Table Order Stepper:**
+  - Adjusted steps: "Kitchen Ticket Dispatched" and "Served to Table".
+  - **Hidden Elements:** Break slot / pickup-timing blocks are completely hidden for table orders (slots are strictly a remote-ordering concept).
+  - Mode toggle and in-venue header are hidden while viewing the order progress tracker.
 - **Cancelled / Expired:** Neutral, dignity-preserving card (*"This order could not be completed"*) without exposing technical error codes.
 
 ---
@@ -389,6 +403,12 @@ QueueLess implements an authentication and onboarding workflow synthesized from 
    - Campus affiliation (FAST, LUMS, IBA, NUST, SZABIST) can be selected immediately or deferred to the Profile perks tab.
 7. **Identity Layer Isolation:**
    - Identity data (`customers`, `email_verification_codes`, `password_reset_tokens`) is managed under the `app_identity_user` role and is completely decoupled from tenant-scoped venue tables (`app_runtime_user`).
+
+### 3.8 Customer Profile & Campus Perks (`ProfileTab.tsx` & `PerksTab.tsx`)
+- **Verified Status Badge:** Plain text **"Verified"** rendered in Electric Cobalt (`#1546d9`), discarding green pills and checkmark SVGs for minimal typographic elegance.
+- **Perks Wallet:** 5-stamp loyalty punch card with Saffron Amber (`#f9b318`) active stamp circles and institutional student voucher cards (FAST, LUMS, IBA, NUST).
+- **Splash Screen Replay:** Accessible on demand from the profile screen to inspect or replay the Apple critically damped launch sequence.
+- **Prototype Status:** `PROTOTYPE.html` is officially retired; all user interfaces are active and maintained in `apps/web`.
 
 ---
 
