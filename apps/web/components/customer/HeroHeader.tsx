@@ -11,6 +11,7 @@ interface HeroHeaderProps {
   onSearchChange: (query: string) => void;
   onSelectTab: (tab: "menu" | "perks" | "status" | "profile") => void;
   onOpenCart?: () => void;
+  showSearch?: boolean;
 }
 
 export function HeroHeader({
@@ -19,6 +20,7 @@ export function HeroHeader({
   searchQuery,
   onSearchChange,
   onOpenCart,
+  showSearch = true,
 }: HeroHeaderProps) {
   const { getItemCount } = useCartStore();
   const cartItemCount = getItemCount();
@@ -32,20 +34,20 @@ export function HeroHeader({
           alt={venue.name}
           className="w-full h-full object-cover opacity-85"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        {/* Restored warm cream bottom gradient overlay for maximum contrast and seamless text grounding */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
 
-        {/* Floating Top Elements: Cart Button (Replaces user button) */}
+        {/* Floating Top Elements: Cart icon button inside a clean white circle */}
         <div className="absolute top-3 left-4 right-4 flex items-center justify-end z-10">
           <button
             type="button"
             onClick={onOpenCart}
-            aria-label={`Open Cart (${cartItemCount} items)`}
-            className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold shadow-md hover:bg-black/80 flex items-center gap-1.5 transition-all active:scale-95 border border-white/10"
+            aria-label={`Shopping Cart (${cartItemCount} items)`}
+            className="relative w-9 h-9 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100"
           >
-            <ShoppingBag className="w-3.5 h-3.5 text-white" />
-            <span>Cart</span>
+            <ShoppingBag className="w-4 h-4 text-neutral-900" />
             {cartItemCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-[#EF5A30] text-white text-[10px] font-extrabold leading-none">
+              <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-[#fd8535] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
                 {cartItemCount}
               </span>
             )}
@@ -55,14 +57,15 @@ export function HeroHeader({
 
       {/* Venue Profile Section (Positioned outside overflow-hidden with negative margin to ensure zero logo clipping) */}
       <div className="px-4 -mt-7 relative z-10 flex items-end gap-3.5">
-        {/* Velocity Platter Emblem Badge */}
+        {/* Official QueueLess Speed Cup "Q" Emblem Vector */}
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fd8535] to-[#e0681c] p-2.5 shadow-xl shadow-orange-950/20 shrink-0 flex items-center justify-center border-2 border-white ring-1 ring-black/5">
-          <svg viewBox="0 0 800 800" className="w-full h-full fill-white" aria-hidden="true">
-            <g fill="#FFFFFF" fillRule="evenodd">
-              <path d="M 235 285 C 310 290, 410 265, 545 220 L 495 265 C 415 275, 320 295, 235 285 Z" />
-              <path d="M 195 348 C 285 352, 420 325, 595 272 L 535 325 C 425 338, 305 362, 195 348 Z" />
-              <path d="M 205 435 C 275 425, 470 380, 615 330 C 570 470, 470 545, 345 545 C 260 545, 215 500, 205 435 Z M 245 448 C 255 485, 290 512, 350 512 C 435 512, 515 460, 560 365 C 445 405, 300 440, 245 448 Z" />
-            </g>
+          <svg viewBox="0 0 512 512" className="w-full h-full fill-white" aria-hidden="true">
+            {/* Lightning Bolt / Wing */}
+            <path d="M 235 125 L 140 285 L 210 285 L 145 395 L 295 240 L 225 240 Z" />
+            {/* Circular Cup Q Loop */}
+            <path d="M 230 150 C 310 150 370 205 370 285 C 370 335 345 375 305 395 L 340 435 L 285 435 L 255 400 C 247 401 238 402 230 402 C 215 402 200 398 185 392 L 210 355 C 217 358 223 359 230 359 C 285 359 325 325 325 285 C 325 245 285 193 230 193 C 218 193 205 197 195 203 L 195 158 C 206 153 218 150 230 150 Z" />
+            {/* Cup Handle */}
+            <path d="M 370 230 C 400 230 415 250 415 280 C 415 310 400 330 370 330 L 370 295 C 382 295 387 290 387 280 C 387 270 382 265 370 265 Z" />
           </svg>
         </div>
 
@@ -72,11 +75,10 @@ export function HeroHeader({
           </h1>
           {/* Rating moved under cafe name */}
           <div className="flex items-center gap-2 mt-1">
-            <span className="px-2 py-0.5 rounded-full bg-[#EF5A30] text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
+            <span className="px-2 py-0.5 rounded-full bg-[#f9b318] text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
               <Star className="w-3 h-3 text-white fill-white" />
               <span>{venue.rating}</span>
             </span>
-            <span className="text-[11px] font-medium text-neutral-500">• Lahore F&B</span>
           </div>
         </div>
       </div>
@@ -91,19 +93,21 @@ export function HeroHeader({
         </div>
       )}
 
-      {/* Search Bar Pill */}
-      <div className="px-4 pt-3">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search burgers, iced latte, fries..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white border border-neutral-200/80 text-xs font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#EF5A30] shadow-soft placeholder-neutral-400"
-          />
-          <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3" />
+      {/* Search Bar Pill (Displayed when browsing menu, hidden in Order Tracker) */}
+      {showSearch && (
+        <div className="px-4 pt-3">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search burgers, iced latte, fries..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white border border-neutral-200/80 text-xs font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#fd8535] shadow-soft placeholder-neutral-400"
+            />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3" />
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }

@@ -42,7 +42,7 @@ export function FloatingBottomDock({
           <button
             type="button"
             onClick={onOpenCart}
-            className="w-full py-3.5 px-5 rounded-full liquid-glass-prominent text-white flex items-center justify-between hover:bg-[#EF5A30] transition-all duration-200 active:scale-[0.98] shadow-2xl"
+            className="w-full py-3.5 px-5 rounded-full bg-neutral-900 active:bg-[#fd8535] hover:bg-[#fd8535] focus:bg-[#fd8535] text-white flex items-center justify-between transition-colors duration-150 active:scale-[0.98] shadow-2xl border border-white/10"
           >
             <div className="flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-white/20 text-xs font-bold flex items-center justify-center">

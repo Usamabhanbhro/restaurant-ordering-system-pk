@@ -51,9 +51,6 @@ export function OrderProgressTracker({
         <h2 className="text-base font-extrabold text-neutral-900 tracking-tight">
           Active Pre-Order Status
         </h2>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#EF5A30]">
-          Live Kitchen Sync
-        </span>
       </div>
 
       {/* Digital Counter Pickup Ticket */}
