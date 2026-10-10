@@ -198,6 +198,7 @@ The QueueLess platform is fully documented across architectural, functional, ope
 | [**`API.md`**](./API.md) | Comprehensive REST route specifications, WebSocket events, and error envelopes. |
 | [**`SRS.md`**](./SRS.md) | Software Requirements Specification with 26 verifiable acceptance criteria. |
 | [**`ROADMAP.md`**](./ROADMAP.md) | Phased execution roadmap (Phase 1–3), risk register, and open venue decisions. |
+| [**`WORKFLOW.md`**](./WORKFLOW.md) | Engineering workflow, branch taxonomy, high-velocity Pull Request standard, and CI gates. |
 | [**`FDE_RUNBOOK.md`**](./FDE_RUNBOOK.md) | Forward-Deployed Engineer runbook: venue provisioning, rehearsal, and training. |
 | [**`TERMS_DRAFT.md`**](./TERMS_DRAFT.md) | Draft customer terms presented prior to payment (for legal counsel review). |
 | [**`PRIVACY.md`**](./PRIVACY.md) | Data protection, retention policies, and cross-venue identity disclosure. |

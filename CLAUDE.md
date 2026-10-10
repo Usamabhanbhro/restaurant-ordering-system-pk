@@ -56,10 +56,11 @@
 9. **Pre-ordering (F1, v1 default).** Pre-orders are COUNTER_PICKUP-only, require a profile (verified email from any provider), and flow through a third KDS queue of scheduled tickets that start at the kitchen start time (pickup minus per-venue prep lead, default 10 min). Status flow: `PENDING_PAYMENT → SCHEDULED → PREPARING → READY → SERVED`. Paid via the venue's own accounts; the customer submits a payment reference (transaction ID primary, screenshot optional); the ticket waits in `PENDING_PAYMENT` until the operator/admin taps "payment received". Orders are same-day only, within venue-set remote-order hours and last-order time; the operator can pause remote orders. Slot cutoff = prep lead + 10 min. A ready order held 30 min past pickup is no-show with no refund (terms shown before payment). Customer can cancel until the kitchen start time; after that no in-app cancel. See ADR-0007.
 10. **Discounts are staff-visible only (F2, future).** A discount appears as a "claims SZABIST 10%" badge on the staff view and is applied manually at the legacy POS. It never enters `line_total` (ADR-003) or the order snapshot. Restricted venues are enforced physically by the guard — the app adds no access gate. Verification is by institution-issued email + one-time code; a discount is a Partnership (venue opts in, discount off the venue's price); percentage only at first; affiliations re-verified every 12 months; the order stores a snapshot of the partnership reference and discount percentage (field names planned). See ADR-0008.
 
-## Code Conventions
+## Code & Engineering Conventions
 
-- See CONVENTIONS.md for full details
-- TypeScript strict mode, no `any` types
+- See [**`CONVENTIONS.md`**](./CONVENTIONS.md) for full coding conventions and style rules.
+- See [**`WORKFLOW.md`**](./WORKFLOW.md) for branch taxonomy, pre-flight quality checks, and PR standards.
+- TypeScript strict mode, no `any` types. Pre-push gates: `pnpm run check-types` and `pnpm run build`.
 - All database queries run inside transactions with RLS context set
 - API routes are tenant-scoped via JWT (staff) or session token (customers)
 - Environment variables for all secrets; never hardcode credentials

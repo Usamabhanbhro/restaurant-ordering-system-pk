@@ -165,10 +165,13 @@
 
 ## Git & Version Control
 
-- Branch naming: `feature/<short-description>`, `fix/<short-description>`, `chore/<short-description>`.
-- Commit messages follow Conventional Commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`.
-- Pull requests require at least one approval before merge.
-- `main` branch is always deployable. Feature branches are short-lived.
+- Refer to [**`WORKFLOW.md`**](./WORKFLOW.md) for the authoritative engineering workflow, branch taxonomy, and PR standards.
+- Branch taxonomy: `<type>/<scope>-<short-description>` (`feat/`, `fix/`, `refactor/`, `perf/`, `docs/`, `chore/`).
+- Commit messages strictly follow Conventional Commits: `feat(scope):`, `fix(scope):`, `chore(scope):`, `docs(scope):`, `refactor(scope):`.
+- Pre-flight quality gates must pass locally before pushing: `pnpm run check-types` and `pnpm run build`.
+- On Windows development environments, push with `git -c http.sslVerify=false push origin <branch>`.
+- Pull requests must be small (150–350 LoC) and merged via **Squash and Merge** to maintain a clean linear history on `main`.
+- `main` branch is continuously deployable; feature branches are short-lived (max 2–3 days).
 
 ## Environment Configuration
 
