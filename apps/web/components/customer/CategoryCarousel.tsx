@@ -1,31 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { Flame, Coffee, Pizza, CupSoda, ChevronRight, ChevronLeft, LayoutGrid } from "lucide-react";
+import { ChevronRight, ChevronLeft, LayoutGrid } from "lucide-react";
 import type { CategoryData } from "@/lib/mockData";
-
-// Inline clean burger vector SVG (strictly zero emoji)
-function BurgerIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M4 11h16a1 1 0 0 0 1-1A7 7 0 0 0 3 10a1 1 0 0 0 1 1Z" />
-      <path d="M3 15h18" />
-      <path d="M4 18h16a2 2 0 0 1 2 2v0a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v0a2 2 0 0 1 2-2Z" />
-      <line x1="7" y1="14" x2="8" y2="14" />
-      <line x1="12" y1="14" x2="13" y2="14" />
-      <line x1="17" y1="14" x2="18" y2="14" />
-    </svg>
-  );
-}
 
 interface CategoryCarouselProps {
   categories: CategoryData[];
@@ -80,24 +57,6 @@ export function CategoryCarousel({
     }
   };
 
-  const renderIcon = (iconName: string, isSelected: boolean) => {
-    const iconClass = `w-3.5 h-3.5 ${isSelected ? "text-white" : "text-neutral-500"}`;
-    switch (iconName) {
-      case "Flame":
-        return <Flame className={iconClass} />;
-      case "Burger":
-        return <BurgerIcon className={iconClass} />;
-      case "Coffee":
-        return <Coffee className={iconClass} />;
-      case "Pizza":
-        return <Pizza className={iconClass} />;
-      case "CupSoda":
-        return <CupSoda className={iconClass} />;
-      default:
-        return <Flame className={iconClass} />;
-    }
-  };
-
   return (
     <div className="px-4 py-2">
       <div className="relative">
@@ -127,18 +86,20 @@ export function CategoryCarousel({
         >
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.id;
+            const isPopular = cat.id === "cat-popular" || cat.name.toLowerCase() === "popular";
             return (
               <button
                 key={cat.id}
                 type="button"
                 onClick={(e) => handleSelect(cat.id, e)}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
                   isSelected
-                    ? "bg-neutral-900 text-white shadow-pill"
+                    ? "bg-[#fd8535] text-white shadow-pill border border-[#fd8535]"
+                    : isPopular
+                    ? "bg-[#f9b318] text-neutral-950 border border-[#f9b318] shadow-xs hover:brightness-105"
                     : "bg-white text-neutral-600 border border-neutral-200/80 hover:bg-neutral-50"
                 }`}
               >
-                {renderIcon(cat.icon, isSelected)}
                 <span>{cat.name}</span>
               </button>
             );

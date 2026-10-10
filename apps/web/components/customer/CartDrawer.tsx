@@ -60,7 +60,7 @@ export function CartDrawer({
   const { currentUser, setAuthModal, setPendingPostAuthAction } = useAuthStore();
   const { availableSlots, selectedSlot, setSelectedSlot } = useSlotStore();
 
-  const [selectedMethod, setSelectedMethod] = useState<"EASYPAISA" | "SADAPAY" | "BANK" | "CASH">("EASYPAISA");
+  const [selectedMethod, setSelectedMethod] = useState<"EASYPAISA" | "SADAPAY" | "BANK">("EASYPAISA");
   const [showPaymentPicker, setShowPaymentPicker] = useState(false);
   const [claimedTxnId, setClaimedTxnId] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -137,8 +137,8 @@ export function CartDrawer({
         return;
       }
 
-      if (!claimedTxnId.trim() && selectedMethod !== "CASH") {
-        setErrorMessage("Please enter the transaction reference ID (or select Cash on Pickup).");
+      if (!claimedTxnId.trim()) {
+        setErrorMessage("Please enter the transaction reference ID.");
         return;
       }
 
@@ -180,8 +180,6 @@ export function CartDrawer({
       txnId:
         mode === "IN_VENUE"
           ? `TABLE-${assignedTable}`
-          : selectedMethod === "CASH"
-          ? "CASH-ON-COUNTER"
           : claimedTxnId.trim(),
       hasScreenshot: false,
       createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }),
@@ -225,7 +223,7 @@ export function CartDrawer({
     >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-        <Drawer.Content className="fixed bottom-0 inset-x-0 z-50 max-w-md mx-auto h-full max-h-[96vh] bg-[#FFFBF8] rounded-t-[2.5rem] shadow-float overflow-hidden flex flex-col focus:outline-none">
+        <Drawer.Content className="fixed bottom-0 inset-x-0 z-50 max-w-md mx-auto h-full max-h-[96vh] bg-white rounded-t-[2.5rem] shadow-float overflow-hidden flex flex-col focus:outline-none">
           {/* iOS Handle */}
           <div className="pt-3 pb-1 flex justify-center shrink-0">
             <div className="w-12 h-1.5 rounded-full bg-neutral-300" />
@@ -366,7 +364,6 @@ export function CartDrawer({
                           {selectedMethod === "EASYPAISA" && "Easypaisa • 0300-1234567"}
                           {selectedMethod === "SADAPAY" && "SadaPay • 0300-9876543"}
                           {selectedMethod === "BANK" && "Meezan Raast • 000123"}
-                          {selectedMethod === "CASH" && "Cash on Pickup"}
                         </span>
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-neutral-100 text-neutral-500">
                           Venue Direct
@@ -390,100 +387,82 @@ export function CartDrawer({
                     <span className="text-[11px] font-bold text-neutral-600 block">
                       Select Venue Payment Rail:
                     </span>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {venue.paymentMethods.map((pm) => (
-                        <button
-                          key={pm.id}
-                          type="button"
-                          onClick={() => setSelectedMethod(pm.kind)}
-                          className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
-                            selectedMethod === pm.kind
-                              ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
-                              : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
-                          }`}
-                        >
-                          {pm.kind}
-                        </button>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => setSelectedMethod("CASH")}
-                        className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
-                          selectedMethod === "CASH"
-                            ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
-                            : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
-                        }`}
-                      >
-                        CASH
-                      </button>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {venue.paymentMethods
+                        .filter((pm) => pm.kind !== "CASH")
+                        .map((pm) => (
+                          <button
+                            key={pm.id}
+                            type="button"
+                            onClick={() => setSelectedMethod(pm.kind as "EASYPAISA" | "SADAPAY" | "BANK")}
+                            className={`py-2 px-1 rounded-2xl border text-center text-xs font-bold transition-all ${
+                              selectedMethod === pm.kind
+                                ? "bg-neutral-950 text-white border-neutral-950 shadow-xs"
+                                : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
+                            }`}
+                          >
+                            {pm.kind}
+                          </button>
+                        ))}
                     </div>
                   </div>
                 )}
 
                 {/* Direct Settlement Details */}
-                {selectedMethod !== "CASH" ? (
-                  <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-100 space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-neutral-500">
-                        Account Title:{" "}
-                        <strong className="text-neutral-800">{activePaymentMethod.accountTitle}</strong>
-                      </span>
-                      <span className="font-black text-[#fd8535]">Amount: Rs. {cartFinalTotal}</span>
-                    </div>
+                <div className="p-3.5 rounded-2xl bg-white border border-neutral-200/80 space-y-2.5 text-xs shadow-xs">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-neutral-500">
+                      Account Title:{" "}
+                      <strong className="text-neutral-800">{activePaymentMethod.accountTitle}</strong>
+                    </span>
+                    <span className="font-black text-[#fd8535]">Amount: Rs. {cartFinalTotal}</span>
+                  </div>
 
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-neutral-200/80 font-mono text-xs font-bold">
-                      <span>{activePaymentMethod.accountNumber}</span>
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-50 border border-neutral-200/80 font-mono text-xs font-bold">
+                    <span>{activePaymentMethod.accountNumber}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(activePaymentMethod.accountNumber)}
+                      className="px-2 py-0.5 rounded-md bg-white border border-neutral-200 text-[10px] font-sans font-bold hover:bg-neutral-100 transition-colors shadow-xs"
+                    >
+                      {copiedText === activePaymentMethod.accountNumber ? (
+                        <span className="flex items-center gap-1 text-emerald-600">
+                          <Check className="w-3 h-3" />
+                          <span>Copied</span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1">
+                          <Copy className="w-3 h-3" />
+                          <span>Copy</span>
+                        </span>
+                      )}
+                    </button>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-neutral-700">
+                        Transaction Reference ID *
+                      </label>
                       <button
                         type="button"
-                        onClick={() => handleCopy(activePaymentMethod.accountNumber)}
-                        className="px-2 py-0.5 rounded-md bg-neutral-100 border text-[10px] font-sans font-bold hover:bg-neutral-200 transition-colors"
+                        onClick={() =>
+                          setClaimedTxnId(`EP-${Math.floor(1000000 + Math.random() * 9000000)}`)
+                        }
+                        className="text-[10px] font-bold text-[#fd8535] hover:underline"
                       >
-                        {copiedText === activePaymentMethod.accountNumber ? (
-                          <span className="flex items-center gap-1 text-emerald-600">
-                            <Check className="w-3 h-3" />
-                            <span>Copied</span>
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <Copy className="w-3 h-3" />
-                            <span>Copy</span>
-                          </span>
-                        )}
+                        Auto-fill Test ID
                       </button>
                     </div>
-
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-neutral-700">
-                          Transaction Reference ID *
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setClaimedTxnId(`EP-${Math.floor(1000000 + Math.random() * 9000000)}`)
-                          }
-                          className="text-[10px] font-bold text-[#fd8535] hover:underline"
-                        >
-                          Auto-fill Test ID
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="e.g. EP-9823411 or Bank Txn ID"
-                        value={claimedTxnId}
-                        onChange={(e) => setClaimedTxnId(e.target.value)}
-                        className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      placeholder="e.g. EP-9823411 or Bank Txn ID"
+                      value={claimedTxnId}
+                      onChange={(e) => setClaimedTxnId(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
+                    />
                   </div>
-                ) : (
-                  <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-800 flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
-                    <span>
-                      Pay exact amount (Rs. {cartFinalTotal}) in cash at register counter upon collection.
-                    </span>
-                  </div>
-                )}
+                </div>
               </div>
             ) : (
               /* In-Venue Table Card: Confirms table and zero payment section */

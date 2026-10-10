@@ -32,7 +32,7 @@ export function FoodCard({ item, is86ed = false, onCustomize }: FoodCardProps) {
             {item.nameEn}
           </h3>
           {item.popular && (
-            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-orange-100 text-[#EF5A30]">
+            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-[#f9b318] text-neutral-950 shadow-xs">
               POPULAR
             </span>
           )}
