@@ -1,6 +1,7 @@
 # DESIGN.md — Product Design Document & Design System
 
-> **Changelog (2026-10-09):** added Section 3.0 Opening Splash Screen specification inspired by Starbucks & Apple fluid motion guidelines (critically damped entrance, ceramic specular sheen, optical typography, time-of-day greeting, venue grounding, interruptible exit with tap-to-dismiss); ratify frontend architecture stack (Next.js 15, React 19, Tailwind v4, Vaul, Motion).
+> **Changelog (2026-10-10):** ratified official Triad Brand Color Palette (`#fd8535` Kinetic Orange, `#f9b318` Saffron Amber, `#1546d9` Electric Cobalt); updated Section 2.0 brand identity with "The Velocity Platter" vector mark assets; updated Section 2.1 color tokens, Section 3.0 opening splash screen specs, Section 3.1 hero header layout, and Section 3.6 bottom dock indicators.  
+> **Changelog (2026-10-09):** added Section 3.0 Opening Splash Screen specification inspired by Starbucks & Apple fluid motion guidelines (critically damped entrance, ceramic specular sheen, optical typography, time-of-day greeting, venue grounding, interruptible exit with tap-to-dismiss); ratify frontend architecture stack (Next.js 15, React 19, Tailwind v4, Vaul, Motion).  
 > **Changelog (2026-10-07):** updated visual design system and component architecture inspired by modern consumer food apps (Buy Bao reference, Starbucks, and Uber Eats). Retains all v1 remote ordering lifecycle rules, 5 dashboard lanes, and Pakistani market constraints.
 
 ---
@@ -19,31 +20,34 @@ To match the world-class aesthetic of **Starbucks**, **Uber Eats**, and the **Bu
 
 ### 2.0 Brand Identity & Logo Specification
 
-The official visual identity for QueueLess is based on the **Speed Cup "Q"** emblem:
-- **Symbol:** A geometric squircle app icon combining a high-voltage lightning bolt with an espresso/takeout cup silhouette to form the letter **Q**.
-- **Metaphor:** Seamless speed, pre-ordering, and skipping physical counter queues at cafes and university canteens.
+The official visual identity for QueueLess is based on **The Velocity Platter** emblem:
+- **Symbol:** "The Velocity Platter" — a 3-plume kinetic aerodynamic flow (`viewBox="0 0 800 800"`, `fillRule="evenodd"`):
+  - **Plume 01:** Top Aerodynamic Streak (`M 235 285 C 310 290...`)
+  - **Plume 02:** Mid Velocity Flow (`M 195 348 C 285 352...`)
+  - **Plume 03:** Kinetic Serving Vessel / Bowl Outline (`M 205 435 C 275 425...`)
+- **Metaphor:** High-velocity counter pickup, frictionless pre-ordering, and skipping physical queues at university cafeterias and fast-casual cafes.
 - **Brand Assets:**
-  - PNG Master: [`brand/queueless-logo.png`](file:///f:/projects/restaurant-ordering-system-pk/brand/queueless-logo.png)
-  - Vector Mark / Favicon: [`brand/queueless-icon.svg`](file:///f:/projects/restaurant-ordering-system-pk/brand/queueless-icon.svg)
-  - Full Vector Horizontal Logo: [`brand/queueless-logo.svg`](file:///f:/projects/restaurant-ordering-system-pk/brand/queueless-logo.svg)
+  - Monochrome Vector Mark: [`brand/queueless-svg.svg`](file:///f:/projects/restaurant-ordering-system-pk/brand/queueless-svg.svg)
+  - Full Coloured Brand Canvas: [`brand/coloured-svg.svg`](file:///f:/projects/restaurant-ordering-system-pk/brand/coloured-svg.svg)
 - **Tagline:** *"Fast Pre-Order & Pickup"* (or *"Skip the Line"*).
 - **Physical Signage:** Applied to counter acrylic QR stands deployed by Forward-Deployed Engineers (`FDE_RUNBOOK.md`).
 
-### 2.1 Color Tokens & Palette
+### 2.1 Color Tokens & Brand Palette
 
-| Token | Hex Value | Semantic Role & Usage |
-|---|---|---|
-| `--color-canvas` | `#FFFBF8` / `#FFFFFF` | Warm cream-cheese canvas for customer PWA; eliminates harsh dark grays and makes food imagery pop. |
-| `--color-surface` | `#FFFFFF` | Crisp pure white for cards, bottom sheets, and elevated containers. |
-| `--color-surface-subtle` | `#F4F4F6` | Subtle off-white for unselected chips, input fields, and stepper backgrounds. |
-| `--color-primary` | `#EF5A30` | Vibrant salmon coral — primary brand accent for active badges, notification pings, and delivery nodes. |
-| `--color-primary-soft` | `#FEEBE5` | Soft salmon tint for active state backgrounds and highlighted tags. |
-| `--color-accent-tuna` | `#FCA9F9` | Tuna pink accent for celebratory banners and student perk badges. |
-| `--color-accent-avocado` | `#DBE4B5` | Avocado sage for dietary/vegan modifier tags. |
-| `--color-accent-mint` | `#34B5AD` | Cucumber mint for pickup timer countdowns and success states. |
-| `--color-text-main` | `#121212` | Jet black for ultra-readable headings, prices, and primary labels. |
-| `--color-text-muted` | `#6B7280` | Neutral slate for secondary descriptions, English subtitles, and timestamps. |
-| `--color-cta-black` | `#121212` | Solid jet-black for high-contrast primary pill buttons (`rounded-full`), matching modern food apps. |
+The QueueLess brand identity and customer interface are anchored around a distinctive, energetic **Triad Color Palette** designed for high legibility, consumer appetite appeal, and modern mobile elegance:
+
+| Token | Hex Value | Color Name | Semantic Role & Usage |
+|---|---|---|---|
+| `--color-brand-primary` / `--color-primary` | `#fd8535` | **Kinetic Orange** | **Primary Brand Color & Anchor:** Opening splash screen canvas, venue brand badge, active order pulse indicators, high-emphasis action triggers, and primary brand accents. |
+| `--color-brand-secondary` / `--color-amber` | `#f9b318` | **Saffron Amber** | **Secondary Accent & Warm Highlights:** Venue ratings and star badges (`4.8` star rating), perks punch card stamps, loyalty discount chips, "Filling Fast" pickup slot warnings, and kitchen prep timers. |
+| `--color-brand-accent` / `--color-cobalt` | `#1546d9` | **Electric Cobalt** | **High-Contrast Digital Accents:** Live digital counter ticket codes (e.g. `#108`), verification PIN states, transaction ID badges, interactive focus indicators, and trust callouts. |
+| `--color-canvas` | `#FFFBF8` | **Warm Cream Canvas** | Warm off-white canvas for customer PWA; eliminates harsh dark grays and makes food imagery pop. |
+| `--color-surface` | `#FFFFFF` | **Pure White** | Crisp white for food cards, bottom sheets, search input pills, and elevated containers. |
+| `--color-surface-subtle` | `#F4F4F6` | **Subtle Neutral Surface** | Subtle off-white for unselected category chips, input fields, and stepper backgrounds. |
+| `--color-text-main` | `#121212` | **Jet Black** | Ultra-readable headings, item titles, prices, and high-contrast primary pill buttons (`rounded-full`). |
+| `--color-text-muted` | `#6B7280` | **Slate Gray** | Secondary descriptions, Roman Urdu subtitles, and subtle timestamps. |
+| `--color-success` | `#10B981` | **Emerald Green** | Available pickup slots, open venue indicator dots, and verified payment states. |
+| `--color-danger` | `#EF4444` | **Crimson Alert** | Out of stock (86ed) warnings, order rejection alerts, and voided tickets. |
 
 ### 2.2 Typography Hierarchy
 
@@ -66,7 +70,7 @@ The official visual identity for QueueLess is based on the **Speed Cup "Q"** emb
 > 
 > - **Iconography:** Always use crisp SVG vector icons (Lucide icons / custom vector paths with deliberate stroke and fill).
 > - **Region & Country Identifiers:** Use standard ISO/typographic badges (e.g., `PK +92`) rather than flag emojis.
-> - **Status Indicators:** Use CSS-styled circular badges or colored semantic dots (`bg-emerald-500`, `bg-amber-500`, `bg-[#EF5A30]`) instead of colored circle emojis.
+> - **Status Indicators:** Use CSS-styled circular badges or colored semantic dots (`bg-[#fd8535]`, `bg-[#f9b318]`, `bg-[#1546d9]`, `bg-emerald-500`) instead of colored circle emojis.
 > - **Wireframes & Documentation:** Use clean text, bracket labels (e.g., `[Search]`, `[Copy]`, `[User]`, `[Ticket]`, `[Close]`), or ASCII indicators rather than emojis.
 
 ### 2.5 Liquid Glass Materials & Motion Design Tokens (Tailwind v4 + Motion)
@@ -109,17 +113,21 @@ To achieve world-class visual fluidity without sacrificing mobile battery or per
   - **User Agency & Zero Latency:** Tapping or clicking anywhere immediately triggers the exit transition, bypassing the remainder of the 1.8s auto-dismiss timer.
   - **Accessibility / Reduced Motion:** `@media (prefers-reduced-motion: reduce)` removes all transforms, substituting a gentle opacity crossfade.
 - **Visual Composition:**
-  - **Canvas:** Solid brand primary orange (`#fc683f`).
-  - **Centerpiece:** Pure white (`#FFFFFF`) **Speed Cup "Q"** vector emblem (`w-28 h-28 sm:w-32 sm:h-32`), perfectly centered with zero competing chrome or typography.
-  - **Testing & Replay:** Replayable at any time via the top bar `Splash` trigger or the Customer Profile tab.
+  - **Canvas:** Solid brand primary orange (`#fd8535`).
+  - **Centerpiece:** Pure white (`#FFFFFF`) **Velocity Platter** vector emblem (`w-32 h-32 sm:w-36 sm:h-36`), perfectly centered with zero competing chrome or typography.
+  - **Testing & Replay:** Replayable at any time via the Customer Profile tab.
 
 ### 3.1 Customer Discovery & Menu Catalog
 - **Venue Hero Header:**
-  - Full-width cover image with subtle gradient overlay.
-  - Floating venue avatar/logo badge, title (*"Brewery Cafe Gulberg"*), cuisine tags, operating hours, and a clean **"10–15 min Counter Pickup"** badge.
-- **Sticky Category Carousel:**
+  - Full-width cover image with subtle bottom gradient overlay.
+  - Floating top bar contains the frosted glass **Cart Button** (`ShoppingBag` icon, label, and dynamic quantity count badge).
+  - **Venue Profile Card:** Positioned outside `overflow-hidden` container with negative top margin (`-mt-7 relative z-10`) to prevent any bottom boundary clipping of the brand emblem badge.
+  - **Brand Badge:** The Velocity Platter SVG on a vibrant rounded-2xl container (`bg-gradient-to-br from-[#fd8535] to-[#e0681c] border-2 border-white shadow-xl`).
+  - **Title & Metadata:** Venue name (`text-base sm:text-lg font-extrabold`) with the Saffron Amber rating badge (`#f9b318` star pill) and cuisine tags directly underneath.
+- **Category Carousel:**
   - Horizontal scrolling pill tabs with custom vector category icons.
-  - Active category highlighted with solid black capsule or salmon accent dot.
+  - Dynamic gradient edge masks (fade indicators on left and right) with one-tap chevron assist buttons for clear mobile discoverability.
+  - Grid wrapping toggle button (`LayoutGrid`) enabling small-screen users (320px–375px) to toggle into a 2-row wrapped view without horizontal scrolling.
 - **Food Item Cards (Split Card Layout):**
   - Left: Item name in English, Roman Urdu subtitle (e.g. *Double Smash Burger • Ziada Cheese*), 2-line teaser description, and bold price.
   - Right: Clean 1:1 food cutout/thumbnail (`rounded-2xl`) with an overlay or adjacent black pill `+` cart button.
@@ -202,10 +210,10 @@ Matches the reference design's vertical chronological stepper with solid circula
     - Transforms into a detached, elevated glassmorphism capsule centered horizontally (`bottom-3.5 left-1/2 -translate-x-1/2 rounded-full p-1.5 bg-white/75 backdrop-blur-2xl border border-white/80 shadow-[0_14px_36px_rgba(0,0,0,0.16)]`).
     - **Active Tab:** Solid black circular button (`w-11 h-11 rounded-full bg-neutral-950 text-white shadow-md scale-105`).
     - **Inactive Tabs:** White circular buttons with subtle borders (`w-11 h-11 rounded-full bg-white text-neutral-700 shadow-sm border border-neutral-100/80 hover:bg-neutral-50`).
-    - **Active Order Dot:** Glowing `#EF5A30` pulse indicator on Tracker button when an order is in progress.
+    - **Active Order Dot:** Glowing `#fd8535` pulse indicator on Tracker button when an order is in progress.
   - **Scroll-Down View (Attached Dock):**
     - Smoothly anchors flush against the bottom edge (`bottom-0 left-0 right-0 h-16 rounded-none bg-white/95 backdrop-blur-md border-t border-neutral-200/90 shadow-none px-6 flex items-center justify-around`).
-    - Displays clean vector icon above text label with Coral Salmon active highlight.
+    - Displays clean vector icon above text label with Kinetic Orange (`#fd8535`) active highlight.
   - **Motion Curve:** `transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]`.
 - **Iconography Standard (Zero Emojis):**
   - All cartoonish emojis are replaced by clean Lucide vector icons (`viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"`).
@@ -427,7 +435,7 @@ The staff interface is restyled from a dark console into a crisp, high-contrast 
 | Area | Decision |
 |---|---|
 | **Visual Canvas** | Replaced dark slate developer UI with warm cream-cheese `#FFFBF8` / pure white `#FFFFFF` consumer theme. |
-| **Primary Accent** | Vibrant Salmon Coral `#EF5A30` + High-Contrast Black `#121212` buttons inspired by the Buy Bao reference. |
+| **Brand Palette** | Triad Color Palette: Kinetic Orange `#fd8535` (primary brand anchor & splash canvas), Saffron Amber `#f9b318` (ratings & perk rewards), and Electric Cobalt `#1546d9` (digital tickets & verification) + High-Contrast Black `#121212` buttons. |
 | **Order Expiration** | Unreviewed claims expire at `pickup_at` (`EXPIRED_UNREVIEWED`), not `kitchen_start_at`. No strike is recorded. |
 | **Strike Trigger** | Strikes originate strictly from un-undone `NOT_FOUND` payment claim rejections. |
 | **No Kitchen TRASH in v1** | In v1 remote ordering, rejecting a claim is the discard action. Kitchen TRASH is deferred to post-v1 table service. |

@@ -1,5 +1,6 @@
 # ROADMAP.md — Engineering Progress & Phased Execution Strategy
 
+> **Changelog (2026-10-10):** ratified official Triad Brand Color Palette (`#fd8535` Kinetic Orange, `#f9b318` Saffron Amber, `#1546d9` Electric Cobalt); synchronized The Velocity Platter brand emblem across splash screen and venue badge; resolved mobile viewport feedback (clutter reduction, rating repositioning, cart trigger in hero, and category carousel discoverability).  
 > **Changelog (2026-10-09):** added granular Engineering Progress & Sitting Tracker for v1 web app implementation; logged completed architecture specifications, interactive prototype, minimal splash screen refinement, and developer handoff; mapped out modular development sittings across Turborepo monorepo packages.  
 > **Changelog (2026-10-06):** applied owner brief v6 (v1 remote ordering scope locked; open items from brief v6 §10 updated in Open Decisions).
 
@@ -37,8 +38,8 @@ Because building a full-stack, multi-tenant digital ordering and KDS sidecar can
 
 - [x] **Ultra-Minimalist Splash Screen (`bd7c3d8`)**
   - [x] Replaced multi-element greeting and venue footer with an ultra-minimal, high-impact launch screen.
-  - [x] Solid brand orange background (`#fc683f`).
-  - [x] Pure white (`#FFFFFF`) Speed Cup "Q" vector emblem centered on canvas with zero extraneous typography.
+  - [x] Solid brand orange background (`#fd8535`).
+  - [x] Pure white (`#FFFFFF`) The Velocity Platter vector emblem centered on canvas with zero extraneous typography.
   - [x] Apple critically damped spring entrance (`cubic-bezier(0.16, 1, 0.3, 1)` scaling `0.92 -> 1.0` in `0.52s`).
   - [x] Tap-to-dismiss instant agency with 1.8s auto-transition.
   - [x] Visual verification recorded ([splash_screen_screenshot.png](file:///f:/projects/restaurant-ordering-system-pk/splash_screen_screenshot.png)).
@@ -89,7 +90,7 @@ To maintain focus and avoid burnout across sessions, work is organized into 7 di
 *Focus: Mobile web ordering experience for diners.*
 - [x] Initialize Next.js 15 (App Router) + React 19 app shell with Server Components for <300ms paint.
 - [x] Configure Tailwind CSS v4 and Liquid Glass CSS tokens (`backdrop-filter: blur(20px)`).
-- [x] Port verified minimal `#fc683f` splash screen component (`SplashScreen.tsx`) with Apple spring entrance.
+- [x] Port verified minimal `#fd8535` splash screen component (`SplashScreen.tsx`) with Apple spring entrance.
 - [x] Setup client cache & state: Zustand stores (`cartStore`, `authStore`, `slotStore`, `orderStore`) + TanStack Query v5 provider (`QueryProvider.tsx`).
 - [x] Implement interactive bottom sheets using `vaul`: item modifier customizer (`ItemCustomizerSheet.tsx`), cart & checkout drawer (`CartDrawer.tsx`), customer auth sheet (`CustomerAuthSheet.tsx`).
 - [x] Implement Pakistani manual payment checkout with one-tap copy (Easypaisa, SadaPay, Meezan Raast, Cash) and transaction reference claim.

@@ -16,7 +16,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#fc683f",
+  themeColor: "#fd8535",
 };
 
 export default function RootLayout({
@@ -34,7 +34,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen antialiased bg-[#FFFBF8] text-[#18181B] selection:bg-[#fc683f]/20 selection:text-[#fc683f]">
+      <body className="min-h-screen antialiased bg-[#FFFBF8] text-[#18181B] selection:bg-[#fd8535]/20 selection:text-[#fd8535]">
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>

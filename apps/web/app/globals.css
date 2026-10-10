@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --primary-orange: #fc683f;
-  --primary-orange-hover: #e0552d;
+  --primary-orange: #fd8535;
+  --primary-orange-hover: #e0681c;
+  --brand-amber: #f9b318;
+  --brand-cobalt: #1546d9;
   --canvas-warm: #fffbf8;
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(255, 255, 255, 0.4);

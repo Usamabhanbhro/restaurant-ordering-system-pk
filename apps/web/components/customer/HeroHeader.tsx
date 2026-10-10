@@ -56,7 +56,7 @@ export function HeroHeader({
       {/* Venue Profile Section (Positioned outside overflow-hidden with negative margin to ensure zero logo clipping) */}
       <div className="px-4 -mt-7 relative z-10 flex items-end gap-3.5">
         {/* Velocity Platter Emblem Badge */}
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fc683f] to-[#e0552d] p-2.5 shadow-xl shadow-orange-950/20 shrink-0 flex items-center justify-center border-2 border-white ring-1 ring-black/5">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fd8535] to-[#e0681c] p-2.5 shadow-xl shadow-orange-950/20 shrink-0 flex items-center justify-center border-2 border-white ring-1 ring-black/5">
           <svg viewBox="0 0 800 800" className="w-full h-full fill-white" aria-hidden="true">
             <g fill="#FFFFFF" fillRule="evenodd">
               <path d="M 235 285 C 310 290, 410 265, 545 220 L 495 265 C 415 275, 320 295, 235 285 Z" />

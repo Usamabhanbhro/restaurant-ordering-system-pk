@@ -2,7 +2,7 @@
   <defs>
     <!-- Brand Palette Definition -->
     <style>
-      .brand-bg { fill: #FF5436; }
+      .brand-bg { fill: #fd8535; }
       .brand-symbol { fill: #FFFFFF; fill-rule: evenodd; }
     </style>
   </defs>

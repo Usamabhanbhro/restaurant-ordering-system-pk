@@ -25,7 +25,7 @@ export function SplashScreen({ isExiting, onDismiss }: SplashScreenProps) {
           : "opacity-100 scale-100"
       }`}
       style={{
-        backgroundColor: "#fc683f",
+        backgroundColor: "#fd8535",
         transitionDuration: "360ms",
         transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)",
       }}
