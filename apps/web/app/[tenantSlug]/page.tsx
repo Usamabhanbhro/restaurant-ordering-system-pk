@@ -118,16 +118,23 @@ export default function CustomerPage({ params }: CustomerPageProps) {
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto no-scrollbar pb-36 relative"
         >
-          {/* Top Hero Banner */}
-          <HeroHeader
-            venue={MOCK_VENUE}
-            remoteOrdersPaused={remoteOrdersPaused}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onSelectTab={setActiveTab}
-            onOpenCart={() => setShowCartDrawer(true)}
-            showSearch={activeTab === "menu"}
-          />
+          {/* Top Hero Banner (Hidden on Profile view per feedback) */}
+          {activeTab !== "profile" ? (
+            <HeroHeader
+              venue={MOCK_VENUE}
+              remoteOrdersPaused={remoteOrdersPaused}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onSelectTab={setActiveTab}
+              onOpenCart={() => setShowCartDrawer(true)}
+              showSearch={activeTab === "menu"}
+            />
+          ) : (
+            <header className="px-5 pt-8 pb-1">
+              <h1 className="text-xl font-black text-neutral-900 tracking-tight">Profile</h1>
+              <p className="text-xs text-neutral-500 font-medium">Manage your personal account and preferences</p>
+            </header>
+          )}
 
           {/* TAB 1: MENU CATALOG */}
           {activeTab === "menu" && (

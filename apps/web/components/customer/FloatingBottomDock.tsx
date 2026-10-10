@@ -58,19 +58,12 @@ export function FloatingBottomDock({
         </div>
       )}
 
-      {/* Ambient Progressive Gradient Blur (Apple iOS 26 Specification) */}
+      {/* Ambient Progressive Gradient Blur (Continuous Optical Mask) */}
       <div
         className={`fixed bottom-0 inset-x-0 max-w-md mx-auto liquid-progressive-backdrop pointer-events-none transition-all duration-300 z-30 ${
           isFloatingNav ? "opacity-100" : "opacity-0"
         }`}
-      >
-        <div className="lpb-layer-1" />
-        <div className="lpb-layer-2" />
-        <div className="lpb-layer-3" />
-        <div className="lpb-layer-4" />
-        <div className="lpb-layer-5" />
-        <div className="lpb-layer-6" />
-      </div>
+      />
 
       {/* Dynamic Bottom Navigation Bar: Floating Pill vs Docked Bar */}
       <nav

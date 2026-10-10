@@ -92,57 +92,23 @@
         0 4px 12px -2px rgba(0, 0, 0, 0.04);
     }
 
-    /* --- Progressive Liquid Glass Gradient Blur (Apple iOS 26 Specification) --- */
+    /* --- Smooth Progressive Liquid Glass Gradient Blur (Continuous Optical Mask) --- */
     .liquid-progressive-backdrop {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      height: 120px;
+      height: 130px;
       pointer-events: none;
       z-index: 10;
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+      -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.35) 70%, rgba(0, 0, 0, 0) 100%);
+      mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.35) 70%, rgba(0, 0, 0, 0) 100%);
+      background: linear-gradient(to top, rgba(255, 251, 248, 0.95) 0%, rgba(255, 251, 248, 0.65) 40%, rgba(255, 251, 248, 0.15) 75%, transparent 100%);
     }
     .liquid-progressive-backdrop > div {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-    }
-    .lpb-layer-1 {
-      height: 100%;
-      backdrop-filter: blur(1px);
-      -webkit-backdrop-filter: blur(1px);
-      background: linear-gradient(to top, rgba(255, 251, 248, 0.05) 0%, transparent 100%);
-    }
-    .lpb-layer-2 {
-      height: 82%;
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
-      background: linear-gradient(to top, rgba(255, 251, 248, 0.08) 0%, transparent 100%);
-    }
-    .lpb-layer-3 {
-      height: 64%;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      background: linear-gradient(to top, rgba(255, 251, 248, 0.12) 0%, transparent 100%);
-    }
-    .lpb-layer-4 {
-      height: 48%;
-      backdrop-filter: blur(7px);
-      -webkit-backdrop-filter: blur(7px);
-      background: linear-gradient(to top, rgba(255, 251, 248, 0.16) 0%, transparent 100%);
-    }
-    .lpb-layer-5 {
-      height: 32%;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      background: linear-gradient(to top, rgba(255, 251, 248, 0.22) 0%, transparent 100%);
-    }
-    .lpb-layer-6 {
-      height: 18%;
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      background: linear-gradient(to top, rgba(255, 251, 248, 0.28) 0%, transparent 100%);
+      display: none;
     }
 
     .liquid-glass-btn-active {
@@ -2072,65 +2038,74 @@
           {/* Scrollable Container with direction detection */}
           <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto no-scrollbar pb-36">
             
-            {/* Top Hero Banner */}
-            <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-neutral-900">
-              <img
-                src={venue.coverImage}
-                alt={venue.name}
-                className="w-full h-full object-cover opacity-85"
-              />
-              {/* Restored warm cream bottom gradient overlay for maximum contrast and seamless text grounding */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
-              
-              {/* Floating Top Elements: Cart icon button inside a clean white circle */}
-              <div className="absolute top-3 left-4 right-4 flex items-center justify-end z-10">
-                <button
-                  onClick={() => setShowCartDrawer(true)}
-                  aria-label={`Shopping Cart (${cartItemCount} items)`}
-                  className="relative w-9 h-9 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100"
-                >
-                  <Icons.ShoppingBag className="w-4 h-4 text-neutral-900" />
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-[#fd8535] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Venue Profile Pill Card (Floats cleanly outside overflow-hidden with negative margin to ensure zero logo clipping) */}
-            <div className="px-4 -mt-7 relative z-10 flex items-end gap-3.5">
-              {/* Official QueueLess Brand Emblem from brand folder (The Velocity Platter) */}
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fd8535] to-[#e0681c] p-2.5 shadow-xl shadow-orange-950/20 shrink-0 flex items-center justify-center border-2 border-white ring-1 ring-black/5">
-                <svg viewBox="0 0 800 800" className="w-full h-full fill-white" aria-hidden="true">
-                  <g fill="#FFFFFF" fillRule="evenodd">
-                    {/* Plume 01: Top Aerodynamic Streak */}
-                    <path d="M 235 285 C 310 290, 410 265, 545 220 L 495 265 C 415 275, 320 295, 235 285 Z" />
-                    {/* Plume 02: Mid Velocity Flow */}
-                    <path d="M 195 348 C 285 352, 420 325, 595 272 L 535 325 C 425 338, 305 362, 195 348 Z" />
-                    {/* Plume 03: The Kinetic Serving Vessel */}
-                    <path d="M 205 435 C 275 425, 470 380, 615 330 C 570 470, 470 545, 345 545 C 260 545, 215 500, 205 435 Z M 245 448 C 255 485, 290 512, 350 512 C 435 512, 515 460, 560 365 C 445 405, 300 440, 245 448 Z" />
-                  </g>
-                </svg>
-              </div>
-              <div className="pb-0.5">
-                <h2 className="font-extrabold text-base sm:text-lg text-neutral-900 tracking-tight leading-tight">{venue.name}</h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="px-2 py-0.5 rounded-full bg-[#f9b318] text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
-                    <Icons.Star className="w-3 h-3 text-white fill-white" />
-                    <span>{venue.rating}</span>
-                  </span>
+            {/* Top Hero Banner & Venue Pill (Hidden on Profile view per feedback) */}
+            {activeTab !== "profile" ? (
+              <>
+                <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-neutral-900">
+                  <img
+                    src={venue.coverImage}
+                    alt={venue.name}
+                    className="w-full h-full object-cover opacity-85"
+                  />
+                  {/* Restored warm cream bottom gradient overlay for maximum contrast and seamless text grounding */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
+                  
+                  {/* Floating Top Elements: Cart icon button inside a clean white circle */}
+                  <div className="absolute top-3 left-4 right-4 flex items-center justify-end z-10">
+                    <button
+                      onClick={() => setShowCartDrawer(true)}
+                      aria-label={`Shopping Cart (${cartItemCount} items)`}
+                      className="relative w-9 h-9 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100"
+                    >
+                      <Icons.ShoppingBag className="w-4 h-4 text-neutral-900" />
+                      {cartItemCount > 0 && (
+                        <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-[#fd8535] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Venue Status Banner (If Paused) */}
-            {remoteOrdersPaused && (
-              <div className="mx-4 mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-center gap-2.5">
-                <Icons.AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                <p className="font-semibold">Remote orders are paused right now by cafe staff. Please order at counter.</p>
-              </div>
+                {/* Venue Profile Pill Card (Floats cleanly outside overflow-hidden with negative margin to ensure zero logo clipping) */}
+                <div className="px-4 -mt-7 relative z-10 flex items-end gap-3.5">
+                  {/* Official QueueLess Brand Emblem from brand folder (The Velocity Platter) */}
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fd8535] to-[#e0681c] p-2.5 shadow-xl shadow-orange-950/20 shrink-0 flex items-center justify-center border-2 border-white ring-1 ring-black/5">
+                    <svg viewBox="0 0 800 800" className="w-full h-full fill-white" aria-hidden="true">
+                      <g fill="#FFFFFF" fillRule="evenodd">
+                        {/* Plume 01: Top Aerodynamic Streak */}
+                        <path d="M 235 285 C 310 290, 410 265, 545 220 L 495 265 C 415 275, 320 295, 235 285 Z" />
+                        {/* Plume 02: Mid Velocity Flow */}
+                        <path d="M 195 348 C 285 352, 420 325, 595 272 L 535 325 C 425 338, 305 362, 195 348 Z" />
+                        {/* Plume 03: The Kinetic Serving Vessel */}
+                        <path d="M 205 435 C 275 425, 470 380, 615 330 C 570 470, 470 545, 345 545 C 260 545, 215 500, 205 435 Z M 245 448 C 255 485, 290 512, 350 512 C 435 512, 515 460, 560 365 C 445 405, 300 440, 245 448 Z" />
+                      </g>
+                    </svg>
+                  </div>
+                  <div className="pb-0.5">
+                    <h2 className="font-extrabold text-base sm:text-lg text-neutral-900 tracking-tight leading-tight">{venue.name}</h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="px-2 py-0.5 rounded-full bg-[#f9b318] text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
+                        <Icons.Star className="w-3 h-3 text-white fill-white" />
+                        <span>{venue.rating}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Venue Status Banner (If Paused) */}
+                {remoteOrdersPaused && (
+                  <div className="mx-4 mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-center gap-2.5">
+                    <Icons.AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <p className="font-semibold">Remote orders are paused right now by cafe staff. Please order at counter.</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <header className="px-5 pt-8 pb-1">
+                <h1 className="text-xl font-black text-neutral-900 tracking-tight">Profile</h1>
+                <p className="text-xs text-neutral-500 font-medium">Manage your personal account and preferences</p>
+              </header>
             )}
 
             {/* TAB CONTENT: 1. MENU */}
@@ -2252,9 +2227,8 @@
             {/* TAB CONTENT: 2. PERKS & LOYALTY WALLET */}
             {activeTab === "perks" && (
               <div className="p-4 space-y-4">
-                <div className="flex items-center justify-between">
+                <div>
                   <h2 className="text-base font-extrabold text-neutral-900 tracking-tight">Perks & Student Rewards</h2>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#EF5A30]">Direct Venue Benefits</span>
                 </div>
 
                 {/* 5-Stamp Digital Loyalty Punch Card */}
@@ -2479,19 +2453,13 @@
                   <>
                     <div className="p-4 rounded-3xl bg-white border border-neutral-200/80 shadow-soft flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-[#EF5A30] text-white font-bold flex items-center justify-center text-lg shadow-sm">
+                        <div className="w-12 h-12 rounded-full bg-[#fd8535] text-white font-bold flex items-center justify-center text-lg shadow-sm">
                           {currentUser.name ? currentUser.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "AA"}
                         </div>
                         <div>
                           <h3 className="font-extrabold text-sm text-neutral-900">{currentUser.name}</h3>
                           <p className="text-xs text-neutral-500">{currentUser.email} • {currentUser.phone}</p>
                           <div className="flex items-center gap-1.5 mt-1">
-                            {currentUser.affiliation && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#EF5A30]">
-                                <Icons.GraduationCap className="w-3 h-3 text-[#EF5A30]" />
-                                <span>{currentUser.affiliation}</span>
-                              </span>
-                            )}
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
                               <Icons.Check className="w-2.5 h-2.5" />
                               <span>{currentUser.badge || "Verified Account"}</span>
@@ -2511,10 +2479,6 @@
                         <div className="flex items-center justify-between p-2.5 rounded-2xl bg-neutral-50 border border-neutral-100">
                           <span>Order Notifications</span>
                           <span className="font-bold text-emerald-600">Audio Chime Enabled</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2.5 rounded-2xl bg-neutral-50 border border-neutral-100">
-                          <span>Pickup Counter Location</span>
-                          <span className="font-bold text-neutral-800">Main Hall Register #2</span>
                         </div>
                       </div>
                     </div>
@@ -2631,19 +2595,12 @@
             </div>
           )}
 
-          {/* AMBIENT PROGRESSIVE GRADIENT BLUR (Calibrated multi-layer optical fade behind pill & cart CTA) */}
+          {/* AMBIENT PROGRESSIVE GRADIENT BLUR (Continuous Optical Mask) */}
           <div
             className={`liquid-progressive-backdrop pointer-events-none transition-all duration-300 ${
               isFloatingNav ? "opacity-100" : "opacity-0"
             }`}
-          >
-            <div className="lpb-layer-1" />
-            <div className="lpb-layer-2" />
-            <div className="lpb-layer-3" />
-            <div className="lpb-layer-4" />
-            <div className="lpb-layer-5" />
-            <div className="lpb-layer-6" />
-          </div>
+          />
 
           {/* DYNAMIC BOTTOM NAVIGATION BAR: Liquid Glass Floating Pill (Scroll Up) vs Docked Bar (Scroll Down) */}
           <nav

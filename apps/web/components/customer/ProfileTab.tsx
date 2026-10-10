@@ -2,7 +2,6 @@
 
 import {
   User,
-  GraduationCap,
   Check,
   Sparkles,
   LogOut,
@@ -25,7 +24,7 @@ export function ProfileTab({ onReplaySplash }: ProfileTabProps) {
           {/* User Profile Card */}
           <div className="p-4 rounded-3xl bg-white border border-neutral-200/80 shadow-soft flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#EF5A30] text-white font-bold flex items-center justify-center text-lg shadow-sm shrink-0">
+              <div className="w-12 h-12 rounded-full bg-[#fd8535] text-white font-bold flex items-center justify-center text-lg shadow-sm shrink-0">
                 {currentUser.name
                   ? currentUser.name
                       .split(" ")
@@ -41,12 +40,6 @@ export function ProfileTab({ onReplaySplash }: ProfileTabProps) {
                   {currentUser.email} • {currentUser.phone}
                 </p>
                 <div className="flex items-center gap-1.5 mt-1">
-                  {currentUser.affiliation && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#EF5A30]">
-                      <GraduationCap className="w-3 h-3 text-[#EF5A30]" />
-                      <span>{currentUser.affiliation}</span>
-                    </span>
-                  )}
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
                     <Check className="w-2.5 h-2.5" />
                     <span>{currentUser.badge || "Verified Account"}</span>
@@ -67,10 +60,6 @@ export function ProfileTab({ onReplaySplash }: ProfileTabProps) {
               <div className="flex items-center justify-between p-2.5 rounded-2xl bg-neutral-50 border border-neutral-100">
                 <span className="text-neutral-500">Order Notifications</span>
                 <span className="font-bold text-emerald-600">Audio Chime Enabled</span>
-              </div>
-              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-neutral-50 border border-neutral-100">
-                <span className="text-neutral-500">Pickup Counter Location</span>
-                <span className="font-bold text-neutral-800">Main Hall Register #2</span>
               </div>
             </div>
           </div>

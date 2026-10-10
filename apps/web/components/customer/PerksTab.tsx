@@ -24,13 +24,10 @@ export function PerksTab() {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
+      <div>
         <h2 className="text-base font-extrabold text-neutral-900 tracking-tight">
           Perks & Student Rewards
         </h2>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#EF5A30]">
-          Direct Venue Benefits
-        </span>
       </div>
 
       {/* 5-Stamp Digital Loyalty Punch Card */}
