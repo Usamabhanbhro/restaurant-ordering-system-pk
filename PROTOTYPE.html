@@ -2026,64 +2026,51 @@
           <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto no-scrollbar pb-36">
             
             {/* Top Hero Banner */}
-            <div className="relative h-44 w-full overflow-hidden bg-neutral-900">
+            <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-neutral-900">
               <img
                 src={venue.coverImage}
                 alt={venue.name}
                 className="w-full h-full object-cover opacity-85"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               
-              {/* Floating Top Elements */}
-              <div className="absolute top-3 left-4 right-4 flex items-center justify-between text-white">
-                <span className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-[11px] font-bold flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  {venue.openTime} - {venue.closeTime}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-full bg-[#EF5A30] text-white text-[11px] font-bold shadow-md flex items-center gap-1">
+              {/* Floating Top Elements: Cart Button (Replaces user button) */}
+              <div className="absolute top-3 left-4 right-4 flex items-center justify-end z-10">
+                <button
+                  onClick={() => setShowCartDrawer(true)}
+                  aria-label="Open Cart"
+                  className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold shadow-md hover:bg-black/80 flex items-center gap-1.5 transition-all active:scale-95 border border-white/10"
+                >
+                  <Icons.ShoppingBag className="w-3.5 h-3.5 text-white" />
+                  <span>Cart</span>
+                  {cartItemCount > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-[#EF5A30] text-white text-[10px] font-extrabold leading-none">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Venue Profile Pill Card (Floats cleanly outside overflow-hidden with negative margin to ensure zero logo clipping) */}
+            <div className="px-4 -mt-7 relative z-10 flex items-end gap-3.5">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fc683f] to-[#e0552d] p-2.5 shadow-xl shadow-orange-950/20 shrink-0 flex items-center justify-center border-2 border-white ring-1 ring-black/5">
+                <svg viewBox="0 0 800 800" className="w-full h-full fill-white">
+                  <g fill="#FFFFFF" fillRule="evenodd">
+                    <path d="M 235 285 C 310 290, 410 265, 545 220 L 495 265 C 415 275, 320 295, 235 285 Z" />
+                    <path d="M 195 348 C 285 352, 420 325, 595 272 L 535 325 C 425 338, 305 362, 195 348 Z" />
+                    <path d="M 205 435 C 275 425, 470 380, 615 330 C 570 470, 470 545, 345 545 C 260 545, 215 500, 205 435 Z M 245 448 C 255 485, 290 512, 350 512 C 435 512, 515 460, 560 365 C 445 405, 300 440, 245 448 Z" />
+                  </g>
+                </svg>
+              </div>
+              <div className="pb-0.5">
+                <h2 className="font-extrabold text-base sm:text-lg text-neutral-900 tracking-tight leading-tight">{venue.name}</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="px-2 py-0.5 rounded-full bg-[#EF5A30] text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
                     <Icons.Star className="w-3 h-3 text-white fill-white" />
                     <span>{venue.rating}</span>
                   </span>
-                  {currentUser ? (
-                    <button
-                      onClick={() => setActiveTab("profile")}
-                      className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-bold shadow-md hover:bg-black/80 flex items-center gap-1.5 transition-all"
-                      title="View Profile"
-                    >
-                      <Icons.User className="w-3 h-3 text-white" />
-                      <span>{currentUser.name ? currentUser.name.split(" ")[0] : "Account"}</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => { setAuthModal("WELCOME"); setPendingPostAuthAction(null); }}
-                      className="px-2.5 py-1 rounded-full bg-white text-neutral-900 text-[11px] font-bold shadow-md hover:bg-neutral-100 flex items-center gap-1 transition-all"
-                    >
-                      <span>Sign In</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Venue Profile Pill Card (Overlapping Hero) */}
-              <div className="absolute -bottom-1 left-4 right-4 flex items-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-[#EF5A30] p-2.5 shadow-lg shadow-orange-950/20 shrink-0 flex items-center justify-center border-2 border-white">
-                  <svg viewBox="0 0 800 800" className="w-full h-full fill-white">
-                    <g fill="#FFFFFF" fillRule="evenodd">
-                      <path d="M 235 285 C 310 290, 410 265, 545 220 L 495 265 C 415 275, 320 295, 235 285 Z" />
-                      <path d="M 195 348 C 285 352, 420 325, 595 272 L 535 325 C 425 338, 305 362, 195 348 Z" />
-                      <path d="M 205 435 C 275 425, 470 380, 615 330 C 570 470, 470 545, 345 545 C 260 545, 215 500, 205 435 Z M 245 448 C 255 485, 290 512, 350 512 C 435 512, 515 460, 560 365 C 445 405, 300 440, 245 448 Z" />
-                    </g>
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="font-extrabold text-base text-neutral-900 tracking-tight leading-tight">{venue.name}</h2>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-bold text-[#EF5A30] bg-orange-100/70 px-2 py-0.5 rounded-full">
-                      10–15m Counter Pickup
-                    </span>
-                    <span className="text-[10px] text-neutral-500">• Lahore F&B</span>
-                  </div>
+                  <span className="text-[11px] font-medium text-neutral-500">• Lahore F&B</span>
                 </div>
               </div>
             </div>
@@ -2098,7 +2085,7 @@
 
             {/* TAB CONTENT: 1. MENU */}
             {activeTab === "menu" && (
-              <div className="mt-4 px-4 space-y-4">
+              <div className="mt-3 px-4 space-y-3">
                 
                 {/* Search Bar (Rounded-full Pill with vector icon) */}
                 <div className="relative">
@@ -2112,26 +2099,28 @@
                   <Icons.Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3" />
                 </div>
 
-                {/* Sticky Category Carousel (Pure Vector Icons) */}
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                  {categories.map((cat) => {
-                    const CatIcon = Icons[cat.icon] || Icons.Burger;
-                    const isSelected = selectedCategory === cat.id;
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
-                          isSelected
-                            ? "bg-neutral-900 text-white shadow-pill"
-                            : "bg-white text-neutral-600 border border-neutral-200/80 hover:bg-neutral-50"
-                        }`}
-                      >
-                        <CatIcon className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-neutral-500"}`} />
-                        <span>{cat.name}</span>
-                      </button>
-                    );
-                  })}
+                {/* Sticky Category Carousel with edge fade scroll cues */}
+                <div className="relative">
+                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth py-1">
+                    {categories.map((cat) => {
+                      const CatIcon = Icons[cat.icon] || Icons.Burger;
+                      const isSelected = selectedCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => setSelectedCategory(cat.id)}
+                          className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
+                            isSelected
+                              ? "bg-neutral-900 text-white shadow-pill"
+                              : "bg-white text-neutral-600 border border-neutral-200/80 hover:bg-neutral-50"
+                          }`}
+                        >
+                          <CatIcon className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-neutral-500"}`} />
+                          <span>{cat.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Food Item Cards List */}

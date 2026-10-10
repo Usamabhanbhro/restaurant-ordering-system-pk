@@ -125,6 +125,7 @@ export default function CustomerPage({ params }: CustomerPageProps) {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onSelectTab={setActiveTab}
+            onOpenCart={() => setShowCartDrawer(true)}
           />
 
           {/* TAB 1: MENU CATALOG */}
