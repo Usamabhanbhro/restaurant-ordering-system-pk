@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Drawer } from "vaul";
 import {
-  Store,
   CreditCard,
   Copy,
   Check,
@@ -238,21 +237,11 @@ export function CartDrawer({
 
           {/* Scrollable Cart Content Area */}
           <div className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
-            {/* Header / Venue Name */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-black text-neutral-900 tracking-tight flex items-center gap-1.5">
-                  <span>Your Order</span>
-                  <span className="w-2 h-2 rounded-full bg-[#fd8535] inline-block" />
-                </h2>
-                <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-0.5">
-                  <Store className="w-3.5 h-3.5 text-[#fd8535]" />
-                  <span>{venue.name} • Counter Pickup</span>
-                </div>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-neutral-100 text-neutral-600 font-bold text-xs">
-                {cartItemCount} {cartItemCount === 1 ? "Item" : "Items"}
-              </span>
+            {/* Header: Your Order */}
+            <div>
+              <h2 className="text-lg font-black text-neutral-900 tracking-tight">
+                Your Order
+              </h2>
             </div>
 
             {/* Error Message if any */}

@@ -161,6 +161,7 @@ export function CustomerOrderingView({
               onSelectTab={setActiveTab}
               onOpenCart={() => setShowCartDrawer(true)}
               showSearch={activeTab === "menu"}
+              showCart={activeTab !== "status"}
               mode={mode}
               tableContext={tableContext}
             />

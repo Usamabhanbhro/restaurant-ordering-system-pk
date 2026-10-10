@@ -2,7 +2,6 @@
 
 import {
   User,
-  Check,
   Sparkles,
   LogOut,
   Zap,
@@ -60,10 +59,9 @@ export function ProfileTab({
                 <p className="text-xs text-neutral-500">
                   {currentUser.email} • {currentUser.phone}
                 </p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-                    <Check className="w-2.5 h-2.5" />
-                    <span>{currentUser.badge || "Verified Account"}</span>
+                <div className="mt-1">
+                  <span className="text-xs font-bold text-[#1546d9]">
+                    Verified
                   </span>
                 </div>
               </div>

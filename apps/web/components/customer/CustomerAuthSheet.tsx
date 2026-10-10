@@ -293,14 +293,6 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6B42] to-[#EF5A30] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20">
                     <Zap className="w-7 h-7 fill-white" />
                   </div>
-                  <div>
-                    <h3 className="font-black text-xl text-neutral-900 tracking-tight">
-                      Welcome to Queue<span className="text-[#EF5A30]">Less</span>
-                    </h3>
-                    <p className="text-xs text-neutral-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
-                      Pre-order meals, skip counter lines, and pick up fresh at your scheduled slot.
-                    </p>
-                  </div>
                 </div>
 
                 <div className="space-y-2 pt-1">

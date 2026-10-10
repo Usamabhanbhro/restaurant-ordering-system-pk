@@ -1213,14 +1213,6 @@
                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6B42] to-[#EF5A30] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20">
                       <Icons.Zap className="w-7 h-7 fill-white" />
                     </div>
-                    <div>
-                      <h3 className="font-black text-xl text-neutral-900 tracking-tight">
-                        Welcome to Queue<span className="text-[#EF5A30]">Less</span>
-                      </h3>
-                      <p className="text-xs text-neutral-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
-                        Pre-order meals, skip counter lines, and pick up fresh at your scheduled slot.
-                      </p>
-                    </div>
                   </div>
 
                   <div className="space-y-2 pt-1">
@@ -2086,21 +2078,23 @@
                   {/* Restored warm cream bottom gradient overlay for maximum contrast and seamless text grounding */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
                   
-                  {/* Floating Top Elements: Cart icon button inside a clean white circle */}
-                  <div className="absolute top-3 left-4 right-4 flex items-center justify-end z-10">
-                    <button
-                      onClick={() => setShowCartDrawer(true)}
-                      aria-label={`Shopping Cart (${cartItemCount} items)`}
-                      className="relative w-9 h-9 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100"
-                    >
-                      <Icons.ShoppingBag className="w-4 h-4 text-neutral-900" />
-                      {cartItemCount > 0 && (
-                        <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-[#fd8535] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
-                          {cartItemCount}
-                        </span>
-                      )}
-                    </button>
-                  </div>
+                  {/* Floating Top Elements: Cart icon button inside a clean white circle (hidden in Order Tracker) */}
+                  {activeTab !== "status" && (
+                    <div className="absolute top-3 left-4 right-4 flex items-center justify-end z-10">
+                      <button
+                        onClick={() => setShowCartDrawer(true)}
+                        aria-label={`Shopping Cart (${cartItemCount} items)`}
+                        className="relative w-9 h-9 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100"
+                      >
+                        <Icons.ShoppingBag className="w-4 h-4 text-neutral-900" />
+                        {cartItemCount > 0 && (
+                          <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-[#fd8535] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
+                            {cartItemCount}
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Venue Profile Pill Card (Floats cleanly outside overflow-hidden with negative margin to ensure zero logo clipping) */}
@@ -2572,10 +2566,9 @@
                         <div>
                           <h3 className="font-extrabold text-sm text-neutral-900">{currentUser.name}</h3>
                           <p className="text-xs text-neutral-500">{currentUser.email} • {currentUser.phone}</p>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-                              <Icons.Check className="w-2.5 h-2.5" />
-                              <span>{currentUser.badge || "Verified Account"}</span>
+                          <div className="mt-1">
+                            <span className="text-xs font-bold text-[#1546d9]">
+                              Verified
                             </span>
                           </div>
                         </div>
@@ -2903,20 +2896,10 @@
                 <div className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
                   
                   {/* Section: Your Order Header */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-black text-neutral-900 tracking-tight flex items-center gap-1.5">
-                        <span>Your Order</span>
-                        <span className="w-2 h-2 rounded-full bg-[#EF5A30] inline-block"></span>
-                      </h2>
-                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-0.5">
-                        <Icons.Store className="w-3.5 h-3.5 text-[#EF5A30]" />
-                        <span>{venue.name} • Counter Pickup</span>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-neutral-100 text-neutral-600 font-bold text-xs">
-                      {cartItemCount} {cartItemCount === 1 ? "Item" : "Items"}
-                    </span>
+                  <div>
+                    <h2 className="text-lg font-black text-neutral-900 tracking-tight">
+                      Your Order
+                    </h2>
                   </div>
 
                   {/* Cart Items List Container Card */}

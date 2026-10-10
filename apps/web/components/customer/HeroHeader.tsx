@@ -12,6 +12,7 @@ interface HeroHeaderProps {
   onSelectTab: (tab: "menu" | "perks" | "status" | "profile") => void;
   onOpenCart?: () => void;
   showSearch?: boolean;
+  showCart?: boolean;
   mode?: OrderingMode;
   tableContext?: TableContext | null;
 }
@@ -23,6 +24,7 @@ export function HeroHeader({
   onSearchChange,
   onOpenCart,
   showSearch = true,
+  showCart = true,
   mode = "REMOTE",
   tableContext,
 }: HeroHeaderProps) {
@@ -41,22 +43,24 @@ export function HeroHeader({
         {/* Restored warm cream bottom gradient overlay for maximum contrast and seamless text grounding */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
 
-        {/* Floating Top Elements: Cart icon button inside a clean white circle */}
-        <div className="absolute top-3 left-4 right-4 flex items-center justify-end z-10">
-          <button
-            type="button"
-            onClick={onOpenCart}
-            aria-label={`Shopping Cart (${cartItemCount} items)`}
-            className="relative w-9 h-9 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100"
-          >
-            <ShoppingBag className="w-4 h-4 text-neutral-900" />
-            {cartItemCount > 0 && (
-              <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-[#fd8535] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
-                {cartItemCount}
-              </span>
-            )}
-          </button>
-        </div>
+        {/* Floating Top Elements: Cart icon button inside a clean white circle (hidden in Order Tracker) */}
+        {showCart && (
+          <div className="absolute top-3 left-4 right-4 flex items-center justify-end z-10">
+            <button
+              type="button"
+              onClick={onOpenCart}
+              aria-label={`Shopping Cart (${cartItemCount} items)`}
+              className="relative w-9 h-9 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100"
+            >
+              <ShoppingBag className="w-4 h-4 text-neutral-900" />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-[#fd8535] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
+                  {cartItemCount}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Venue Profile Section (Positioned outside overflow-hidden with negative margin to ensure zero logo clipping) */}
