@@ -60,7 +60,7 @@ export function OrderProgressTracker({
             <Zap className="w-3 h-3 text-orange-400 fill-orange-400" />
             <span>
               {activeOrder.mode === "IN_VENUE"
-                ? `Table #${activeOrder.tableNumber || "01"} Order Ticket`
+                ? "Order Ticket"
                 : "Counter Pickup Ticket"}
             </span>
           </span>
@@ -76,11 +76,11 @@ export function OrderProgressTracker({
           <span className="text-sm font-bold text-neutral-300">Rs. {activeOrder.total}</span>
         </div>
 
-        <p className="text-xs text-neutral-400 mt-1">
-          {activeOrder.mode === "IN_VENUE"
-            ? `Food is being prepared for Table ${activeOrder.tableNumber || "01"}. Physical settlement at counter.`
-            : "Show this number at the cafe counter acrylic stand when ready."}
-        </p>
+        {activeOrder.mode !== "IN_VENUE" && (
+          <p className="text-xs text-neutral-400 mt-1">
+            Show this number at the cafe counter acrylic stand when ready.
+          </p>
+        )}
 
         {activeOrder.items && activeOrder.items.length > 0 && (
           <div className="mt-3 pt-3 border-t border-neutral-800 text-[11px] text-neutral-400 space-y-1">
@@ -89,7 +89,9 @@ export function OrderProgressTracker({
                 <span>
                   {it.qty}x {it.name}
                 </span>
-                <span>Rs. {it.price * it.qty}</span>
+                {activeOrder.mode !== "IN_VENUE" && (
+                  <span>Rs. {it.price * it.qty}</span>
+                )}
               </div>
             ))}
           </div>
@@ -108,7 +110,7 @@ export function OrderProgressTracker({
             <span
               className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${
                 activeOrder.mode === "IN_VENUE"
-                  ? "bg-neutral-900"
+                  ? "bg-[#1546d9]"
                   : isPending
                   ? "bg-[#fd8535] ring-4 ring-orange-100 animate-pulse"
                   : "bg-neutral-900"
@@ -117,7 +119,11 @@ export function OrderProgressTracker({
               <Check className="w-3 h-3 text-white" />
             </span>
             <div>
-              <p className="text-xs font-extrabold text-neutral-900">
+              <p
+                className={`text-xs font-extrabold ${
+                  activeOrder.mode === "IN_VENUE" ? "text-[#1546d9]" : "text-neutral-900"
+                }`}
+              >
                 {activeOrder.mode === "IN_VENUE"
                   ? "1. Order Sent to Kitchen"
                   : "1. Awaiting Payment Confirmation"}

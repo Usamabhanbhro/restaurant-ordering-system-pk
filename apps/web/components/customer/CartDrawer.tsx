@@ -563,7 +563,7 @@ export function CartDrawer({
                   </div>
                   <input
                     type="text"
-                    placeholder="Enter any code for Rs. 50 off (e.g. FAST20)"
+                    placeholder="Enter any code for Rs. 50 off (e.g. PROMO50)"
                     value={localPromoInput}
                     onChange={(e) => setLocalPromoInput(e.target.value)}
                     className="w-full text-xs font-bold text-neutral-800 bg-transparent focus:outline-none placeholder:text-neutral-400 uppercase"
@@ -585,7 +585,7 @@ export function CartDrawer({
                   <button
                     type="button"
                     onClick={() => {
-                      const code = localPromoInput.trim() || "FAST20";
+                      const code = localPromoInput.trim() || "PROMO50";
                       applyPromo(code);
                       setLocalPromoInput(code);
                     }}
@@ -617,7 +617,7 @@ export function CartDrawer({
                   <div className="flex items-center justify-between text-emerald-600 font-bold">
                     <span className="flex items-center gap-1.5">
                       <Ticket className="w-3.5 h-3.5" />
-                      <span>Voucher Discount ({promoCode || "FAST20"})</span>
+                      <span>Voucher Discount ({promoCode || "PROMO50"})</span>
                     </span>
                     <span>-Rs. {voucherDiscount}</span>
                   </div>

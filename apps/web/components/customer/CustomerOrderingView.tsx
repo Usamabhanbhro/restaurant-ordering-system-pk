@@ -197,7 +197,7 @@ export function CustomerOrderingView({
                         : "text-neutral-500 hover:text-neutral-800"
                     }`}
                   >
-                    <span>In-Venue (Table #{tableContext?.tableNumber || "04"})</span>
+                    <span>In Venue</span>
                   </button>
                 </div>
               </div>

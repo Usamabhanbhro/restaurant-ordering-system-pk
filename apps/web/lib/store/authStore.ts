@@ -16,7 +16,8 @@ export type AuthModalMode =
   | "REGISTER"
   | "VERIFY_EMAIL"
   | "ONBOARDING"
-  | "FORGOT_PASSWORD";
+  | "FORGOT_PASSWORD"
+  | "RESET_PASSWORD";
 
 export type PendingPostAuthAction = "CHECKOUT" | null;
 

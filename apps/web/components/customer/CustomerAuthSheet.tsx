@@ -70,12 +70,20 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
   const [errorMessage, setErrorMessage] = useState("");
   const [resendTimer, setResendTimer] = useState(59);
   const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [isRecoveryFlow, setIsRecoveryFlow] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Sync mode with global modal state
   useEffect(() => {
     if (authModal !== "NONE") {
       setMode(authModal);
       setErrorMessage("");
+      if (authModal === "FORGOT_PASSWORD") {
+        setIsRecoveryFlow(true);
+      } else if (authModal === "REGISTER" || authModal === "LOGIN") {
+        setIsRecoveryFlow(false);
+      }
     }
   }, [authModal]);
 
@@ -169,29 +177,40 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
       return;
     }
 
+    setIsRecoveryFlow(false);
     setResendTimer(59);
     setOtpDigits(["", "", "", "", "", ""]);
     setMode("VERIFY_EMAIL");
   };
 
   const handleOtpChange = (index: number, value: string) => {
+    const nextDigits = [...otpDigits];
     if (value.length > 1) {
       const pasted = value.slice(0, 6).split("");
-      const nextDigits = [...otpDigits];
       pasted.forEach((char, i) => {
         if (i < 6) nextDigits[i] = char;
       });
       setOtpDigits(nextDigits);
-      return;
+    } else {
+      nextDigits[index] = value;
+      setOtpDigits(nextDigits);
+
+      if (value && index < 5) {
+        const nextInput = document.getElementById(`web-otp-input-${index + 1}`);
+        if (nextInput) nextInput.focus();
+      }
     }
 
-    const nextDigits = [...otpDigits];
-    nextDigits[index] = value;
-    setOtpDigits(nextDigits);
-
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`web-otp-input-${index + 1}`);
-      if (nextInput) nextInput.focus();
+    // Auto-advance to the next screen immediately once all 6 digits are entered
+    if (nextDigits.every((d) => d.trim().length === 1)) {
+      setTimeout(() => {
+        setErrorMessage("");
+        if (isRecoveryFlow) {
+          setMode("RESET_PASSWORD");
+        } else {
+          setMode("ONBOARDING");
+        }
+      }, 150);
     }
   };
 
@@ -209,7 +228,34 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
       setErrorMessage("Please enter the verification code sent to your email.");
       return;
     }
-    setMode("ONBOARDING");
+    if (isRecoveryFlow) {
+      setMode("RESET_PASSWORD");
+    } else {
+      setMode("ONBOARDING");
+    }
+  };
+
+  const handleResetPasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage("");
+
+    if (!newPassword || newPassword.length < 8) {
+      setErrorMessage("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    completeLogin({
+      name: displayName.trim() || "Ahmad Ali",
+      email: email.trim() || "student@nu.edu.pk",
+      phone: phone || "+92 300 1234567",
+      affiliation: affiliation === "None" ? "" : affiliation,
+      badge: "Verified Student",
+      isVerified: true,
+    });
   };
 
   const handleCompleteOnboarding = (e: React.FormEvent) => {
@@ -253,7 +299,8 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
                 type="button"
                 onClick={() => {
                   setErrorMessage("");
-                  if (mode === "VERIFY_EMAIL") setMode("REGISTER");
+                  if (mode === "VERIFY_EMAIL") setMode(isRecoveryFlow ? "FORGOT_PASSWORD" : "REGISTER");
+                  else if (mode === "RESET_PASSWORD") setMode("VERIFY_EMAIL");
                   else if (mode === "ONBOARDING") setMode("VERIFY_EMAIL");
                   else if (mode === "FORGOT_PASSWORD") setMode("LOGIN");
                   else setMode("WELCOME");
@@ -639,28 +686,31 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
             {/* 4. VERIFY EMAIL (6-Digit OTP) */}
             {mode === "VERIFY_EMAIL" && (
               <form onSubmit={handleVerifyEmail} className="space-y-4 text-center">
-                <div className="flex items-center justify-between px-1 pb-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
-                      <Check className="w-3 h-3 text-white" />
-                    </span>
-                    <span className="text-xs font-bold text-neutral-800">Details</span>
+                {/* 3-Step Progress Indicator: Only shown in registration flow, completely hidden in recovery flow */}
+                {!isRecoveryFlow && (
+                  <div className="flex items-center justify-between px-1 pb-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                        <Check className="w-3 h-3 text-white" />
+                      </span>
+                      <span className="text-xs font-bold text-neutral-800">Details</span>
+                    </div>
+                    <div className="w-8 h-0.5 bg-emerald-400" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-[#EF5A30] text-white flex items-center justify-center text-[10px] font-bold ring-2 ring-orange-200">
+                        2
+                      </span>
+                      <span className="text-xs font-bold text-neutral-900">Verify</span>
+                    </div>
+                    <div className="w-8 h-0.5 bg-neutral-200" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-neutral-200 text-neutral-500 flex items-center justify-center text-[10px] font-bold">
+                        3
+                      </span>
+                      <span className="text-xs font-medium text-neutral-400">Profile</span>
+                    </div>
                   </div>
-                  <div className="w-8 h-0.5 bg-emerald-400" />
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-[#EF5A30] text-white flex items-center justify-center text-[10px] font-bold ring-2 ring-orange-200">
-                      2
-                    </span>
-                    <span className="text-xs font-bold text-neutral-900">Verify</span>
-                  </div>
-                  <div className="w-8 h-0.5 bg-neutral-200" />
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-neutral-200 text-neutral-500 flex items-center justify-center text-[10px] font-bold">
-                      3
-                    </span>
-                    <span className="text-xs font-medium text-neutral-400">Profile</span>
-                  </div>
-                </div>
+                )}
 
                 <div className="w-14 h-14 rounded-2xl bg-orange-100 text-[#EF5A30] flex items-center justify-center mx-auto shadow-xs">
                   <Shield className="w-7 h-7" />
@@ -669,7 +719,7 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
                 <div>
                   <h3 className="font-black text-lg text-neutral-900 tracking-tight">Enter 6-Digit Code</h3>
                   <p className="text-xs text-neutral-500 mt-1 max-w-[280px] mx-auto">
-                    We sent an email verification code to{" "}
+                    We sent a verification code to{" "}
                     <span className="font-bold text-neutral-800">{email || "your email"}</span>
                   </p>
                 </div>
@@ -701,33 +751,49 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
                   ))}
                 </div>
 
-                <div className="text-xs text-neutral-500">
-                  {resendTimer > 0 ? (
-                    <p>
-                      Resend code in{" "}
-                      <span className="font-mono font-bold text-neutral-800">
-                        00:{resendTimer < 10 ? `0${resendTimer}` : resendTimer}
-                      </span>
-                    </p>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setResendTimer(59);
-                      }}
-                      className="text-[#EF5A30] font-bold hover:underline"
-                    >
-                      Resend Code Now
-                    </button>
-                  )}
-                </div>
+                {/* In recovery flow, action buttons are removed and code auto-advances on 6th digit */}
+                {!isRecoveryFlow ? (
+                  <>
+                    <div className="text-xs text-neutral-500">
+                      {resendTimer > 0 ? (
+                        <p>
+                          Resend code in{" "}
+                          <span className="font-mono font-bold text-neutral-800">
+                            00:{resendTimer < 10 ? `0${resendTimer}` : resendTimer}
+                          </span>
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setResendTimer(59);
+                          }}
+                          className="text-[#EF5A30] font-bold hover:underline"
+                        >
+                          Resend Code Now
+                        </button>
+                      )}
+                    </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-[#EF5A30] hover:bg-[#DE4920] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98]"
-                >
-                  Verify & Continue
-                </button>
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 rounded-2xl bg-[#EF5A30] hover:bg-[#DE4920] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98]"
+                    >
+                      Verify & Continue
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-xs text-neutral-500 py-1">
+                    {resendTimer > 0 && (
+                      <p>
+                        Resend code in{" "}
+                        <span className="font-mono font-bold text-neutral-800">
+                          00:{resendTimer < 10 ? `0${resendTimer}` : resendTimer}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <p className="text-[11px] text-neutral-400">
                   Code expires in 10 minutes. Check spam if not received.
@@ -867,7 +933,9 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
                       setErrorMessage("Please enter a valid email address.");
                       return;
                     }
+                    setIsRecoveryFlow(true);
                     setResendTimer(59);
+                    setOtpDigits(["", "", "", "", "", ""]);
                     setMode("VERIFY_EMAIL");
                   }}
                   className="w-full py-3.5 rounded-2xl bg-[#EF5A30] hover:bg-[#DE4920] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98]"
@@ -875,6 +943,78 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
                   Send Recovery Code
                 </button>
               </div>
+            )}
+
+            {/* 7. RESET PASSWORD (Account Recovery Final Step) */}
+            {mode === "RESET_PASSWORD" && (
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+                <div>
+                  <h3 className="font-black text-lg text-neutral-900 tracking-tight">Set New Password</h3>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    Enter your new password to regain access to your account.
+                  </p>
+                </div>
+
+                {errorMessage && (
+                  <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-neutral-700 uppercase tracking-wide">
+                      New Password
+                    </label>
+                    <span className="text-[10px] text-neutral-400">Min. 8 characters</span>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full pl-10 pr-10 py-3 rounded-2xl bg-neutral-50 border border-neutral-200 text-xs font-medium text-neutral-900 placeholder-neutral-400 focus:bg-white focus:border-[#EF5A30] focus:ring-2 focus:ring-[#EF5A30]/15 outline-none transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-neutral-400 hover:text-neutral-700"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-neutral-700 uppercase tracking-wide">
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl bg-neutral-50 border border-neutral-200 text-xs font-medium text-neutral-900 placeholder-neutral-400 focus:bg-white focus:border-[#EF5A30] focus:ring-2 focus:ring-[#EF5A30]/15 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 rounded-2xl bg-[#EF5A30] hover:bg-[#DE4920] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98] mt-2"
+                >
+                  Save New Password & Sign In
+                </button>
+              </form>
             )}
           </div>
         </Drawer.Content>

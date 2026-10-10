@@ -25,20 +25,6 @@ export function ProfileTab({
 
   return (
     <div className="p-4 space-y-4">
-      {mode === "IN_VENUE" && (
-        <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/60 text-xs text-blue-900 flex items-center justify-between">
-          <div>
-            <p className="font-extrabold text-[#1546d9]">In-Venue Table Mode</p>
-            <p className="text-[11px] text-blue-700">
-              Table {tableContext?.tableNumber || "01"}{tableContext?.zoneName ? ` (${tableContext.zoneName})` : ""} • No account required
-            </p>
-          </div>
-          <span className="px-2 py-0.5 rounded-full bg-[#1546d9] text-white font-extrabold text-[10px]">
-            Active
-          </span>
-        </div>
-      )}
-
       {currentUser ? (
         <>
           {/* User Profile Card */}
@@ -155,16 +141,16 @@ export function ProfileTab({
               className="text-[11px] text-neutral-400 hover:text-neutral-700 font-semibold pt-2 inline-flex items-center gap-1.5 transition-colors"
             >
               <Zap className="w-3 h-3 text-[#EF5A30]" />
-              <span>Quick Demo Login as Ahmad Ali (FAST)</span>
+              <span>Quick Demo Login as Ahmad Ali</span>
             </button>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-orange-50/80 border border-orange-200/60 text-left flex items-center gap-3">
             <Sparkles className="w-5 h-5 text-[#EF5A30] shrink-0" />
             <div>
-              <p className="text-xs font-bold text-neutral-900">Campus Partnership Discounts</p>
+              <p className="text-xs font-bold text-neutral-900">Platform Member Discounts</p>
               <p className="text-[11px] text-neutral-500">
-                Students at FAST, LUMS, IBA, NUST get 10% off with university email.
+                Discounts offered by the platform across participating venues with verified email.
               </p>
             </div>
           </div>
