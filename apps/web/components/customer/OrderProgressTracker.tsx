@@ -64,9 +64,11 @@ export function OrderProgressTracker({
                 : "Counter Pickup Ticket"}
             </span>
           </span>
-          <span className="text-xs font-bold text-neutral-400">
-            {activeOrder.slot} ({activeOrder.breakSlot})
-          </span>
+          {activeOrder.mode !== "IN_VENUE" && (
+            <span className="text-xs font-bold text-neutral-400">
+              {activeOrder.slot} ({activeOrder.breakSlot})
+            </span>
+          )}
         </div>
 
         <div className="mt-3 flex items-baseline justify-between">
@@ -142,9 +144,13 @@ export function OrderProgressTracker({
               2
             </span>
             <div>
-              <p className="text-xs font-extrabold text-neutral-900">2. Confirmed & Scheduled</p>
+              <p className="text-xs font-extrabold text-neutral-900">
+                {activeOrder.mode === "IN_VENUE" ? "2. Kitchen Ticket Dispatched" : "2. Confirmed & Scheduled"}
+              </p>
               <p className="text-[11px] text-neutral-500">
-                Cooking begins 10m before {activeOrder.slot}
+                {activeOrder.mode === "IN_VENUE"
+                  ? "Order sent directly to kitchen station"
+                  : `Cooking begins 10m before ${activeOrder.slot}`}
               </p>
             </div>
           </div>
@@ -170,7 +176,7 @@ export function OrderProgressTracker({
             </div>
           </div>
 
-          {/* Step 4: Ready at Counter */}
+          {/* Step 4: Ready at Counter / Served to Table */}
           <div className="relative">
             <span
               className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${
@@ -184,9 +190,13 @@ export function OrderProgressTracker({
               4
             </span>
             <div>
-              <p className="text-xs font-extrabold text-neutral-900">4. Ready for Pickup</p>
+              <p className="text-xs font-extrabold text-neutral-900">
+                {activeOrder.mode === "IN_VENUE" ? "4. Served to Table" : "4. Ready for Pickup"}
+              </p>
               <p className="text-[11px] text-neutral-500">
-                Waiting on the counter tray. Please collect promptly.
+                {activeOrder.mode === "IN_VENUE"
+                  ? `Delivered to Table ${activeOrder.tableNumber || "04"}. Enjoy your meal!`
+                  : "Waiting on the counter tray. Please collect promptly."}
               </p>
             </div>
           </div>

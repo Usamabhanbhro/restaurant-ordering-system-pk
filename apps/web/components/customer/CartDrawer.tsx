@@ -16,6 +16,7 @@ import {
   ShoppingBag,
   ChevronLeft,
   ChevronRight,
+  MapPin,
 } from "lucide-react";
 import type { VenueData, OrderData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
@@ -454,109 +455,104 @@ export function CartDrawer({
                 </div>
               </div>
             ) : (
-              /* In-Venue Table Card: Confirms table and zero payment section */
-              <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-100/80 text-[#fd8535] flex items-center justify-center font-black text-sm shrink-0 border border-orange-200/50">
-                    #{tableContext?.tableNumber || "01"}
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
-                      Dining Location
-                    </span>
-                    <span className="text-xs font-extrabold text-neutral-900">
-                      Table {tableContext?.tableNumber || "01"}{tableContext?.zoneName ? ` • ${tableContext.zoneName}` : ""}
-                    </span>
-                  </div>
+              /* In-Venue Table Card: Confirms dining location */
+              <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft flex items-center gap-2.5">
+                <MapPin className="w-4 h-4 text-[#1546d9] shrink-0" />
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
+                    Dining Location
+                  </span>
+                  <span className="text-xs font-extrabold text-neutral-900">
+                    Table {tableContext?.tableNumber || "04"}{tableContext?.zoneName ? ` • ${tableContext.zoneName}` : ""}
+                  </span>
                 </div>
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                  Table Order
-                </span>
               </div>
             )}
 
-            {/* Pickup Slot Selection Card */}
-            <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#fd8535]" />
-                  <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                    Slot
-                  </span>
-                </div>
-                <span className="text-[10px] text-[#fd8535] font-bold">10m Prep Lead</span>
-              </div>
-
-              <div className="relative">
-                {/* Left Scroll Gradient Affordance & Button */}
-                {canScrollSlotsLeft && (
-                  <div className="absolute left-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-r from-white via-white/90 to-transparent pr-4 pl-0.5 pointer-events-auto">
-                    <button
-                      type="button"
-                      onClick={() => scrollSlotsBy(-140)}
-                      aria-label="Scroll slots left"
-                      className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </button>
+            {/* Pickup Slot Selection Card (Remote Ordering Only) */}
+            {mode === "REMOTE" && (
+              <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#fd8535]" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                      Slot
+                    </span>
                   </div>
-                )}
+                  <span className="text-[10px] text-[#fd8535] font-bold">10m Prep Lead</span>
+                </div>
 
-                {/* Scrollable Slots Track */}
-                <div
-                  ref={slotsScrollRef}
-                  onScroll={checkSlotsScroll}
-                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1"
-                >
-                  {availableSlots.map((s, idx) => {
-                    const isSel = selectedSlot && selectedSlot.time === s.time;
-                    return (
+                <div className="relative">
+                  {/* Left Scroll Gradient Affordance & Button */}
+                  {canScrollSlotsLeft && (
+                    <div className="absolute left-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-r from-white via-white/90 to-transparent pr-4 pl-0.5 pointer-events-auto">
                       <button
-                        key={idx}
                         type="button"
-                        disabled={s.status === "full"}
-                        onClick={() => setSelectedSlot(s)}
-                        className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
-                          isSel
-                            ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
-                            : s.status === "full"
-                            ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed"
-                            : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400"
-                        }`}
+                        onClick={() => scrollSlotsBy(-140)}
+                        aria-label="Scroll slots left"
+                        className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
                       >
-                        <p className="font-black text-xs">{s.time}</p>
-                        <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
-                        <span
-                          className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
-                            s.status === "available"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : s.status === "filling"
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-neutral-200 text-neutral-500"
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Scrollable Slots Track */}
+                  <div
+                    ref={slotsScrollRef}
+                    onScroll={checkSlotsScroll}
+                    className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1"
+                  >
+                    {availableSlots.map((s, idx) => {
+                      const isSel = selectedSlot && selectedSlot.time === s.time;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          disabled={s.status === "full"}
+                          onClick={() => setSelectedSlot(s)}
+                          className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
+                            isSel
+                              ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
+                              : s.status === "full"
+                              ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed"
+                              : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400"
                           }`}
                         >
-                          {s.status}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Right Scroll Gradient Affordance & Button */}
-                {canScrollSlotsRight && (
-                  <div className="absolute right-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-l from-white via-white/90 to-transparent pl-4 pr-0.5 pointer-events-auto">
-                    <button
-                      type="button"
-                      onClick={() => scrollSlotsBy(140)}
-                      aria-label="Scroll slots right"
-                      className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                          <p className="font-black text-xs">{s.time}</p>
+                          <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
+                          <span
+                            className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
+                              s.status === "available"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : s.status === "filling"
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-neutral-200 text-neutral-500"
+                            }`}
+                          >
+                            {s.status}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
+
+                  {/* Right Scroll Gradient Affordance & Button */}
+                  {canScrollSlotsRight && (
+                    <div className="absolute right-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-l from-white via-white/90 to-transparent pl-4 pr-0.5 pointer-events-auto">
+                      <button
+                        type="button"
+                        onClick={() => scrollSlotsBy(140)}
+                        aria-label="Scroll slots right"
+                        className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Voucher Discount Code Card */}
             <div className="bg-white rounded-3xl p-3.5 border border-neutral-100/90 shadow-soft space-y-2">

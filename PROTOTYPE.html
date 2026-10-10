@@ -2143,46 +2143,44 @@
               </header>
             )}
 
-            {/* Architecture Mode Selector Bar */}
-            <div className="px-4 pt-2">
-              <div className="p-1 rounded-2xl bg-neutral-100/90 border border-neutral-200/60 flex items-center gap-1 text-[11px] font-bold">
-                <button
-                  type="button"
-                  onClick={() => setOrderingMode("REMOTE")}
-                  className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
-                    orderingMode === "REMOTE"
-                      ? "bg-white text-neutral-900 shadow-sm"
-                      : "text-neutral-500 hover:text-neutral-800"
-                  }`}
-                >
-                  <span>Remote Mode</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOrderingMode("IN_VENUE")}
-                  className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
-                    orderingMode === "IN_VENUE"
-                      ? "bg-[#1546d9] text-white shadow-sm"
-                      : "text-neutral-500 hover:text-neutral-800"
-                  }`}
-                >
-                  <Icons.QrCode className="w-3.5 h-3.5" />
-                  <span>In-Venue (Table #{tableContext.tableNumber})</span>
-                </button>
-              </div>
-            </div>
-
-            {/* In-Venue Table Context Notification Pill */}
-            {orderingMode === "IN_VENUE" && (
-              <div className="mx-4 mt-2 p-2.5 rounded-2xl bg-blue-50/90 border border-blue-200/80 flex items-center justify-between text-[11px]">
-                <div className="flex items-center gap-2 text-blue-950 font-bold">
-                  <Icons.MapPin className="w-3.5 h-3.5 text-[#1546d9]" />
-                  <span>Ordering to Table {tableContext.tableNumber} ({tableContext.zoneName})</span>
+            {/* Architecture Mode Selector Bar (Enables effortless switching on entry/ordering screen) */}
+            {activeTab === "menu" && (
+              <>
+                <div className="px-4 pt-2">
+                  <div className="p-1 rounded-2xl bg-neutral-100/90 border border-neutral-200/60 flex items-center gap-1 text-[11px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setOrderingMode("REMOTE")}
+                      className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
+                        orderingMode === "REMOTE"
+                          ? "bg-white text-neutral-900 shadow-sm"
+                          : "text-neutral-500 hover:text-neutral-800"
+                      }`}
+                    >
+                      <span>Remote Mode</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOrderingMode("IN_VENUE")}
+                      className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
+                        orderingMode === "IN_VENUE"
+                          ? "bg-[#1546d9] text-white shadow-sm"
+                          : "text-neutral-500 hover:text-neutral-800"
+                      }`}
+                    >
+                      <span>In-Venue (Table #{tableContext.tableNumber})</span>
+                    </button>
+                  </div>
                 </div>
-                <span className="text-[10px] font-extrabold text-[#1546d9] uppercase tracking-wide">
-                  No Account Needed
-                </span>
-              </div>
+
+                {/* In-Venue Table Context Header */}
+                {orderingMode === "IN_VENUE" && (
+                  <div className="mx-4 mt-2 p-2.5 rounded-2xl bg-blue-50/90 border border-blue-200/80 flex items-center gap-2 text-[11px] text-blue-950 font-bold">
+                    <Icons.MapPin className="w-3.5 h-3.5 text-[#1546d9]" />
+                    <span>Ordering to Table {tableContext.tableNumber} ({tableContext.zoneName})</span>
+                  </div>
+                )}
+              </>
             )}
 
             {/* TAB CONTENT: 1. MENU */}
@@ -2425,11 +2423,11 @@
                               : "Counter Pickup Ticket"}
                           </span>
                         </span>
-                        <span className="text-xs font-bold text-neutral-400">
-                          {myActiveOrder.mode === "IN_VENUE"
-                            ? (myActiveOrder.tableLabel || `Table #${myActiveOrder.tableNumber || "04"}`)
-                            : `${myActiveOrder.slot} (${myActiveOrder.breakSlot})`}
-                        </span>
+                        {myActiveOrder.mode !== "IN_VENUE" && (
+                          <span className="text-xs font-bold text-neutral-400">
+                            {myActiveOrder.slot} ({myActiveOrder.breakSlot})
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-3 flex items-baseline justify-between">
@@ -2484,8 +2482,14 @@
                             2
                           </span>
                           <div>
-                            <p className="text-xs font-extrabold text-neutral-900">2. Confirmed & Scheduled</p>
-                            <p className="text-[11px] text-neutral-500">Cooking begins 10m before {myActiveOrder.slot}</p>
+                            <p className="text-xs font-extrabold text-neutral-900">
+                              {myActiveOrder.mode === "IN_VENUE" ? "2. Kitchen Ticket Dispatched" : "2. Confirmed & Scheduled"}
+                            </p>
+                            <p className="text-[11px] text-neutral-500">
+                              {myActiveOrder.mode === "IN_VENUE"
+                                ? "Order sent directly to kitchen station"
+                                : `Cooking begins 10m before ${myActiveOrder.slot}`}
+                            </p>
                           </div>
                         </div>
 
@@ -3087,97 +3091,92 @@
                     })()
                   ) : (
                     /* In-Venue Table Dining Card: Zero payment section, counter physical payment */
-                    <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-blue-100/80 text-[#1546d9] flex items-center justify-center font-black text-sm shrink-0 border border-blue-200/50">
-                          #{tableContext ? tableContext.tableNumber : "04"}
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
-                            Dining Location
-                          </span>
-                          <span className="text-xs font-extrabold text-neutral-900">
-                            Table {tableContext ? tableContext.tableNumber : "04"}{tableContext ? ` • ${tableContext.zoneName}` : ""}
-                          </span>
-                        </div>
+                    <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft flex items-center gap-2.5">
+                      <Icons.MapPin className="w-4 h-4 text-[#1546d9] shrink-0" />
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
+                          Dining Location
+                        </span>
+                        <span className="text-xs font-extrabold text-neutral-900">
+                          Table {tableContext ? tableContext.tableNumber : "04"}{tableContext ? ` • ${tableContext.zoneName}` : ""}
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                        Table Order
-                      </span>
                     </div>
                   )}
 
-                  {/* Pickup Slot Selection Card */}
-                  <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Icons.Clock className="w-4 h-4 text-[#fd8535]" />
-                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Slot</span>
-                      </div>
-                      <span className="text-[10px] text-[#fd8535] font-bold">10m Prep Lead</span>
-                    </div>
-
-                    <div className="relative">
-                      {/* Left Scroll Gradient Affordance & Button */}
-                      {canScrollSlotsLeft && (
-                        <div className="absolute left-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-r from-white via-white/90 to-transparent pr-4 pl-0.5 pointer-events-auto">
-                          <button
-                            type="button"
-                            onClick={() => scrollSlotsBy(-140)}
-                            aria-label="Scroll slots left"
-                            className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
-                          >
-                            <Icons.ChevronLeft className="w-3.5 h-3.5" />
-                          </button>
+                  {/* Pickup Slot Selection Card (Remote Ordering Only) */}
+                  {orderingMode === "REMOTE" && (
+                    <div className="bg-white rounded-3xl p-4 border border-neutral-100/90 shadow-soft space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Icons.Clock className="w-4 h-4 text-[#fd8535]" />
+                          <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Slot</span>
                         </div>
-                      )}
+                        <span className="text-[10px] text-[#fd8535] font-bold">10m Prep Lead</span>
+                      </div>
 
-                      {/* Scrollable Slot Track */}
-                      <div
-                        ref={slotsScrollRef}
-                        onScroll={checkSlotsScroll}
-                        className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1"
-                      >
-                        {availableSlots.map((s, idx) => {
-                          const isSel = selectedSlot && selectedSlot.time === s.time;
-                          return (
+                      <div className="relative">
+                        {/* Left Scroll Gradient Affordance & Button */}
+                        {canScrollSlotsLeft && (
+                          <div className="absolute left-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-r from-white via-white/90 to-transparent pr-4 pl-0.5 pointer-events-auto">
                             <button
-                              key={idx}
-                              disabled={s.status === 'full'}
-                              onClick={() => setSelectedSlot(s)}
-                              className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
-                                isSel
-                                  ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
-                                  : (s.status === 'full' ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed" : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400")
-                              }`}
+                              type="button"
+                              onClick={() => scrollSlotsBy(-140)}
+                              aria-label="Scroll slots left"
+                              className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
                             >
-                              <p className="font-black text-xs">{s.time}</p>
-                              <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
-                              <span className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
-                                s.status === 'available' ? 'bg-emerald-100 text-emerald-800' : (s.status === 'filling' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-200 text-neutral-500')
-                              }`}>
-                                {s.status}
-                              </span>
+                              <Icons.ChevronLeft className="w-3.5 h-3.5" />
                             </button>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        )}
 
-                      {/* Right Scroll Gradient Affordance & Button */}
-                      {canScrollSlotsRight && (
-                        <div className="absolute right-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-l from-white via-white/90 to-transparent pl-4 pr-0.5 pointer-events-auto">
-                          <button
-                            type="button"
-                            onClick={() => scrollSlotsBy(140)}
-                            aria-label="Scroll slots right"
-                            className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
-                          >
-                            <Icons.ChevronRight className="w-3.5 h-3.5" />
-                          </button>
+                        {/* Scrollable Slot Track */}
+                        <div
+                          ref={slotsScrollRef}
+                          onScroll={checkSlotsScroll}
+                          className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1"
+                        >
+                          {availableSlots.map((s, idx) => {
+                            const isSel = selectedSlot && selectedSlot.time === s.time;
+                            return (
+                              <button
+                                key={idx}
+                                disabled={s.status === 'full'}
+                                onClick={() => setSelectedSlot(s)}
+                                className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
+                                  isSel
+                                    ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
+                                    : (s.status === 'full' ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed" : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400")
+                                }`}
+                              >
+                                <p className="font-black text-xs">{s.time}</p>
+                                <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
+                                <span className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
+                                  s.status === 'available' ? 'bg-emerald-100 text-emerald-800' : (s.status === 'filling' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-200 text-neutral-500')
+                                }`}>
+                                  {s.status}
+                                </span>
+                              </button>
+                            );
+                          })}
                         </div>
-                      )}
+
+                        {/* Right Scroll Gradient Affordance & Button */}
+                        {canScrollSlotsRight && (
+                          <div className="absolute right-0 top-0 bottom-1 z-10 flex items-center bg-gradient-to-l from-white via-white/90 to-transparent pl-4 pr-0.5 pointer-events-auto">
+                            <button
+                              type="button"
+                              onClick={() => scrollSlotsBy(140)}
+                              aria-label="Scroll slots right"
+                              className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
+                            >
+                              <Icons.ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Voucher Discount Code Card */}
                   <div className="bg-white rounded-3xl p-3.5 border border-neutral-100/90 shadow-soft space-y-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, type UIEvent } from "react";
-import { MapPin, QrCode } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { SplashScreen } from "@/components/splash/SplashScreen";
 import { HeroHeader } from "@/components/customer/HeroHeader";
 import { CategoryCarousel } from "@/components/customer/CategoryCarousel";
@@ -172,46 +172,44 @@ export function CustomerOrderingView({
             </header>
           )}
 
-          {/* Architecture Mode Selector Bar (Enables effortless switching for testers/reviewers) */}
-          <div className="px-4 pt-2">
-            <div className="p-1 rounded-2xl bg-neutral-100/90 border border-neutral-200/60 flex items-center gap-1 text-[11px] font-bold">
-              <button
-                type="button"
-                onClick={() => handleToggleMode("REMOTE")}
-                className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
-                  mode === "REMOTE"
-                    ? "bg-white text-neutral-900 shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-800"
-                }`}
-              >
-                <span>Remote Mode</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleToggleMode("IN_VENUE")}
-                className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
-                  mode === "IN_VENUE"
-                    ? "bg-[#1546d9] text-white shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-800"
-                }`}
-              >
-                <QrCode className="w-3.5 h-3.5" />
-                <span>In-Venue (Table #{tableContext?.tableNumber || "04"})</span>
-              </button>
-            </div>
-          </div>
-
-          {/* In-Venue Table Context Notification Pill */}
-          {mode === "IN_VENUE" && (
-            <div className="mx-4 mt-2 p-2.5 rounded-2xl bg-blue-50/90 border border-blue-200/80 flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-2 text-blue-950 font-bold">
-                <MapPin className="w-3.5 h-3.5 text-[#1546d9]" />
-                <span>Ordering to Table {tableContext?.tableNumber || "04"} ({tableContext?.zoneName || "Indoor Main"})</span>
+          {/* Architecture Mode Selector Bar (Enables effortless switching on entry/ordering screen) */}
+          {activeTab === "menu" && (
+            <>
+              <div className="px-4 pt-2">
+                <div className="p-1 rounded-2xl bg-neutral-100/90 border border-neutral-200/60 flex items-center gap-1 text-[11px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleMode("REMOTE")}
+                    className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
+                      mode === "REMOTE"
+                        ? "bg-white text-neutral-900 shadow-sm"
+                        : "text-neutral-500 hover:text-neutral-800"
+                    }`}
+                  >
+                    <span>Remote Mode</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleMode("IN_VENUE")}
+                    className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
+                      mode === "IN_VENUE"
+                        ? "bg-[#1546d9] text-white shadow-sm"
+                        : "text-neutral-500 hover:text-neutral-800"
+                    }`}
+                  >
+                    <span>In-Venue (Table #{tableContext?.tableNumber || "04"})</span>
+                  </button>
+                </div>
               </div>
-              <span className="text-[10px] font-extrabold text-[#1546d9] uppercase tracking-wide">
-                No Account Needed
-              </span>
-            </div>
+
+              {/* In-Venue Table Context Header */}
+              {mode === "IN_VENUE" && (
+                <div className="mx-4 mt-2 p-2.5 rounded-2xl bg-blue-50/90 border border-blue-200/80 flex items-center gap-2 text-[11px] text-blue-950 font-bold">
+                  <MapPin className="w-3.5 h-3.5 text-[#1546d9]" />
+                  <span>Ordering to Table {tableContext?.tableNumber || "04"} ({tableContext?.zoneName || "Indoor Main"})</span>
+                </div>
+              )}
+            </>
           )}
 
           {/* TAB 1: MENU CATALOG */}
