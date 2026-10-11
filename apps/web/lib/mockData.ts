@@ -144,6 +144,7 @@ export const MOCK_VENUE: VenueData = {
 
 export const MOCK_CATEGORIES: CategoryData[] = [
   { id: "cat-popular", name: "Popular", icon: "Flame" },
+  { id: "cat-all", name: "All", icon: "Utensils" },
   { id: "cat-burgers", name: "Burgers", icon: "Burger" },
   { id: "cat-coffee", name: "Specialty Coffee", icon: "Coffee" },
   { id: "cat-bites", name: "Quick Bites", icon: "Pizza" },

@@ -133,6 +133,7 @@ export function CustomerOrderingView({
       );
     }
     if (selectedCategory === "cat-popular") return it.popular;
+    if (selectedCategory === "cat-all" || selectedCategory === "all") return true;
     return it.categoryId === selectedCategory;
   });
 

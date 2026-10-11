@@ -7,6 +7,8 @@ export interface UserProfile {
   affiliation?: string;
   badge?: string;
   isVerified: boolean;
+  savedPaymentRails?: string[];
+  dietaryNotes?: string;
 }
 
 export type AuthModalMode =
@@ -39,6 +41,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     affiliation: "FAST-NUCES",
     badge: "Verified Student",
     isVerified: true,
+    savedPaymentRails: ["Easypaisa", "SadaPay"],
+    dietaryNotes: "Halal only • Mild spice",
   },
   authModal: "NONE",
   pendingPostAuthAction: null,

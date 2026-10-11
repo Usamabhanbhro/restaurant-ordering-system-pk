@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
-import { ChevronRight, ChevronLeft, LayoutGrid } from "lucide-react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import type { CategoryData } from "@/lib/mockData";
 
 interface CategoryCarouselProps {
@@ -18,55 +18,73 @@ export function CategoryCarousel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [isWrapped, setIsWrapped] = useState(false);
+
+  // Ensure "All" pill exists immediately after "Popular" if not already present
+  const resolvedCategories = useMemo(() => {
+    const hasAll = categories.some((c) => c.id === "cat-all" || c.name.toLowerCase() === "all");
+    if (hasAll) return categories;
+
+    const popIdx = categories.findIndex(
+      (c) => c.id === "cat-popular" || c.name.toLowerCase() === "popular"
+    );
+    if (popIdx !== -1) {
+      const copy = [...categories];
+      copy.splice(popIdx + 1, 0, { id: "cat-all", name: "All", icon: "Utensils" });
+      return copy;
+    }
+    return [{ id: "cat-all", name: "All", icon: "Utensils" }, ...categories];
+  }, [categories]);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
-    if (!el || isWrapped) {
+    if (!el) {
       setCanScrollLeft(false);
       setCanScrollRight(false);
       return;
     }
-    // Check with a 2px tolerance for fractional subpixels
-    const hasLeft = el.scrollLeft > 2;
-    const hasRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 4;
+    const hasLeft = el.scrollLeft > 4;
+    const hasRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 6;
     setCanScrollLeft(hasLeft);
     setCanScrollRight(hasRight);
-  }, [isWrapped]);
+  }, []);
 
   useEffect(() => {
     checkScroll();
+    const timeout = setTimeout(checkScroll, 120);
     window.addEventListener("resize", checkScroll);
-    return () => window.removeEventListener("resize", checkScroll);
-  }, [checkScroll, categories]);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [checkScroll, resolvedCategories]);
 
-  const scrollBy = (offset: number) => {
+  const slideByPage = (direction: "left" | "right") => {
     if (scrollRef.current) {
+      const pageDistance = Math.max(scrollRef.current.clientWidth * 0.75, 160);
+      const offset = direction === "left" ? -pageDistance : pageDistance;
       scrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
     }
   };
 
   const handleSelect = (id: string, e: React.MouseEvent<HTMLButtonElement>) => {
     onSelectCategory(id);
-    if (!isWrapped) {
-      e.currentTarget.scrollIntoView({
-        behavior: "smooth",
-        inline: "center",
-        block: "nearest",
-      });
-    }
+    e.currentTarget.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
   };
 
   return (
     <div className="px-4 py-2">
       <div className="relative">
-        {/* Left Scroll Gradient Affordance & Button */}
-        {!isWrapped && canScrollLeft && (
-          <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-[#FFFBF8] via-[#FFFBF8]/90 to-transparent pr-4 pl-0.5 pointer-events-auto">
+        {/* Left Scroll Sliding Affordance & Button */}
+        {canScrollLeft && (
+          <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-[#FFFBF8] via-[#FFFBF8]/95 to-transparent pr-5 pl-0.5 pointer-events-auto">
             <button
               type="button"
-              onClick={() => scrollBy(-140)}
-              aria-label="Scroll categories left"
+              onClick={() => slideByPage("left")}
+              aria-label="Slide categories left"
               className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -74,17 +92,13 @@ export function CategoryCarousel({
           </div>
         )}
 
-        {/* Scrollable Track / Wrapped Container */}
+        {/* Scrollable / Slidable Track */}
         <div
           ref={scrollRef}
           onScroll={checkScroll}
-          className={`flex items-center gap-1.5 sm:gap-2 py-1 ${
-            isWrapped
-              ? "flex-wrap"
-              : "overflow-x-auto no-scrollbar scroll-smooth"
-          }`}
+          className="flex items-center gap-1.5 sm:gap-2 py-1 overflow-x-auto no-scrollbar scroll-smooth"
         >
-          {categories.map((cat) => {
+          {resolvedCategories.map((cat) => {
             const isSelected = selectedCategory === cat.id;
             const isPopular = cat.id === "cat-popular" || cat.name.toLowerCase() === "popular";
             return (
@@ -104,30 +118,15 @@ export function CategoryCarousel({
               </button>
             );
           })}
-
-          {/* Wrap / Expand Grid Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setIsWrapped(!isWrapped)}
-            aria-label={isWrapped ? "Collapse to single row carousel" : "Expand all categories"}
-            title={isWrapped ? "Single Row Carousel" : "Show All in Grid"}
-            className={`p-1.5 rounded-full text-xs font-medium shrink-0 transition-all border flex items-center justify-center ${
-              isWrapped
-                ? "bg-neutral-900 text-white border-neutral-900 shadow-pill"
-                : "bg-white text-neutral-400 border-neutral-200/80 hover:text-neutral-700 hover:bg-neutral-50"
-            }`}
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-          </button>
         </div>
 
-        {/* Right Scroll Gradient Affordance & Button */}
-        {!isWrapped && canScrollRight && (
-          <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-[#FFFBF8] via-[#FFFBF8]/90 to-transparent pl-4 pr-0.5 pointer-events-auto">
+        {/* Right Scroll Sliding Affordance & Button */}
+        {canScrollRight && (
+          <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-[#FFFBF8] via-[#FFFBF8]/95 to-transparent pl-5 pr-0.5 pointer-events-auto">
             <button
               type="button"
-              onClick={() => scrollBy(140)}
-              aria-label="Scroll categories right"
+              onClick={() => slideByPage("right")}
+              aria-label="Slide categories right"
               className="w-6 h-6 rounded-full bg-white shadow-md border border-neutral-200/80 flex items-center justify-center text-neutral-700 hover:bg-neutral-50 active:scale-95 transition-all"
             >
               <ChevronRight className="w-3.5 h-3.5" />

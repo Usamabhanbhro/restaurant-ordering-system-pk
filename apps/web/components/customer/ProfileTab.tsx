@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   User,
   LogOut,
@@ -16,6 +17,7 @@ import {
   ChevronRight,
   RotateCcw,
   Check,
+  Mail,
 } from "lucide-react";
 import type { OrderingMode, TableContext } from "@/lib/mockData";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -46,8 +48,8 @@ export function ProfileTab({
       {/* 1. Account / Diner Identity Header */}
       {currentUser ? (
         <div className="p-4 rounded-3xl bg-white border border-neutral-200/80 shadow-soft flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#fd8535] text-white font-bold flex items-center justify-center text-lg shadow-sm shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-full bg-[#fd8535] text-white font-bold flex items-center justify-center text-base shadow-sm shrink-0">
               {currentUser.name
                 ? currentUser.name
                     .split(" ")
@@ -57,18 +59,33 @@ export function ProfileTab({
                     .toUpperCase()
                 : "AA"}
             </div>
-            <div>
-              <h3 className="font-extrabold text-sm text-neutral-900">{currentUser.name}</h3>
-              <p className="text-xs text-neutral-500">
-                {currentUser.email} • {currentUser.phone}
-              </p>
-              <div className="mt-1">
-                <span className="text-xs font-bold text-[#1546d9]">
-                  Verified
-                </span>
+            <div className="flex flex-col justify-center">
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-base text-neutral-900 leading-tight">
+                  {currentUser.name}
+                </h3>
+                {currentUser.isVerified && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1546d9] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">
+                    <ShieldCheck className="w-3 h-3 text-[#1546d9]" />
+                    Verified
+                  </span>
+                )}
               </div>
+              {currentUser.affiliation && (
+                <p className="text-xs text-neutral-500 font-medium mt-0.5">
+                  {currentUser.affiliation}
+                </p>
+              )}
             </div>
           </div>
+          <button
+            type="button"
+            onClick={signOut}
+            className="p-2 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
+            title="Sign Out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       ) : (
         /* Guest Diner State */
@@ -117,6 +134,8 @@ export function ProfileTab({
                   affiliation: "FAST-NUCES",
                   badge: "Verified Student",
                   isVerified: true,
+                  savedPaymentRails: ["Easypaisa", "SadaPay"],
+                  dietaryNotes: "Halal only • Mild spice",
                 });
               }}
               className="text-[11px] text-neutral-400 hover:text-neutral-700 font-semibold pt-2 inline-flex items-center gap-1.5 transition-colors"
@@ -138,6 +157,7 @@ export function ProfileTab({
             Account
           </h4>
           <div className="rounded-2xl bg-white border border-neutral-200/80 divide-y divide-neutral-100 overflow-hidden shadow-xs">
+            {/* Display Name & Pakistani Mobile */}
             <button
               type="button"
               onClick={() => handleStagedClick("Profile Information")}
@@ -147,12 +167,38 @@ export function ProfileTab({
                 <User className="w-4 h-4 text-neutral-500 shrink-0" />
                 <div>
                   <p className="text-xs font-bold text-neutral-900">Profile Information</p>
-                  <p className="text-[11px] text-neutral-400">{currentUser.name} • {currentUser.phone}</p>
+                  <p className="text-[11px] text-neutral-500">
+                    {currentUser.name} • {currentUser.phone}
+                  </p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
             </button>
 
+            {/* Verified Email */}
+            <button
+              type="button"
+              onClick={() => handleStagedClick("Verified Email")}
+              className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Mail className="w-4 h-4 text-neutral-500 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-neutral-900">Verified Email</p>
+                  <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+                    <span>{currentUser.email}</span>
+                    {currentUser.isVerified && (
+                      <span className="text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60">
+                        Verified
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
+            </button>
+
+            {/* Saved Payment Rails */}
             <button
               type="button"
               onClick={() => handleStagedClick("Saved Payment Rails")}
@@ -162,12 +208,17 @@ export function ProfileTab({
                 <CreditCard className="w-4 h-4 text-neutral-500 shrink-0" />
                 <div>
                   <p className="text-xs font-bold text-neutral-900">Saved Payment Rails</p>
-                  <p className="text-[11px] text-neutral-400">Easypaisa, SadaPay, Raast</p>
+                  <p className="text-[11px] text-neutral-500">
+                    {currentUser.savedPaymentRails && currentUser.savedPaymentRails.length > 0
+                      ? currentUser.savedPaymentRails.join(", ")
+                      : "None"}
+                  </p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
             </button>
 
+            {/* Dietary & Kitchen Notes */}
             <button
               type="button"
               onClick={() => handleStagedClick("Dietary Preferences")}
@@ -177,7 +228,9 @@ export function ProfileTab({
                 <Utensils className="w-4 h-4 text-neutral-500 shrink-0" />
                 <div>
                   <p className="text-xs font-bold text-neutral-900">Dietary & Kitchen Notes</p>
-                  <p className="text-[11px] text-neutral-400">Special instructions & spice level</p>
+                  <p className="text-[11px] text-neutral-500">
+                    {currentUser.dietaryNotes || "None specified"}
+                  </p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
@@ -273,9 +326,8 @@ export function ProfileTab({
             <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
           </button>
 
-          <button
-            type="button"
-            onClick={() => handleStagedClick("Counter Pickup Terms")}
+          <Link
+            href="/terms"
             className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -283,11 +335,10 @@ export function ProfileTab({
               <p className="text-xs font-bold text-neutral-900">Pickup terms & rules</p>
             </div>
             <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
-          </button>
+          </Link>
 
-          <button
-            type="button"
-            onClick={() => handleStagedClick("Privacy Policy")}
+          <Link
+            href="/privacy"
             className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -295,7 +346,7 @@ export function ProfileTab({
               <p className="text-xs font-bold text-neutral-900">Privacy policy</p>
             </div>
             <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
-          </button>
+          </Link>
         </div>
       </section>
 

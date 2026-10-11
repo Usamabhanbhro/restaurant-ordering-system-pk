@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Drawer } from "vaul";
 import {
   CreditCard,
@@ -494,23 +495,36 @@ export function CartDrawer({
                             isSel
                               ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
                               : s.status === "full"
-                              ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed"
-                              : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400"
+                              ? "bg-neutral-100 border-neutral-200 cursor-not-allowed"
+                              : "bg-white border-neutral-200/90 hover:border-neutral-400 shadow-xs"
                           }`}
                         >
-                          <p className="font-black text-xs">{s.time}</p>
-                          <p className="text-[9px] mt-0.5 opacity-80">{s.breakSlot}</p>
-                          <span
-                            className={`inline-block mt-1 text-[8px] font-extrabold uppercase px-1 rounded ${
-                              s.status === "available"
-                                ? "bg-emerald-100 text-emerald-800"
+                          <p
+                            className={`font-black text-xs ${
+                              isSel
+                                ? "text-white"
+                                : s.status === "available"
+                                ? "text-emerald-600"
                                 : s.status === "filling"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-neutral-200 text-neutral-500"
+                                ? "text-amber-600"
+                                : "text-neutral-400"
                             }`}
                           >
-                            {s.status}
-                          </span>
+                            {s.time}
+                          </p>
+                          <p
+                            className={`text-[9px] mt-0.5 ${
+                              isSel
+                                ? "text-neutral-300 font-medium"
+                                : s.status === "available"
+                                ? "text-emerald-700/80 font-medium"
+                                : s.status === "filling"
+                                ? "text-amber-700/80 font-medium"
+                                : "text-neutral-400"
+                            }`}
+                          >
+                            {s.breakSlot}
+                          </p>
                         </button>
                       );
                     })}
@@ -637,15 +651,55 @@ export function CartDrawer({
                 />
                 <label
                   htmlFor="terms"
-                  className={`text-[10px] leading-tight cursor-pointer select-none ${
+                  className={`text-[10px] leading-relaxed cursor-pointer select-none ${
                     errorMessage && errorMessage.includes("terms")
                       ? "text-red-600 font-semibold"
                       : "text-neutral-500"
                   }`}
                 >
-                  {mode === "IN_VENUE"
-                    ? `I confirm this order is for Table ${tableContext?.tableNumber || "01"}. Payment will be settled at the counter physically.`
-                    : "I understand orders are prepared for same-day counter pickup. Orders held 30m past pickup slot are counter no-shows (TERMS_DRAFT)."}
+                  {mode === "IN_VENUE" ? (
+                    <>
+                      I confirm this order is for Table {tableContext?.tableNumber || "01"}. Physical settlement at counter under our{" "}
+                      <Link
+                        href="/terms"
+                        target="_blank"
+                        className="underline font-bold text-neutral-700 hover:text-neutral-950"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        href="/privacy"
+                        target="_blank"
+                        className="underline font-bold text-neutral-700 hover:text-neutral-950"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Privacy Policy
+                      </Link>.
+                    </>
+                  ) : (
+                    <>
+                      I understand orders are prepared for same-day counter pickup (held 30m past slot before no-show). I agree to the{" "}
+                      <Link
+                        href="/terms"
+                        target="_blank"
+                        className="underline font-bold text-neutral-700 hover:text-neutral-950"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        href="/privacy"
+                        target="_blank"
+                        className="underline font-bold text-neutral-700 hover:text-neutral-950"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Privacy Policy
+                      </Link>.
+                    </>
+                  )}
                 </label>
               </div>
             </div>
