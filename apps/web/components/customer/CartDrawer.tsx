@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Drawer } from "vaul";
 import {
   CreditCard,
-  Copy,
   Check,
   Clock,
   Ticket,
@@ -67,6 +66,9 @@ export function CartDrawer({
   const [copiedText, setCopiedText] = useState("");
   const [localPromoInput, setLocalPromoInput] = useState(promoCode);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const termsRef = useRef<HTMLDivElement>(null);
 
   // Pickup Slots horizontal scroll affordances & arrow controls
   const slotsScrollRef = useRef<HTMLDivElement>(null);
@@ -134,16 +136,19 @@ export function CartDrawer({
 
       if (!selectedSlot) {
         setErrorMessage("Please select a pickup time slot.");
+        scrollContainerRef.current?.scrollTo({ top: 120, behavior: "smooth" });
         return;
       }
 
       if (!claimedTxnId.trim()) {
         setErrorMessage("Please enter the transaction reference ID.");
+        scrollContainerRef.current?.scrollTo({ top: 40, behavior: "smooth" });
         return;
       }
 
       if (!termsAccepted) {
         setErrorMessage("Please agree to the same-day counter pickup terms.");
+        termsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
     }
@@ -237,7 +242,7 @@ export function CartDrawer({
           </div>
 
           {/* Scrollable Cart Content Area */}
-          <div className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
+          <div ref={scrollContainerRef} className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
             {/* Header: Your Order */}
             <div>
               <h2 className="text-lg font-black text-neutral-900 tracking-tight">
@@ -245,8 +250,8 @@ export function CartDrawer({
               </h2>
             </div>
 
-            {/* Error Message if any */}
-            {errorMessage && (
+            {/* Error Message if any (non-terms errors displayed at top) */}
+            {errorMessage && !errorMessage.includes("terms") && (
               <div className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage}</span>
@@ -347,18 +352,13 @@ export function CartDrawer({
                     </div>
                     <div>
                       <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
-                        Payment Rail
+                        Payment Method
                       </span>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs font-extrabold text-neutral-900">
-                          {selectedMethod === "EASYPAISA" && "Easypaisa • 0300-1234567"}
-                          {selectedMethod === "SADAPAY" && "SadaPay • 0300-9876543"}
-                          {selectedMethod === "BANK" && "Meezan Raast • 000123"}
-                        </span>
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-neutral-100 text-neutral-500">
-                          Venue Direct
-                        </span>
-                      </div>
+                      <span className="text-xs font-extrabold text-neutral-900 block mt-0.5">
+                        {selectedMethod === "EASYPAISA" && "Easypaisa"}
+                        {selectedMethod === "SADAPAY" && "SadaPay"}
+                        {selectedMethod === "BANK" && "Bank Transfer / Raast"}
+                      </span>
                     </div>
                   </div>
 
@@ -406,27 +406,6 @@ export function CartDrawer({
                       <strong className="text-neutral-800">{activePaymentMethod.accountTitle}</strong>
                     </span>
                     <span className="font-black text-[#fd8535]">Amount: Rs. {cartFinalTotal}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-50 border border-neutral-200/80 font-mono text-xs font-bold">
-                    <span>{activePaymentMethod.accountNumber}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(activePaymentMethod.accountNumber)}
-                      className="px-2 py-0.5 rounded-md bg-white border border-neutral-200 text-[10px] font-sans font-bold hover:bg-neutral-100 transition-colors shadow-xs"
-                    >
-                      {copiedText === activePaymentMethod.accountNumber ? (
-                        <span className="flex items-center gap-1 text-emerald-600">
-                          <Check className="w-3 h-3" />
-                          <span>Copied</span>
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1">
-                          <Copy className="w-3 h-3" />
-                          <span>Copy</span>
-                        </span>
-                      )}
-                    </button>
                   </div>
 
                   <div>
@@ -636,22 +615,39 @@ export function CartDrawer({
             </div>
 
             {/* Terms Acknowledgment */}
-            <div className="flex items-start gap-2 px-1">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-0.5 accent-[#fd8535] rounded cursor-pointer"
-              />
-              <label
-                htmlFor="terms"
-                className="text-[10px] text-neutral-500 leading-tight cursor-pointer select-none"
-              >
-                {mode === "IN_VENUE"
-                  ? `I confirm this order is for Table ${tableContext?.tableNumber || "01"}. Payment will be settled at the counter physically.`
-                  : "I understand orders are prepared for same-day counter pickup. Orders held 30m past pickup slot are counter no-shows (TERMS_DRAFT)."}
-              </label>
+            <div ref={termsRef} className="space-y-2 px-1">
+              {errorMessage && errorMessage.includes("terms") && (
+                <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={termsAccepted}
+                  onChange={(e) => {
+                    setTermsAccepted(e.target.checked);
+                    if (e.target.checked && errorMessage.includes("terms")) {
+                      setErrorMessage("");
+                    }
+                  }}
+                  className="mt-0.5 accent-[#fd8535] rounded cursor-pointer"
+                />
+                <label
+                  htmlFor="terms"
+                  className={`text-[10px] leading-tight cursor-pointer select-none ${
+                    errorMessage && errorMessage.includes("terms")
+                      ? "text-red-600 font-semibold"
+                      : "text-neutral-500"
+                  }`}
+                >
+                  {mode === "IN_VENUE"
+                    ? `I confirm this order is for Table ${tableContext?.tableNumber || "01"}. Payment will be settled at the counter physically.`
+                    : "I understand orders are prepared for same-day counter pickup. Orders held 30m past pickup slot are counter no-shows (TERMS_DRAFT)."}
+                </label>
+              </div>
             </div>
           </div>
 

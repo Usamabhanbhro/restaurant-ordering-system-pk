@@ -171,34 +171,34 @@ export function CustomerOrderingView({
             </header>
           )}
 
-          {/* Architecture Mode Selector Bar (Enables effortless switching on entry/ordering screen) */}
-          {activeTab === "menu" && (
-              <div className="px-4 pt-2">
-                <div className="p-1 rounded-2xl bg-neutral-100/90 border border-neutral-200/60 flex items-center gap-1 text-[11px] font-bold">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleMode("REMOTE")}
-                    className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
-                      mode === "REMOTE"
-                        ? "bg-white text-neutral-900 shadow-sm"
-                        : "text-neutral-500 hover:text-neutral-800"
-                    }`}
-                  >
-                    <span>Remote Mode</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleMode("IN_VENUE")}
-                    className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
-                      mode === "IN_VENUE"
-                        ? "bg-[#1546d9] text-white shadow-sm"
-                        : "text-neutral-500 hover:text-neutral-800"
-                    }`}
-                  >
-                    <span>In-Venue</span>
-                  </button>
-                </div>
+          {/* Architecture Mode Selector Bar (Enables effortless switching on entry/ordering screen; hidden on table QR screen) */}
+          {activeTab === "menu" && !defaultTableContext && (
+            <div className="px-4 pt-2">
+              <div className="p-1 rounded-xl bg-neutral-100 flex items-center text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => handleToggleMode("REMOTE")}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-center transition-all ${
+                    mode === "REMOTE"
+                      ? "bg-white text-neutral-900 font-bold shadow-xs"
+                      : "text-neutral-500 hover:text-neutral-800"
+                  }`}
+                >
+                  Remote
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleMode("IN_VENUE")}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-center transition-all ${
+                    mode === "IN_VENUE"
+                      ? "bg-white text-neutral-900 font-bold shadow-xs"
+                      : "text-neutral-500 hover:text-neutral-800"
+                  }`}
+                >
+                  In-Venue
+                </button>
               </div>
+            </div>
           )}
 
           {/* TAB 1: MENU CATALOG */}

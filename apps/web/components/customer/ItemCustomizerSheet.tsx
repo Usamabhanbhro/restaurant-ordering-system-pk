@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Drawer } from "vaul";
-import { X, Check, Minus, Plus } from "lucide-react";
+import { Check, Minus, Plus } from "lucide-react";
 import type { MenuItemData, ModifierItem } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
 
@@ -68,20 +68,13 @@ export function ItemCustomizerSheet({
             <div className="w-12 h-1.5 rounded-full bg-neutral-300" />
           </div>
 
-          {/* Header Image with Close Button */}
+          {/* Header Image */}
           <div className="relative h-44 w-full bg-neutral-100 shrink-0">
             <img
               src={item.image}
               alt={item.nameEn}
               className="w-full h-full object-cover"
             />
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white font-bold flex items-center justify-center text-xs backdrop-blur-md hover:bg-black/80 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </div>
 
           {/* Scrollable Content */}

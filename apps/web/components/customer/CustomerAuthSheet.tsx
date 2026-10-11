@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Drawer } from "vaul";
 import {
   ArrowLeft,
-  X,
   Mail,
   Lock,
   Eye,
@@ -327,13 +326,7 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={handleClose}
-              className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="w-8" />
           </div>
 
           {/* Scrollable Body */}
