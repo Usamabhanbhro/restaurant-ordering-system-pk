@@ -152,89 +152,122 @@ export function ProfileTab({
 
       {/* 2. Account Group (DoorDash-style, visible when logged in) */}
       {currentUser && (
-        <section className="space-y-1.5">
+        <section className="space-y-3">
           <h4 className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider px-1">
             Account
           </h4>
-          <div className="rounded-2xl bg-white border border-neutral-200/80 divide-y divide-neutral-100 overflow-hidden shadow-xs">
-            {/* Display Name & Pakistani Mobile */}
-            <button
-              type="button"
-              onClick={() => handleStagedClick("Profile Information")}
-              className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <User className="w-4 h-4 text-neutral-500 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-neutral-900">Profile Information</p>
-                  <p className="text-[11px] text-neutral-500">
-                    {currentUser.name} • {currentUser.phone}
-                  </p>
+
+          {/* Profile Information Panel */}
+          <div className="rounded-2xl bg-white border border-neutral-200/80 p-4 shadow-xs space-y-3">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-neutral-600" />
+                <span className="text-xs font-bold text-neutral-900">Profile Information</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleStagedClick("Edit Profile")}
+                className="text-[11px] font-bold text-[#fd8535] hover:text-[#e07227] transition-colors"
+              >
+                Edit
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {/* Display Name */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-neutral-400 font-medium">Display Name</span>
+                <span className="font-bold text-neutral-900">{currentUser.name}</span>
+              </div>
+
+              {/* Verified Email (inside the profile panel) */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-neutral-400 font-medium">Verified Email</span>
+                <div className="flex items-center gap-1.5 font-semibold text-neutral-800">
+                  <span>{currentUser.email}</span>
+                  {currentUser.isVerified && (
+                    <span className="text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60">
+                      Verified
+                    </span>
+                  )}
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
-            </button>
 
-            {/* Verified Email */}
-            <button
-              type="button"
-              onClick={() => handleStagedClick("Verified Email")}
-              className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-neutral-500 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-neutral-900">Verified Email</p>
-                  <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
-                    <span>{currentUser.email}</span>
-                    {currentUser.isVerified && (
-                      <span className="text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60">
-                        Verified
-                      </span>
-                    )}
+              {/* Pakistani Mobile */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-neutral-400 font-medium">Mobile Number</span>
+                <span className="font-semibold text-neutral-800">{currentUser.phone}</span>
+              </div>
+
+              {/* Campus Affiliation & Badge */}
+              {currentUser.affiliation && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-neutral-400 font-medium">Affiliation</span>
+                  <span className="font-semibold text-neutral-800">
+                    {currentUser.affiliation}
+                    {currentUser.badge ? ` • ${currentUser.badge}` : ""}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Saved Payment Rails Panel */}
+          <div className="rounded-2xl bg-white border border-neutral-200/80 p-4 shadow-xs space-y-3">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-neutral-600" />
+                <span className="text-xs font-bold text-neutral-900">Saved Payment Rails</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleStagedClick("Add Payment Rail")}
+                className="text-[11px] font-bold text-[#fd8535] hover:text-[#e07227] transition-colors"
+              >
+                + Add Rail
+              </button>
+            </div>
+
+            {currentUser.savedPaymentRails && currentUser.savedPaymentRails.length > 0 ? (
+              <div className="space-y-2">
+                {currentUser.savedPaymentRails.map((rail, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50 border border-neutral-200/60 text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="font-bold text-neutral-900">{rail}</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-neutral-500 bg-white px-2 py-0.5 rounded-md border border-neutral-200/80">
+                      Active Rail
+                    </span>
                   </div>
-                </div>
+                ))}
               </div>
-              <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
-            </button>
+            ) : (
+              <p className="text-xs text-neutral-400 py-1">No payment rails saved yet.</p>
+            )}
+          </div>
 
-            {/* Saved Payment Rails */}
-            <button
-              type="button"
-              onClick={() => handleStagedClick("Saved Payment Rails")}
-              className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <CreditCard className="w-4 h-4 text-neutral-500 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-neutral-900">Saved Payment Rails</p>
-                  <p className="text-[11px] text-neutral-500">
-                    {currentUser.savedPaymentRails && currentUser.savedPaymentRails.length > 0
-                      ? currentUser.savedPaymentRails.join(", ")
-                      : "None"}
-                  </p>
-                </div>
+          {/* Dietary & Kitchen Notes Panel */}
+          <div className="rounded-2xl bg-white border border-neutral-200/80 p-4 shadow-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Utensils className="w-4 h-4 text-neutral-600" />
+                <span className="text-xs font-bold text-neutral-900">Dietary & Kitchen Notes</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
-            </button>
-
-            {/* Dietary & Kitchen Notes */}
-            <button
-              type="button"
-              onClick={() => handleStagedClick("Dietary Preferences")}
-              className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Utensils className="w-4 h-4 text-neutral-500 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-neutral-900">Dietary & Kitchen Notes</p>
-                  <p className="text-[11px] text-neutral-500">
-                    {currentUser.dietaryNotes || "None specified"}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
-            </button>
+              <button
+                type="button"
+                onClick={() => handleStagedClick("Edit Dietary Notes")}
+                className="text-[11px] font-bold text-[#fd8535] hover:text-[#e07227] transition-colors"
+              >
+                Edit
+              </button>
+            </div>
+            <p className="text-xs text-neutral-600 font-medium">
+              {currentUser.dietaryNotes || "None specified"}
+            </p>
           </div>
         </section>
       )}

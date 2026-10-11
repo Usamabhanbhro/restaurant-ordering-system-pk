@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type UIEvent } from "react";
+import { useState, useRef, useEffect, type UIEvent } from "react";
 import { SplashScreen } from "@/components/splash/SplashScreen";
 import { HeroHeader } from "@/components/customer/HeroHeader";
 import { CategoryCarousel } from "@/components/customer/CategoryCarousel";
@@ -45,9 +45,20 @@ export function CustomerOrderingView({
         : null)
   );
 
-  // Splash Screen State
-  const [showSplash, setShowSplash] = useState(true);
+  // Splash Screen State (shown once per session; will not replay on back navigation)
+  const [showSplash, setShowSplash] = useState(false);
   const [splashExiting, setSplashExiting] = useState(false);
+
+  useEffect(() => {
+    try {
+      const hasSeen = sessionStorage.getItem("queueless_splash_shown");
+      if (!hasSeen) {
+        setShowSplash(true);
+      }
+    } catch {
+      // In private browsing or storage-restricted contexts
+    }
+  }, []);
 
   // Navigation & Category Filtering
   const [activeTab, setActiveTab] = useState<NavTabId>("menu");
@@ -103,6 +114,11 @@ export function CustomerOrderingView({
   const handleDismissSplash = () => {
     if (splashExiting) return;
     setSplashExiting(true);
+    try {
+      sessionStorage.setItem("queueless_splash_shown", "true");
+    } catch {
+      // Ignore storage errors
+    }
     setTimeout(() => {
       setShowSplash(false);
       setSplashExiting(false);
