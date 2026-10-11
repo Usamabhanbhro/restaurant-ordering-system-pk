@@ -11,7 +11,8 @@
 [![Fastify](https://img.shields.io/badge/Fastify-5.x-000000?style=for-the-badge&logo=fastify&logoColor=white)](https://fastify.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-SQL--First-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
-[![Node.js](https://img.shields.io/badge/Node.js-20_LTS-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22_LTS-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_Production-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://queueless-bice-eight.vercel.app)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](#-license)
 
 <p align="center">
@@ -22,13 +23,15 @@
   <a href="#-order-lifecycle">Order Lifecycle</a> •
   <a href="#-unified-staff-dashboard-lanes">Dashboard</a> •
   <a href="#-documentation-index">Documentation</a> •
-  <a href="#-quickstart--development">Quickstart</a>
+  <a href="#-quickstart--development">Quickstart</a> •
+  <a href="https://queueless-bice-eight.vercel.app"><strong>Live Demo</strong></a>
 </p>
 
 </div>
 
 ---
 
+> **Changelog (2026-10-11 - Session 3):** published QueueLess Next.js web application to Vercel production at [https://queueless-bice-eight.vercel.app](https://queueless-bice-eight.vercel.app); connected GitHub repository (`Usamabhanbhro/restaurant-ordering-system-pk`) to Vercel project for automatic continuous deployment triggers on every remote push to `main`; added `vercel.json` with cleanUrls and Next.js preset; aligned GitHub Actions CI runtime to Node.js 22.  
 > **Changelog (2026-10-11 - Session 2):** implemented visual and profile consistency improvements across customer ordering screens; removed duplicate contact line from ProfileTab avatar header and aligned avatar, diner name, and verified badge; bound profile section to real profile state (display name, verified email, verified Pakistani mobile, saved payment rails, dietary & kitchen notes); added "All" category pill immediately after "Popular" and implemented smooth page-level sliding navigation in CategoryCarousel; removed separate status chip badges in slot picker, encoding availability purely via colored typography (emerald for available, amber for filling, muted for full); converted Terms of Service and Privacy Policy to real clickable links in CartDrawer and ProfileTab; created dedicated `/terms` and `/privacy` App Router pages with responsive styling.  
 > **Changelog (2026-10-11):** reviewed and adjusted customer ordering UI on staged screens for remote pre-ordering and in-venue table QR; standardized sheet dismissal on swipe-down gesture by removing redundant close buttons across ItemCustomizerSheet and CustomerAuthSheet; simplified venue payment block in CartDrawer to display only the payment method name without account/phone numbers or redundant "Venue Direct" tags; implemented automatic smooth scroll-into-view for same-day counter pickup terms agreement errors; updated mode toggle to a clean, non-nested segmented background style without inner rings and hid the toggle on in-venue table QR screens; added structured DoorDash-inspired staged settings panel to ProfileTab across Account, Preferences, Support, More, and app version footer.  
 > **Changelog (2026-10-10 - Session 3):** executed visual fix pass across customer screens; standardized mode toggle to concise "In-Venue" label without table numbers; removed in-venue table context banner from menu header; styled completed preparation timeline steps in Electric Cobalt `#1546d9` with white checkmark icons; eliminated total price and item price leaks from OrderProgressTracker; removed "Active" badge and icon clutter from PerksTab; converted Platform Member Discounts in ProfileTab from peach card to plain, unadorned text; eradicated decorative `Zap` and `Sparkles` embellishments across all customer surfaces and standardized branding on "The Velocity Platter" vector mark; cleaned institutional suffixes from mock customer names.  

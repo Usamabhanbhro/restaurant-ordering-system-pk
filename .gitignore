@@ -47,3 +47,6 @@ temp/
 # Temporary visual audit screenshots
 *_screenshot.png
 viewport-*.png
+
+.vercel
+.env*
