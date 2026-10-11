@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
+  Copy,
 } from "lucide-react";
 import type { VenueData, OrderData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useTenantCart } from "@/lib/store/cartStore";
@@ -113,7 +114,9 @@ export function CartDrawer({
 
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
     setCopiedText(text);
     setTimeout(() => setCopiedText(""), 2000);
   };
@@ -123,7 +126,6 @@ export function CartDrawer({
 
     if (!termsAccepted) {
       setErrorMessage("Please agree to the counter pickup terms.");
-      termsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
@@ -146,13 +148,11 @@ export function CartDrawer({
 
     if (capabilities.requiresPickupSlot && !selectedSlot) {
       setErrorMessage("Please select a pickup time slot.");
-      scrollContainerRef.current?.scrollTo({ top: 120, behavior: "smooth" });
       return;
     }
 
     if (capabilities.requiresPaymentClaim && !claimedTxnId.trim()) {
       setErrorMessage("Please enter the transaction reference ID.");
-      scrollContainerRef.current?.scrollTo({ top: 40, behavior: "smooth" });
       return;
     }
 
@@ -376,6 +376,29 @@ export function CartDrawer({
                     </span>
                     <span className="font-black text-[#fd8535]">Amount: Rs. {cartFinalTotal}</span>
                   </div>
+
+                  {/* Account Number below Account Title */}
+                  {activePaymentMethod.accountNumber && (
+                    <div className="flex items-center justify-between text-[11px] pt-0.5">
+                      <span className="text-neutral-500">Account Number:</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(activePaymentMethod.accountNumber)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-neutral-100 hover:bg-neutral-200/70 text-neutral-900 font-mono font-bold text-xs transition-all active:scale-95 cursor-pointer border border-neutral-200/60"
+                        title="Tap to copy account number"
+                      >
+                        <span>{activePaymentMethod.accountNumber}</span>
+                        {copiedText === activePaymentMethod.accountNumber ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-sans font-bold">
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            Copied
+                          </span>
+                        ) : (
+                          <Copy className="w-3 h-3 text-neutral-400 hover:text-neutral-600" />
+                        )}
+                      </button>
+                    </div>
+                  )}
 
                   <div>
                     <div className="flex items-center justify-between">
