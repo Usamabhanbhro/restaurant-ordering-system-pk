@@ -59,3 +59,16 @@ export const VENUE_MODE = {
   TABLE_SERVICE: "TABLE_SERVICE",
 } as const;
 export type VenueMode = (typeof VENUE_MODE)[keyof typeof VENUE_MODE];
+
+export const ORDERING_MODE = {
+  REMOTE: "REMOTE",
+  IN_VENUE: "IN_VENUE",
+} as const;
+export type OrderingMode = (typeof ORDERING_MODE)[keyof typeof ORDERING_MODE];
+
+export const MODIFIER_TYPE = {
+  ADD_ON: "ADD_ON",
+  EXCLUSION: "EXCLUSION",
+  PREFERENCE: "PREFERENCE",
+} as const;
+export type ModifierType = (typeof MODIFIER_TYPE)[keyof typeof MODIFIER_TYPE];

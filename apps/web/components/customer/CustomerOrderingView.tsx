@@ -14,16 +14,18 @@ import { ProfileTab } from "@/components/customer/ProfileTab";
 import { FloatingBottomDock, type NavTabId } from "@/components/customer/FloatingBottomDock";
 
 import {
-  MOCK_VENUE,
   MOCK_CATEGORIES,
   MOCK_ITEMS,
   type MenuItemData,
   type OrderingMode,
   type TableContext,
 } from "@/lib/mockData";
-import { useCartStore } from "@/lib/store/cartStore";
+import { useTenantCart } from "@/lib/store/cartStore";
 import { useAuthStore } from "@/lib/store/authStore";
-import { useOrderStore } from "@/lib/store/orderStore";
+import { useTenantOrders } from "@/lib/store/orderStore";
+import { useTenant } from "@/lib/tenant/TenantContext";
+import { toVenueViewModel } from "@/lib/domain/venue/venueViewModel";
+import { OrderingModeProvider } from "@/lib/domain/ordering/OrderingModeContext";
 
 export interface CustomerOrderingViewProps {
   tenantSlug: string;
@@ -77,13 +79,12 @@ export function CustomerOrderingView({
   const [isFloatingNav, setIsFloatingNav] = useState(true);
   const lastScrollTop = useRef(0);
 
-  // Stores
-  const { getItemCount, getSubtotal } = useCartStore();
+  // Stores & Tenant Context
+  const { venue } = useTenant();
+  const venueVm = toVenueViewModel(venue);
+  const { itemCount: cartItemCount, subtotal: cartSubtotal } = useTenantCart();
   const { currentUser, pendingPostAuthAction, setPendingPostAuthAction } = useAuthStore();
-  const { placeOrder, cancelOrder, getActiveOrder } = useOrderStore();
-
-  const cartItemCount = getItemCount();
-  const cartSubtotal = getSubtotal();
+  const { placeOrder, cancelOrder, getActiveOrder } = useTenantOrders();
 
   // Active Order lookup: In-Venue orders resolve by table/session, Remote orders resolve by account email
   const activeOrder = getActiveOrder(
@@ -154,23 +155,24 @@ export function CustomerOrderingView({
   });
 
   return (
-    <div className="min-h-screen bg-[#FFFBF8] text-neutral-900 flex justify-center">
-      {/* Mobile Shell constrained to max-w-md */}
-      <main className="w-full max-w-md bg-[#FFFBF8] flex flex-col relative h-screen shadow-2xl overflow-hidden">
-        {/* 1. Opening Splash Screen */}
-        {showSplash && (
-          <SplashScreen isExiting={splashExiting} onDismiss={handleDismissSplash} />
-        )}
+    <OrderingModeProvider mode={mode} tableContext={tableContext}>
+      <div className="min-h-screen bg-[#FFFBF8] text-neutral-900 flex justify-center">
+        {/* Mobile Shell constrained to max-w-md */}
+        <main className="w-full max-w-md bg-[#FFFBF8] flex flex-col relative h-screen shadow-2xl overflow-hidden">
+          {/* 1. Opening Splash Screen */}
+          {showSplash && (
+            <SplashScreen isExiting={splashExiting} onDismiss={handleDismissSplash} />
+          )}
 
-        {/* 2. Scrollable Body Container */}
-        <div
-          onScroll={handleScroll}
-          className="flex-1 overflow-y-auto no-scrollbar pb-36 relative"
-        >
-          {/* Top Hero Banner (Hidden on Profile view per feedback) */}
-          {activeTab !== "profile" ? (
-            <HeroHeader
-              venue={MOCK_VENUE}
+          {/* 2. Scrollable Body Container */}
+          <div
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto no-scrollbar pb-36 relative"
+          >
+            {/* Top Hero Banner (Hidden on Profile view per feedback) */}
+            {activeTab !== "profile" ? (
+              <HeroHeader
+                venue={venueVm}
               remoteOrdersPaused={remoteOrdersPaused}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -293,7 +295,7 @@ export function CustomerOrderingView({
 
         {/* Cart & Checkout Drawer */}
         <CartDrawer
-          venue={MOCK_VENUE}
+          venue={venueVm}
           isOpen={showCartDrawer}
           onClose={() => setShowCartDrawer(false)}
           onOrderPlaced={placeOrder}
@@ -313,5 +315,6 @@ export function CustomerOrderingView({
         />
       </main>
     </div>
-  );
+  </OrderingModeProvider>
+);
 }

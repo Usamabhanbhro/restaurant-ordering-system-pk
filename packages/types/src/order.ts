@@ -33,9 +33,22 @@ export const OrderItemInputSchema = z.object({
 });
 export type OrderItemInput = z.infer<typeof OrderItemInputSchema>;
 
+export const TableContextSchema = z.object({
+  zoneSlug: z.string().min(1),
+  tableNumber: z.string().min(1),
+  zoneName: z.string().optional(),
+});
+export type TableContext = z.infer<typeof TableContextSchema>;
+
 export const OrderCreateInputSchema = z.object({
   tenantId: z.string().uuid(),
-  pickupSlot: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid slot format (HH:mm)"),
+  mode: z.enum(["REMOTE", "IN_VENUE"]).default("REMOTE"),
+  pickupSlot: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid slot format (HH:mm)")
+    .optional(),
+  tableContext: TableContextSchema.optional(),
+  customerDisplayName: z.string().optional(),
   items: z.array(OrderItemInputSchema).min(1, "Order must contain at least one item."),
   orderNotes: z
     .string()
@@ -123,9 +136,12 @@ export const OrderSchema = z.object({
   id: z.string().uuid(),
   orderNumber: z.number().int().positive(),
   tenantId: z.string().uuid(),
-  customerRef: z.string().uuid(),
+  customerRef: z.string().uuid().nullable().optional(),
   customerDisplayName: z.string(),
-  pickupSlot: z.string(),
+  mode: z.enum(["REMOTE", "IN_VENUE"]).default("REMOTE"),
+  tableContext: TableContextSchema.nullable().optional(),
+  pickupSlot: z.string().nullable().optional(),
+  breakSlot: z.string().optional(),
   state: z.enum([
     ORDER_STATUS.PENDING_PAYMENT,
     ORDER_STATUS.SCHEDULED,
@@ -137,12 +153,12 @@ export const OrderSchema = z.object({
   subtotalPkr: z.number().int().positive(),
   discountPkr: z.number().int().nonnegative().default(0),
   totalPkr: z.number().int().positive(),
-  kitchenStartAt: z.string().nullable(),
-  readyAt: z.string().nullable(),
-  servedAt: z.string().nullable(),
-  voidedAt: z.string().nullable(),
+  kitchenStartAt: z.string().nullable().optional(),
+  readyAt: z.string().nullable().optional(),
+  servedAt: z.string().nullable().optional(),
+  voidedAt: z.string().nullable().optional(),
   items: z.array(OrderItemSchema),
-  claim: PaymentClaimSchema.nullable(),
+  claim: PaymentClaimSchema.nullable().optional(),
   createdAt: z.string(),
 });
 export type Order = z.infer<typeof OrderSchema>;

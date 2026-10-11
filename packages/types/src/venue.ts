@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { PAYMENT_METHOD, SLOT_STATUS, VENUE_MODE } from "./enums.js";
+import { MODIFIER_TYPE, PAYMENT_METHOD, SLOT_STATUS, VENUE_MODE } from "./enums.js";
 
 export const ModifierOptionSchema = z.object({
   id: z.string(),
   nameEn: z.string().min(1),
   nameUrdu: z.string().optional(),
-  pricePkr: z.number().int().nonnegative(),
+  pricePkr: z.number().int().nonnegative().default(0),
+  type: z.enum([MODIFIER_TYPE.ADD_ON, MODIFIER_TYPE.EXCLUSION, MODIFIER_TYPE.PREFERENCE]).default(MODIFIER_TYPE.ADD_ON),
 });
 export type ModifierOption = z.infer<typeof ModifierOptionSchema>;
 
@@ -32,6 +33,7 @@ export const MenuItemSchema = z.object({
   blurHash: z.string().optional(),
   prepTimeMinutes: z.number().int().positive().default(6),
   isAvailable: z.boolean().default(true),
+  isPopular: z.boolean().default(false),
   modifierGroups: z.array(ModifierGroupSchema).default([]),
 });
 export type MenuItem = z.infer<typeof MenuItemSchema>;
@@ -55,6 +57,7 @@ export const PickupSlotSchema = z.object({
   ]),
   capacity: z.number().int().positive(),
   reservedCount: z.number().int().nonnegative(),
+  breakSlotName: z.string().optional(),
 });
 export type PickupSlot = z.infer<typeof PickupSlotSchema>;
 
@@ -70,6 +73,7 @@ export const VenuePaymentAccountSchema = z.object({
   accountTitle: z.string().min(1),
   accountNumber: z.string().min(1),
   qrImageUrl: z.string().url().optional(),
+  instructions: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 export type VenuePaymentAccount = z.infer<typeof VenuePaymentAccountSchema>;
@@ -79,6 +83,10 @@ export const VenueSettingsSchema = z.object({
   tenantId: z.string().uuid(),
   name: z.string().min(1),
   slug: z.string().min(1),
+  tagline: z.string().optional(),
+  coverImageUrl: z.string().optional(),
+  rating: z.string().optional(),
+  reviewsCount: z.string().optional(),
   operatingHours: z.string(),
   mode: z.enum([VENUE_MODE.COUNTER_PICKUP, VENUE_MODE.TABLE_SERVICE]).default(VENUE_MODE.COUNTER_PICKUP),
   isOrderingPaused: z.boolean().default(false),

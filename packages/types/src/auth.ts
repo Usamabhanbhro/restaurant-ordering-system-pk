@@ -36,6 +36,9 @@ export const CustomerProfileSchema = z.object({
   displayName: z.string().nullable(),
   emailVerified: z.boolean(),
   affiliation: z.string().nullable(),
+  badge: z.string().optional(),
+  savedPaymentRails: z.array(z.string()).default([]),
+  dietaryNotes: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

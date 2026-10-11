@@ -97,10 +97,10 @@ export interface OrderData {
   undoUntil: number | null;
   rejectionReason: string | null;
   refundOwed: boolean;
-  mode?: OrderingMode;
-  zoneSlug?: string;
-  tableNumber?: string;
-  tableLabel?: string;
+  mode?: OrderingMode | undefined;
+  zoneSlug?: string | undefined;
+  tableNumber?: string | undefined;
+  tableLabel?: string | undefined;
 }
 
 export const MOCK_VENUE: VenueData = {
