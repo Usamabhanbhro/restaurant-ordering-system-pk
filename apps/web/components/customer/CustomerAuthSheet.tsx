@@ -14,6 +14,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useAuthStore, type UserProfile } from "@/lib/store/authStore";
+import { CustomerLoginSchema, CustomerRegisterSchema } from "@queueless/types";
+import { apiClient } from "@/lib/api";
 
 // Google Vector SVG Icon
 function GoogleIcon({ className }: { className?: string }) {
@@ -71,6 +73,7 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
   const [isRecoveryFlow, setIsRecoveryFlow] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Sync mode with global modal state
   useEffect(() => {
@@ -131,54 +134,77 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
     });
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
-    if (!email.trim()) {
-      setErrorMessage("Please enter your email or mobile number.");
-      return;
-    }
-    if (!password || password.length < 6) {
-      setErrorMessage("Password must be at least 6 characters.");
+    const validation = CustomerLoginSchema.safeParse({ email: email.trim(), password });
+    if (!validation.success) {
+      setErrorMessage(validation.error.errors[0]?.message || "Invalid login credentials.");
       return;
     }
 
-    completeLogin({
-      name: "Ahmad Ali",
-      email: email.includes("@") ? email : "student@nu.edu.pk",
-      phone: email.includes("@") ? "+92 300 1234567" : email,
-      affiliation: "FAST-NUCES",
-      badge: "Verified Student",
-      isVerified: true,
-    });
+    setIsSubmitting(true);
+    try {
+      const { profile } = await apiClient.loginCustomer(validation.data);
+      completeLogin({
+        name: profile.displayName || "Ahmad Ali",
+        email: profile.email,
+        phone: profile.phone,
+        affiliation: profile.affiliation || undefined,
+        badge: profile.badge,
+        isVerified: profile.emailVerified,
+        savedPaymentRails: profile.savedPaymentRails,
+        dietaryNotes: profile.dietaryNotes,
+      });
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to log in.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
-    if (!email.trim() || !email.includes("@")) {
-      setErrorMessage("Please enter a valid email address.");
-      return;
-    }
-    if (!phone.trim()) {
-      setErrorMessage("Please enter your Pakistani mobile number.");
-      return;
-    }
-    if (!password || password.length < 8) {
-      setErrorMessage("Password must be at least 8 characters.");
-      return;
-    }
     if (!termsAgreed) {
       setErrorMessage("Please agree to the Terms of Service and Privacy Policy.");
       return;
     }
 
-    setIsRecoveryFlow(false);
-    setResendTimer(59);
-    setOtpDigits(["", "", "", "", "", ""]);
-    setMode("VERIFY_EMAIL");
+    const normalizedPhone = phone.trim().replace(/[\s-]/g, "");
+    const formattedPhone = normalizedPhone.startsWith("+92")
+      ? normalizedPhone
+      : normalizedPhone.startsWith("0")
+      ? `+92${normalizedPhone.slice(1)}`
+      : `+92${normalizedPhone}`;
+
+    const validation = CustomerRegisterSchema.safeParse({
+      email: email.trim(),
+      phone: formattedPhone,
+      password,
+      displayName: displayName.trim() || undefined,
+    });
+
+    if (!validation.success) {
+      setErrorMessage(validation.error.errors[0]?.message || "Invalid registration details.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await apiClient.registerCustomer(validation.data);
+      setPhone(formattedPhone);
+      setIsRecoveryFlow(false);
+      setResendTimer(59);
+      setOtpDigits(["", "", "", "", "", ""]);
+      setMode("VERIFY_EMAIL");
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Registration failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -519,9 +545,12 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-[#EF5A30] hover:bg-[#DE4920] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98] mt-2"
+                  disabled={isSubmitting}
+                  className={`w-full py-3.5 rounded-2xl text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98] mt-2 ${
+                    isSubmitting ? "bg-neutral-400 cursor-not-allowed" : "bg-[#EF5A30] hover:bg-[#DE4920]"
+                  }`}
                 >
-                  Sign In
+                  {isSubmitting ? "Signing in..." : "Sign In"}
                 </button>
 
                 <p className="text-center text-xs text-neutral-500 pt-1">
@@ -665,10 +694,13 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-[#EF5A30] hover:bg-[#DE4920] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className={`w-full py-3.5 rounded-2xl text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2 ${
+                    isSubmitting ? "bg-neutral-400 cursor-not-allowed" : "bg-[#EF5A30] hover:bg-[#DE4920]"
+                  }`}
                 >
-                  <span>Continue to Verification</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>{isSubmitting ? "Registering..." : "Continue to Verification"}</span>
+                  {!isSubmitting && <ArrowRight className="w-3.5 h-3.5" />}
                 </button>
 
                 <p className="text-center text-xs text-neutral-500 pt-1">

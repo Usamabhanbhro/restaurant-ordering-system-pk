@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Drawer } from "vaul";
 import { Check, Minus, Plus } from "lucide-react";
 import type { MenuItemData, ModifierItem } from "@/lib/mockData";
-import { useCartStore } from "@/lib/store/cartStore";
+import { useTenantCart } from "@/lib/store/cartStore";
 
 interface ItemCustomizerSheetProps {
   item: MenuItemData | null;
@@ -21,7 +21,7 @@ export function ItemCustomizerSheet({
   const [selectedModifiers, setSelectedModifiers] = useState<ModifierItem[]>([]);
   const [note, setNote] = useState("");
 
-  const addItem = useCartStore((s) => s.addItem);
+  const { addItem } = useTenantCart();
 
   // Reset customizer state when a new item is opened
   useEffect(() => {

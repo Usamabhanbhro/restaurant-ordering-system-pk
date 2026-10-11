@@ -26,6 +26,8 @@ import { useTenantOrders } from "@/lib/store/orderStore";
 import { useTenant } from "@/lib/tenant/TenantContext";
 import { toVenueViewModel } from "@/lib/domain/venue/venueViewModel";
 import { OrderingModeProvider } from "@/lib/domain/ordering/OrderingModeContext";
+import { useMenu } from "@/lib/hooks/useMenu";
+import { toMenuItemViewModel, toCategoryViewModel } from "@/lib/domain/menu/menuViewModel";
 
 export interface CustomerOrderingViewProps {
   tenantSlug: string;
@@ -142,7 +144,18 @@ export function CustomerOrderingView({
     }
   };
 
-  const filteredItems = MOCK_ITEMS.filter((it) => {
+  // Domain Menu Data
+  const { categories: apiCategories, items: apiItems } = useMenu();
+
+  const categories = apiCategories.length > 0
+    ? apiCategories.map(toCategoryViewModel)
+    : MOCK_CATEGORIES;
+
+  const menuItems = apiItems.length > 0
+    ? apiItems.map(toMenuItemViewModel)
+    : MOCK_ITEMS;
+
+  const filteredItems = menuItems.filter((it) => {
     if (searchQuery.trim()) {
       return (
         it.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -225,7 +238,7 @@ export function CustomerOrderingView({
             <div className="space-y-3 pt-2">
               {/* Category Carousel Pills */}
               <CategoryCarousel
-                categories={MOCK_CATEGORIES}
+                categories={categories}
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
               />
@@ -298,7 +311,6 @@ export function CustomerOrderingView({
           venue={venueVm}
           isOpen={showCartDrawer}
           onClose={() => setShowCartDrawer(false)}
-          onOrderPlaced={placeOrder}
           onSelectTab={setActiveTab}
           mode={mode}
           tableContext={tableContext}

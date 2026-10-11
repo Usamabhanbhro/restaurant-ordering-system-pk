@@ -11,10 +11,10 @@ import { apiClient } from "../api";
 import { toOrderData } from "../domain/order/orderViewModel";
 
 interface SubmitOrderParams {
-  pickupSlot?: string;
-  paymentMethod?: PaymentMethod;
-  claimedTxnId?: string;
-  orderNotes?: string;
+  pickupSlot?: string | undefined;
+  paymentMethod?: PaymentMethod | undefined;
+  claimedTxnId?: string | undefined;
+  orderNotes?: string | undefined;
 }
 
 export function useCheckout() {
@@ -97,7 +97,7 @@ export function useCheckout() {
       }
 
       // 8. Record in tenant order store
-      orders.placeOrder(toOrderData(createdOrder));
+      orders.placeOrder(toOrderData(createdOrder, currentUser?.email));
 
       // 9. Clear tenant cart
       cart.clearCart();

@@ -1,12 +1,12 @@
 import type { Order } from "@queueless/types";
 import type { OrderData } from "@/lib/mockData";
 
-export function toOrderData(order: Order): OrderData {
+export function toOrderData(order: Order, fallbackEmail?: string): OrderData {
   return {
     id: order.id,
     code: `#${order.orderNumber}`,
     customerName: order.customerDisplayName,
-    customerEmail: order.customerRef ? "customer@nu.edu.pk" : "",
+    customerEmail: fallbackEmail || (order.customerRef ? "ahmad.ali@nu.edu.pk" : ""),
     items: order.items.map((it) => ({
       name: it.nameSnapshot,
       qty: it.quantity,

@@ -19,16 +19,19 @@ import {
   MapPin,
 } from "lucide-react";
 import type { VenueData, OrderData, OrderingMode, TableContext } from "@/lib/mockData";
-import { useCartStore } from "@/lib/store/cartStore";
+import { useTenantCart } from "@/lib/store/cartStore";
 import { useAuthStore } from "@/lib/store/authStore";
-import { useSlotStore } from "@/lib/store/slotStore";
+import { useSlots } from "@/lib/hooks/useSlots";
+import { useCheckout } from "@/lib/hooks/useCheckout";
+import { useOrderingMode } from "@/lib/domain/ordering/OrderingModeContext";
+import { toOrderData } from "@/lib/domain/order/orderViewModel";
 import { playChime } from "@/lib/audio";
 
 interface CartDrawerProps {
   venue: VenueData;
   isOpen: boolean;
   onClose: () => void;
-  onOrderPlaced: (order: OrderData) => void;
+  onOrderPlaced?: (order: OrderData) => void;
   onSelectTab: (tab: "menu" | "perks" | "status" | "profile") => void;
   mode?: OrderingMode;
   tableContext?: TableContext | null;
@@ -50,15 +53,17 @@ export function CartDrawer({
     promoApplied,
     applyPromo,
     removePromo,
-    getSubtotal,
-    getVoucherDiscount,
-    getFinalTotal,
-    getItemCount,
+    subtotal: cartSubtotal,
+    voucherDiscount,
+    finalTotal: cartFinalTotal,
+    itemCount: cartItemCount,
     clearCart,
-  } = useCartStore();
+  } = useTenantCart();
 
   const { currentUser, setAuthModal, setPendingPostAuthAction } = useAuthStore();
-  const { availableSlots, selectedSlot, setSelectedSlot } = useSlotStore();
+  const { slots: availableSlots, selectedSlot, setSelectedSlot } = useSlots();
+  const { isSubmitting, error: checkoutError, submitOrder } = useCheckout();
+  const { capabilities } = useOrderingMode();
 
   const [selectedMethod, setSelectedMethod] = useState<"EASYPAISA" | "SADAPAY" | "BANK">("EASYPAISA");
   const [showPaymentPicker, setShowPaymentPicker] = useState(false);
@@ -106,10 +111,6 @@ export function CartDrawer({
     }
   };
 
-  const cartSubtotal = getSubtotal();
-  const voucherDiscount = getVoucherDiscount();
-  const cartFinalTotal = getFinalTotal();
-  const cartItemCount = getItemCount();
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -117,93 +118,60 @@ export function CartDrawer({
     setTimeout(() => setCopiedText(""), 2000);
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     setErrorMessage("");
 
-    if (mode === "REMOTE") {
-      if (!currentUser) {
-        onClose();
-        setAuthModal("WELCOME");
-        setPendingPostAuthAction("CHECKOUT");
-        return;
-      }
-
-      if (!currentUser.name || currentUser.name.trim() === "" || currentUser.name === "Guest Diner") {
-        onClose();
-        setAuthModal("ONBOARDING");
-        setPendingPostAuthAction("CHECKOUT");
-        return;
-      }
-
-      if (!selectedSlot) {
-        setErrorMessage("Please select a pickup time slot.");
-        scrollContainerRef.current?.scrollTo({ top: 120, behavior: "smooth" });
-        return;
-      }
-
-      if (!claimedTxnId.trim()) {
-        setErrorMessage("Please enter the transaction reference ID.");
-        scrollContainerRef.current?.scrollTo({ top: 40, behavior: "smooth" });
-        return;
-      }
-
-      if (!termsAccepted) {
-        setErrorMessage("Please agree to the same-day counter pickup terms.");
-        termsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-        return;
-      }
+    if (!termsAccepted) {
+      setErrorMessage("Please agree to the counter pickup terms.");
+      termsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
     }
 
-    const orderNumber = Math.floor(100 + Math.random() * 900);
-    const assignedTable = tableContext?.tableNumber || "01";
-    const assignedZone = tableContext?.zoneSlug || "main-hall";
+    if (capabilities.requiresAuthentication && !currentUser) {
+      onClose();
+      setAuthModal("WELCOME");
+      setPendingPostAuthAction("CHECKOUT");
+      return;
+    }
 
-    const newOrder: OrderData = {
-      id: `ORD-${orderNumber}`,
-      code: `#${orderNumber}`,
-      customerName:
-        mode === "IN_VENUE"
-          ? currentUser?.name && currentUser.name !== "Guest Diner"
-            ? currentUser.name
-            : `Table ${assignedTable} Diner`
-          : currentUser!.name,
-      customerEmail:
-        mode === "IN_VENUE"
-          ? currentUser?.email || `table-${assignedTable}@guest.local`
-          : currentUser!.email,
-      items: items.map((line) => ({
-        name: line.item.nameEn,
-        qty: line.quantity,
-        price: line.item.price,
-        mods: line.selectedModifiers.map((m) => m.nameEn),
-        note: line.note,
-      })),
-      total: cartFinalTotal,
-      slot: mode === "IN_VENUE" ? selectedSlot?.time || "Immediate" : selectedSlot!.time,
-      breakSlot: mode === "IN_VENUE" ? selectedSlot?.breakSlot || `Table #${assignedTable}` : selectedSlot!.breakSlot,
-      state: mode === "IN_VENUE" ? "PREPARING" : "PENDING_PAYMENT",
-      paymentMethod: mode === "IN_VENUE" ? "COUNTER_PHYSICAL" : selectedMethod,
-      txnId:
-        mode === "IN_VENUE"
-          ? `TABLE-${assignedTable}`
-          : claimedTxnId.trim(),
-      hasScreenshot: false,
-      createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }),
-      kitchenStartAt: selectedSlot?.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }),
-      undoUntil: null,
-      rejectionReason: null,
-      refundOwed: false,
-      mode: mode,
-      zoneSlug: assignedZone,
-      tableNumber: assignedTable,
-      tableLabel: `Table ${assignedTable}${tableContext?.zoneName ? ` • ${tableContext.zoneName}` : ""}`,
-    };
+    if (
+      capabilities.requiresAuthentication &&
+      (!currentUser?.name || currentUser.name.trim() === "" || currentUser.name === "Guest Diner")
+    ) {
+      onClose();
+      setAuthModal("ONBOARDING");
+      setPendingPostAuthAction("CHECKOUT");
+      return;
+    }
 
-    playChime();
-    onOrderPlaced(newOrder);
-    clearCart();
-    onClose();
-    onSelectTab("status");
+    if (capabilities.requiresPickupSlot && !selectedSlot) {
+      setErrorMessage("Please select a pickup time slot.");
+      scrollContainerRef.current?.scrollTo({ top: 120, behavior: "smooth" });
+      return;
+    }
+
+    if (capabilities.requiresPaymentClaim && !claimedTxnId.trim()) {
+      setErrorMessage("Please enter the transaction reference ID.");
+      scrollContainerRef.current?.scrollTo({ top: 40, behavior: "smooth" });
+      return;
+    }
+
+    const order = await submitOrder({
+      pickupSlot: selectedSlot?.time,
+      paymentMethod: selectedMethod as any,
+      claimedTxnId: claimedTxnId.trim(),
+    });
+
+    if (order) {
+      playChime();
+      if (onOrderPlaced) {
+        onOrderPlaced(toOrderData(order, currentUser?.email));
+      }
+      onClose();
+      onSelectTab("status");
+    } else if (checkoutError) {
+      setErrorMessage(checkoutError);
+    }
   };
 
   const defaultPaymentMethod = {
@@ -252,10 +220,10 @@ export function CartDrawer({
             </div>
 
             {/* Error Message if any (non-terms errors displayed at top) */}
-            {errorMessage && !errorMessage.includes("terms") && (
+            {(errorMessage || checkoutError) && !(errorMessage || checkoutError)!.includes("terms") && (
               <div className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>{errorMessage}</span>
+                <span>{errorMessage || checkoutError}</span>
               </div>
             )}
 
@@ -485,16 +453,21 @@ export function CartDrawer({
                   >
                     {availableSlots.map((s, idx) => {
                       const isSel = selectedSlot && selectedSlot.time === s.time;
+                      const isFull = s.status === "FULL" || (s as any).status === "full";
+                      const isAvailable = s.status === "AVAILABLE" || (s as any).status === "available";
+                      const isFilling = s.status === "FILLING_FAST" || (s as any).status === "filling";
+                      const breakLabel = s.breakSlotName || (s as any).breakSlot || `Slot #${idx + 1}`;
+
                       return (
                         <button
                           key={idx}
                           type="button"
-                          disabled={s.status === "full"}
+                          disabled={isFull}
                           onClick={() => setSelectedSlot(s)}
                           className={`p-2.5 rounded-2xl border text-center shrink-0 min-w-[78px] transition-all ${
                             isSel
                               ? "bg-neutral-950 text-white border-neutral-950 shadow-md scale-102"
-                              : s.status === "full"
+                              : isFull
                               ? "bg-neutral-100 border-neutral-200 cursor-not-allowed"
                               : "bg-white border-neutral-200/90 hover:border-neutral-400 shadow-xs"
                           }`}
@@ -503,9 +476,9 @@ export function CartDrawer({
                             className={`font-black text-xs ${
                               isSel
                                 ? "text-white"
-                                : s.status === "available"
+                                : isAvailable
                                 ? "text-emerald-600"
-                                : s.status === "filling"
+                                : isFilling
                                 ? "text-amber-600"
                                 : "text-neutral-400"
                             }`}
@@ -516,14 +489,14 @@ export function CartDrawer({
                             className={`text-[9px] mt-0.5 ${
                               isSel
                                 ? "text-neutral-300 font-medium"
-                                : s.status === "available"
+                                : isAvailable
                                 ? "text-emerald-700/80 font-medium"
-                                : s.status === "filling"
+                                : isFilling
                                 ? "text-amber-700/80 font-medium"
                                 : "text-neutral-400"
                             }`}
                           >
-                            {s.breakSlot}
+                            {breakLabel}
                           </p>
                         </button>
                       );
@@ -709,17 +682,21 @@ export function CartDrawer({
           <div className="p-4 bg-white/95 backdrop-blur-md border-t border-neutral-100 shrink-0">
             <button
               type="button"
-              disabled={items.length === 0}
+              disabled={items.length === 0 || isSubmitting}
               onClick={handlePlaceOrder}
               className={`w-full py-4 px-6 rounded-full font-extrabold text-sm flex items-center justify-between transition-all active:scale-[0.99] ${
-                items.length > 0
+                items.length > 0 && !isSubmitting
                   ? "bg-[#fd8535] hover:bg-[#e0681c] text-white shadow-[0_8px_24px_rgba(253,133,53,0.35)] cursor-pointer"
                   : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
               }`}
             >
               <span className="flex items-center gap-2">
-                {mode === "IN_VENUE" ? "Send Order to Kitchen" : "Place Order"}{" "}
-                <ArrowRight className="w-4 h-4" />
+                {isSubmitting
+                  ? "Placing Order..."
+                  : mode === "IN_VENUE"
+                  ? "Send Order to Kitchen"
+                  : "Place Order"}{" "}
+                {!isSubmitting && <ArrowRight className="w-4 h-4" />}
               </span>
               <span className="text-base font-black">Rs. {cartFinalTotal}</span>
             </button>

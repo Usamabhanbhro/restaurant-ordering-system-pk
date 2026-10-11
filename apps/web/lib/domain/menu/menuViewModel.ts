@@ -5,7 +5,7 @@ export interface MenuItemViewModel {
   id: string;
   categoryId: string;
   nameEn: string;
-  nameRomanUrdu?: string | undefined;
+  nameRomanUrdu: string;
   description: string;
   price: number;
   popular: boolean;
@@ -34,7 +34,7 @@ export function toMenuItemViewModel(item: MenuItem): MenuItemViewModel {
     id: item.id,
     categoryId: item.categoryId,
     nameEn: item.nameEn,
-    nameRomanUrdu: item.nameUrdu,
+    nameRomanUrdu: item.nameUrdu || item.nameEn,
     description: item.descriptionEn || "",
     price: item.pricePkr,
     popular: item.isPopular,

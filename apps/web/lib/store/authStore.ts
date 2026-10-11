@@ -4,11 +4,11 @@ export interface UserProfile {
   name: string;
   email: string;
   phone: string;
-  affiliation?: string;
-  badge?: string;
+  affiliation?: string | undefined;
+  badge?: string | undefined;
   isVerified: boolean;
-  savedPaymentRails?: string[];
-  dietaryNotes?: string;
+  savedPaymentRails?: string[] | undefined;
+  dietaryNotes?: string | undefined;
 }
 
 export type AuthModalMode =

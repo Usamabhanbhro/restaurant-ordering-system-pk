@@ -22,9 +22,9 @@ export interface MenuItemData {
   description: string;
   price: number;
   popular: boolean;
-  weight?: string;
+  weight?: string | undefined;
   image: string;
-  modifierGroups?: ModifierGroup[];
+  modifierGroups?: ModifierGroup[] | undefined;
 }
 
 export interface CategoryData {
