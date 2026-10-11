@@ -19,6 +19,7 @@ import {
   UserPlus,
   Handshake,
   Briefcase,
+  Edit,
 } from "lucide-react";
 import type { OrderingMode, TableContext } from "@/lib/mockData";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -48,88 +49,80 @@ export function ProfileTab({
     <div className="p-4 space-y-5">
       {/* 1. Account / Diner Identity Header & Profile Information */}
       {currentUser ? (
-        <div className="rounded-3xl bg-white border border-neutral-200/80 p-5 shadow-soft space-y-4">
-          {/* Header with Title and Edit Control */}
-          <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#fd8535] flex items-center justify-center font-bold">
-                <User className="w-4 h-4 text-[#fd8535]" />
-              </div>
-              <div>
-                <h2 className="text-xs font-extrabold uppercase tracking-wider text-neutral-400">
-                  Identity
-                </h2>
-                <h3 className="text-sm font-black text-neutral-900 tracking-tight">
-                  Profile Information
-                </h3>
-              </div>
+        <div className="rounded-3xl bg-white border border-neutral-200/80 p-4 shadow-soft space-y-3">
+          {/* Identity Header: Plain text title & Edit icon button */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-neutral-900">Profile Information</span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleStagedClick("Edit Profile")}
+                className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
+                title="Edit Profile"
+                aria-label="Edit Profile"
+              >
+                <Edit className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={signOut}
+                className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
+                title="Sign Out"
+                aria-label="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => handleStagedClick("Edit Profile")}
-              className="text-xs font-extrabold text-[#fd8535] hover:text-[#e07227] px-3 py-1 rounded-full bg-orange-50 hover:bg-orange-100/70 border border-orange-200/60 transition-colors"
-            >
-              Edit
-            </button>
           </div>
 
-          {/* Identity Avatar & Quick Summary */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-neutral-50/80 border border-neutral-100">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#fd8535] text-white font-extrabold flex items-center justify-center text-sm shadow-sm shrink-0">
-                {currentUser.name
-                  ? currentUser.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()
-                  : "AA"}
-              </div>
-              <div className="flex flex-col justify-center">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-extrabold text-sm text-neutral-900 leading-tight">
-                    {currentUser.name}
-                  </h4>
-                  {currentUser.isVerified && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1546d9] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">
-                      <ShieldCheck className="w-3 h-3 text-[#1546d9]" />
-                      Verified
-                    </span>
-                  )}
-                </div>
-                {currentUser.affiliation && (
-                  <p className="text-xs text-neutral-500 font-medium mt-0.5">
-                    {currentUser.affiliation}
-                  </p>
+          {/* Identity Summary: Avatar + Name + Verification + Affiliation */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#fd8535] text-white font-extrabold flex items-center justify-center text-xs shadow-sm shrink-0">
+              {currentUser.name
+                ? currentUser.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()
+                : "AA"}
+            </div>
+            <div className="flex flex-col justify-center min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h4 className="font-extrabold text-sm text-neutral-900 leading-tight truncate">
+                  {currentUser.name}
+                </h4>
+                {currentUser.isVerified && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60 shrink-0">
+                    <ShieldCheck className="w-2.5 h-2.5 text-[#1546d9]" />
+                    Verified
+                  </span>
                 )}
               </div>
+              {currentUser.affiliation && (
+                <p className="text-[11px] text-neutral-500 font-medium truncate mt-0.5">
+                  {currentUser.affiliation}
+                  {currentUser.badge ? ` • ${currentUser.badge}` : ""}
+                </p>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={signOut}
-              className="p-2 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-200/60 rounded-full transition-colors"
-              title="Sign Out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
           </div>
 
-          {/* Nested Profile Controls & Details */}
-          <div className="space-y-2 pt-1">
+          {/* Grouped Profile Details with reduced gaps */}
+          <div className="pt-2 border-t border-neutral-100 space-y-1.5 text-xs">
             {/* Display Name */}
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/50 hover:bg-neutral-50 border border-neutral-100 text-xs transition-colors">
-              <span className="text-neutral-500 font-medium">Display Name</span>
+            <div className="flex items-center justify-between">
+              <span className="text-neutral-400 font-medium">Display Name</span>
               <span className="font-bold text-neutral-900">{currentUser.name}</span>
             </div>
 
             {/* Verified Email */}
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/50 hover:bg-neutral-50 border border-neutral-100 text-xs transition-colors">
-              <span className="text-neutral-500 font-medium">Verified Email</span>
-              <div className="flex items-center gap-1.5 font-semibold text-neutral-800">
+            <div className="flex items-center justify-between">
+              <span className="text-neutral-400 font-medium">Verified Email</span>
+              <div className="flex items-center gap-1 font-semibold text-neutral-800">
                 <span>{currentUser.email}</span>
                 {currentUser.isVerified && (
-                  <span className="text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60">
+                  <span className="text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1 py-0.5 rounded border border-blue-200/60">
                     Verified
                   </span>
                 )}
@@ -137,27 +130,26 @@ export function ProfileTab({
             </div>
 
             {/* Mobile Number */}
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/50 hover:bg-neutral-50 border border-neutral-100 text-xs transition-colors">
-              <span className="text-neutral-500 font-medium">Mobile Number</span>
+            <div className="flex items-center justify-between">
+              <span className="text-neutral-400 font-medium">Mobile Number</span>
               <span className="font-semibold text-neutral-800">{currentUser.phone}</span>
             </div>
 
             {/* Campus Affiliation & Status */}
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/50 hover:bg-neutral-50 border border-neutral-100 text-xs transition-colors">
-              <span className="text-neutral-500 font-medium">Affiliation & Status</span>
-              <span className="font-semibold text-neutral-800">
-                {currentUser.affiliation || "Campus Member"}
-                {currentUser.badge ? ` • ${currentUser.badge}` : ""}
-              </span>
-            </div>
+            {currentUser.affiliation && (
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400 font-medium">Affiliation</span>
+                <span className="font-semibold text-neutral-800">
+                  {currentUser.affiliation}
+                  {currentUser.badge ? ` • ${currentUser.badge}` : ""}
+                </span>
+              </div>
+            )}
 
             {/* Dietary & Kitchen Notes */}
             {currentUser.dietaryNotes && (
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/50 hover:bg-neutral-50 border border-neutral-100 text-xs transition-colors">
-                <div className="flex items-center gap-1.5 text-neutral-500 font-medium">
-                  <Utensils className="w-3.5 h-3.5 text-neutral-400" />
-                  <span>Dietary Notes</span>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400 font-medium">Dietary Note</span>
                 <span className="font-medium text-neutral-700">{currentUser.dietaryNotes}</span>
               </div>
             )}
