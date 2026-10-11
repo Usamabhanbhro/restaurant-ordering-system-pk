@@ -282,7 +282,7 @@ export const INITIAL_ORDERS: OrderData[] = [
   {
     id: "ORD-108",
     code: "#108",
-    customerName: "Ahmad Ali (FAST)",
+    customerName: "Ahmad Ali",
     customerEmail: "ahmad.ali@nu.edu.pk",
     items: [
       { name: "Double Smash Burger", qty: 1, price: 750, mods: ["Extra Melted Cheddar", "No Onion"], note: "Cut in half please" },
@@ -304,7 +304,7 @@ export const INITIAL_ORDERS: OrderData[] = [
   {
     id: "ORD-105",
     code: "#105",
-    customerName: "Zainab Fatima (LUMS)",
+    customerName: "Zainab Fatima",
     customerEmail: "zainab@lums.edu.pk",
     items: [
       { name: "Loaded Truffle Fries", qty: 2, price: 900, mods: [], note: "Extra napkins please" }

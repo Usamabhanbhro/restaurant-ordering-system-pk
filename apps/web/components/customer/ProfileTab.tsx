@@ -2,9 +2,7 @@
 
 import {
   User,
-  Sparkles,
   LogOut,
-  Zap,
 } from "lucide-react";
 import type { OrderingMode, TableContext } from "@/lib/mockData";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -75,7 +73,6 @@ export function ProfileTab({
             onClick={onReplaySplash}
             className="w-full py-2.5 rounded-2xl bg-white border border-neutral-200/80 text-neutral-700 hover:text-neutral-900 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-sm"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#EF5A30]" />
             <span>Experience Opening Splash</span>
           </button>
 
@@ -92,7 +89,7 @@ export function ProfileTab({
       ) : (
         /* Guest Diner State */
         <div className="p-6 rounded-3xl bg-white border border-neutral-200/80 shadow-soft text-center space-y-4">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#FF6B42] to-[#EF5A30] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#FF6B42] to-[#fd8535] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20">
             <User className="w-8 h-8" />
           </div>
           <div>
@@ -112,7 +109,7 @@ export function ProfileTab({
                 setAuthModal("LOGIN");
                 setPendingPostAuthAction(null);
               }}
-              className="w-full py-3.5 rounded-2xl bg-[#EF5A30] hover:bg-[#DE4920] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98]"
+              className="w-full py-3.5 rounded-2xl bg-[#fd8535] hover:bg-[#e07227] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98]"
             >
               Sign In
             </button>
@@ -140,27 +137,19 @@ export function ProfileTab({
               }}
               className="text-[11px] text-neutral-400 hover:text-neutral-700 font-semibold pt-2 inline-flex items-center gap-1.5 transition-colors"
             >
-              <Zap className="w-3 h-3 text-[#EF5A30]" />
               <span>Quick Demo Login as Ahmad Ali</span>
             </button>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-orange-50/80 border border-orange-200/60 text-left flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-[#EF5A30] shrink-0" />
-            <div>
-              <p className="text-xs font-bold text-neutral-900">Platform Member Discounts</p>
-              <p className="text-[11px] text-neutral-500">
-                Discounts offered by the platform across participating venues with verified email.
-              </p>
-            </div>
-          </div>
+          <p className="text-xs text-neutral-500 pt-2 text-center leading-relaxed">
+            Platform member discounts are offered across participating venues with verified email.
+          </p>
 
           <button
             type="button"
             onClick={onReplaySplash}
             className="w-full py-2.5 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#EF5A30]" />
             <span>Experience Opening Splash</span>
           </button>
         </div>

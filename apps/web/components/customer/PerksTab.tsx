@@ -66,21 +66,11 @@ export function PerksTab() {
           Platform Member Discounts
         </h4>
 
-        <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-200/70 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-[#EF5A30]">
-              <Gift className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-neutral-900">Partner & Member Discounts</p>
-              <p className="text-[10px] text-neutral-500">
-                Discounts offered by the platform across participating venues
-              </p>
-            </div>
-          </div>
-          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
-            Active
-          </span>
+        <div className="p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200/70">
+          <p className="text-xs font-bold text-neutral-900">Partner & Member Discounts</p>
+          <p className="text-[11px] text-neutral-500 mt-0.5">
+            Discounts offered by the platform across participating venues
+          </p>
         </div>
       </div>
     </div>

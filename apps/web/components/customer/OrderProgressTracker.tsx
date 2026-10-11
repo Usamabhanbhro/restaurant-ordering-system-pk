@@ -1,6 +1,6 @@
 "use client";
 
-import { Zap, Check, Coffee } from "lucide-react";
+import { Check, Coffee } from "lucide-react";
 import type { OrderData } from "@/lib/mockData";
 
 interface OrderProgressTrackerProps {
@@ -45,6 +45,11 @@ export function OrderProgressTracker({
   const isReady = activeOrder.state === "READY";
   const isServed = activeOrder.state === "SERVED";
 
+  const step1Completed = activeOrder.mode === "IN_VENUE" || !isPending;
+  const step2Completed = isPreparing || isReady || isServed;
+  const step3Completed = isReady || isServed;
+  const step4Completed = isServed;
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -56,13 +61,10 @@ export function OrderProgressTracker({
       {/* Digital Order Ticket */}
       <div className="p-4 rounded-3xl bg-neutral-900 text-white shadow-float relative overflow-hidden">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-orange-400 flex items-center gap-1.5">
-            <Zap className="w-3 h-3 text-orange-400 fill-orange-400" />
-            <span>
-              {activeOrder.mode === "IN_VENUE"
-                ? "Order Ticket"
-                : "Counter Pickup Ticket"}
-            </span>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-orange-400">
+            {activeOrder.mode === "IN_VENUE"
+              ? "Order Ticket"
+              : "Counter Pickup Ticket"}
           </span>
           {activeOrder.mode !== "IN_VENUE" && (
             <span className="text-xs font-bold text-neutral-400">
@@ -73,7 +75,6 @@ export function OrderProgressTracker({
 
         <div className="mt-3 flex items-baseline justify-between">
           <span className="text-4xl font-black tracking-tight text-white">{activeOrder.code}</span>
-          <span className="text-sm font-bold text-neutral-300">Rs. {activeOrder.total}</span>
         </div>
 
         {activeOrder.mode !== "IN_VENUE" && (
@@ -89,16 +90,13 @@ export function OrderProgressTracker({
                 <span>
                   {it.qty}x {it.name}
                 </span>
-                {activeOrder.mode !== "IN_VENUE" && (
-                  <span>Rs. {it.price * it.qty}</span>
-                )}
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* 5-Stage Vertical Timeline (Buy Bao Stepper) */}
+      {/* 4-Stage Vertical Timeline (Buy Bao Stepper) */}
       <div className="p-4 rounded-3xl bg-white border border-neutral-200/80 shadow-soft">
         <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-4">
           Preparation Timeline
@@ -109,19 +107,17 @@ export function OrderProgressTracker({
           <div className="relative">
             <span
               className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${
-                activeOrder.mode === "IN_VENUE"
+                step1Completed
                   ? "bg-[#1546d9]"
-                  : isPending
-                  ? "bg-[#fd8535] ring-4 ring-orange-100 animate-pulse"
-                  : "bg-neutral-900"
+                  : "bg-[#fd8535] ring-4 ring-orange-100 animate-pulse"
               }`}
             >
-              <Check className="w-3 h-3 text-white" />
+              {step1Completed ? <Check className="w-3 h-3 text-white" /> : "1"}
             </span>
             <div>
               <p
                 className={`text-xs font-extrabold ${
-                  activeOrder.mode === "IN_VENUE" ? "text-[#1546d9]" : "text-neutral-900"
+                  step1Completed ? "text-[#1546d9]" : "text-neutral-900"
                 }`}
               >
                 {activeOrder.mode === "IN_VENUE"
@@ -140,17 +136,25 @@ export function OrderProgressTracker({
           <div className="relative">
             <span
               className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${
-                isScheduled
-                  ? "bg-[#EF5A30] ring-4 ring-orange-100"
-                  : isPreparing || isReady || isServed
-                  ? "bg-neutral-900"
+                step2Completed
+                  ? "bg-[#1546d9]"
+                  : isScheduled
+                  ? "bg-[#fd8535] ring-4 ring-orange-100 animate-pulse"
                   : "bg-neutral-300"
               }`}
             >
-              2
+              {step2Completed ? <Check className="w-3 h-3 text-white" /> : "2"}
             </span>
             <div>
-              <p className="text-xs font-extrabold text-neutral-900">
+              <p
+                className={`text-xs font-extrabold ${
+                  step2Completed
+                    ? "text-[#1546d9]"
+                    : isScheduled
+                    ? "text-neutral-900"
+                    : "text-neutral-500"
+                }`}
+              >
                 {activeOrder.mode === "IN_VENUE" ? "2. Kitchen Ticket Dispatched" : "2. Confirmed & Scheduled"}
               </p>
               <p className="text-[11px] text-neutral-500">
@@ -165,17 +169,27 @@ export function OrderProgressTracker({
           <div className="relative">
             <span
               className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${
-                isPreparing
-                  ? "bg-[#EF5A30] ring-4 ring-orange-100 animate-pulse"
-                  : isReady || isServed
-                  ? "bg-neutral-900"
+                step3Completed
+                  ? "bg-[#1546d9]"
+                  : isPreparing
+                  ? "bg-[#fd8535] ring-4 ring-orange-100 animate-pulse"
                   : "bg-neutral-300"
               }`}
             >
-              3
+              {step3Completed ? <Check className="w-3 h-3 text-white" /> : "3"}
             </span>
             <div>
-              <p className="text-xs font-extrabold text-neutral-900">3. Being Prepared</p>
+              <p
+                className={`text-xs font-extrabold ${
+                  step3Completed
+                    ? "text-[#1546d9]"
+                    : isPreparing
+                    ? "text-neutral-900"
+                    : "text-neutral-500"
+                }`}
+              >
+                3. Being Prepared
+              </p>
               <p className="text-[11px] text-neutral-500">
                 Cook is assembling your order on the hotline
               </p>
@@ -186,17 +200,25 @@ export function OrderProgressTracker({
           <div className="relative">
             <span
               className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${
-                isReady
+                step4Completed
+                  ? "bg-[#1546d9]"
+                  : isReady
                   ? "bg-emerald-500 ring-4 ring-emerald-100 animate-pulse"
-                  : isServed
-                  ? "bg-neutral-900"
                   : "bg-neutral-300"
               }`}
             >
-              4
+              {step4Completed ? <Check className="w-3 h-3 text-white" /> : "4"}
             </span>
             <div>
-              <p className="text-xs font-extrabold text-neutral-900">
+              <p
+                className={`text-xs font-extrabold ${
+                  step4Completed
+                    ? "text-[#1546d9]"
+                    : isReady
+                    ? "text-emerald-700"
+                    : "text-neutral-500"
+                }`}
+              >
                 {activeOrder.mode === "IN_VENUE" ? "4. Served to Table" : "4. Ready for Pickup"}
               </p>
               <p className="text-[11px] text-neutral-500">

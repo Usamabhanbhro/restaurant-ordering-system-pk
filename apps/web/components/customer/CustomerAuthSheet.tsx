@@ -5,7 +5,6 @@ import { Drawer } from "vaul";
 import {
   ArrowLeft,
   X,
-  Zap,
   Mail,
   Lock,
   Eye,
@@ -314,11 +313,17 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
             )}
 
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-[#EF5A30] flex items-center justify-center text-white shadow-xs">
-                <Zap className="w-3.5 h-3.5 fill-white" />
+              <div className="w-6 h-6 rounded-lg bg-[#fd8535] p-1 flex items-center justify-center text-white shadow-xs">
+                <svg viewBox="0 0 800 800" className="w-full h-full fill-white" aria-hidden="true">
+                  <g fill="#FFFFFF" fillRule="evenodd">
+                    <path d="M 235 285 C 310 290, 410 265, 545 220 L 495 265 C 415 275, 320 295, 235 285 Z" />
+                    <path d="M 195 348 C 285 352, 420 325, 595 272 L 535 325 C 425 338, 305 362, 195 348 Z" />
+                    <path d="M 205 435 C 275 425, 470 380, 615 330 C 570 470, 470 545, 345 545 C 260 545, 215 500, 205 435 Z M 245 448 C 255 485, 290 512, 350 512 C 435 512, 515 460, 560 365 C 445 405, 300 440, 245 448 Z" />
+                  </g>
+                </svg>
               </div>
               <span className="font-extrabold text-sm text-neutral-900 tracking-tight">
-                Queue<span className="text-[#EF5A30]">Less</span>
+                Queue<span className="text-[#fd8535]">Less</span>
               </span>
             </div>
 
@@ -337,8 +342,14 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
             {mode === "WELCOME" && (
               <div className="space-y-4">
                 <div className="text-center pt-3 pb-2 space-y-2">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6B42] to-[#EF5A30] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20">
-                    <Zap className="w-7 h-7 fill-white" />
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fd8535] to-[#e0681c] p-2.5 text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20">
+                    <svg viewBox="0 0 800 800" className="w-full h-full fill-white" aria-hidden="true">
+                      <g fill="#FFFFFF" fillRule="evenodd">
+                        <path d="M 235 285 C 310 290, 410 265, 545 220 L 495 265 C 415 275, 320 295, 235 285 Z" />
+                        <path d="M 195 348 C 285 352, 420 325, 595 272 L 535 325 C 425 338, 305 362, 195 348 Z" />
+                        <path d="M 205 435 C 275 425, 470 380, 615 330 C 570 470, 470 545, 345 545 C 260 545, 215 500, 205 435 Z M 245 448 C 255 485, 290 512, 350 512 C 435 512, 515 460, 560 365 C 445 405, 300 440, 245 448 Z" />
+                      </g>
+                    </svg>
                   </div>
                 </div>
 
