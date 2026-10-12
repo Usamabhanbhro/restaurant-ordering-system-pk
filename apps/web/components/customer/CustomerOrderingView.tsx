@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect, type UIEvent } from "react";
 import { SplashScreen } from "@/components/splash/SplashScreen";
 import { HeroHeader } from "@/components/customer/HeroHeader";
+import { CuisineShortcutRow } from "@/components/customer/CuisineShortcutRow";
+import { FeaturedSpotlightCard } from "@/components/customer/FeaturedSpotlightCard";
+import { PopularHorizontalShelf } from "@/components/customer/PopularHorizontalShelf";
 import { CategoryCarousel } from "@/components/customer/CategoryCarousel";
 import { FoodCard } from "@/components/customer/FoodCard";
 import { ItemCustomizerSheet } from "@/components/customer/ItemCustomizerSheet";
@@ -171,6 +174,10 @@ export function CustomerOrderingView({
     return it.categoryId === selectedCategory;
   });
 
+  // Featured Signature Dish & Popular favorites for home discovery
+  const featuredItem = menuItems.find((it) => it.id === "item-1") || menuItems[0];
+  const popularItems = menuItems.filter((it) => it.popular);
+
   return (
     <OrderingModeProvider mode={mode} tableContext={tableContext}>
       <div className="min-h-screen bg-[#FFFBF8] text-neutral-900 flex justify-center">
@@ -237,17 +244,63 @@ export function CustomerOrderingView({
             </div>
           )}
 
-          {/* TAB 1: MENU CATALOG */}
+          {/* TAB 1: MENU CATALOG / DISCOVERY HOME SCREEN */}
           {activeTab === "menu" && (
-            <div className="space-y-3 pt-2">
-              {/* Category Carousel Pills */}
-              <CategoryCarousel
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
-              />
+            <div className="space-y-4 pt-1">
+              {/* 1. Cuisine Category 3D Shortcuts (Hidden while actively searching) */}
+              {!searchQuery.trim() && (
+                <CuisineShortcutRow
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={setSelectedCategory}
+                />
+              )}
 
-              {/* Food Item Cards List */}
+              {/* 2. Discovery Home Shelf & Spotlight (Visible on Popular/All views when not searching) */}
+              {!searchQuery.trim() && (selectedCategory === "cat-popular" || selectedCategory === "cat-all") && (
+                <>
+                  {featuredItem && (
+                    <FeaturedSpotlightCard
+                      item={featuredItem}
+                      onCustomize={setCustomizingItem}
+                    />
+                  )}
+
+                  {popularItems.length > 0 && (
+                    <PopularHorizontalShelf
+                      items={popularItems}
+                      venue86List={venue86List}
+                      onCustomize={setCustomizingItem}
+                      onSeeAllPopular={() => setSelectedCategory("cat-popular")}
+                    />
+                  )}
+                </>
+              )}
+
+              {/* 3. Category Filter Carousel Pills & Section Heading */}
+              <div className="space-y-2">
+                <div className="px-4 flex items-center justify-between">
+                  <h2 className="text-xs font-extrabold uppercase tracking-wider text-neutral-400">
+                    {searchQuery.trim()
+                      ? `Search Results`
+                      : selectedCategory === "cat-popular"
+                      ? "Explore All Popular"
+                      : selectedCategory === "cat-all"
+                      ? "Full Menu"
+                      : (categories.find((c) => c.id === selectedCategory)?.name || "Menu")}
+                  </h2>
+                  <span className="text-[11px] font-bold text-neutral-400">
+                    {filteredItems.length} {filteredItems.length === 1 ? "dish" : "dishes"}
+                  </span>
+                </div>
+
+                <CategoryCarousel
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={setSelectedCategory}
+                />
+              </div>
+
+              {/* 4. Food Item Cards List */}
               <section className="px-4 space-y-3">
                 {filteredItems.map((item) => (
                   <FoodCard

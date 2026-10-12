@@ -1,6 +1,6 @@
 "use client";
 
-import { Star, Search, AlertTriangle, ShoppingBag } from "lucide-react";
+import { Star, Search, AlertTriangle, ShoppingBag, MapPin } from "lucide-react";
 import type { VenueData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
 
@@ -83,15 +83,20 @@ export function HeroHeader({
           <h1 className="font-extrabold text-base sm:text-lg text-neutral-900 tracking-tight leading-tight">
             {venue.name}
           </h1>
-          {/* Rating moved under cafe name + Table badge in In-Venue mode */}
-          <div className="flex items-center gap-2 mt-1">
+          {/* Rating & Dining Mode Context */}
+          <div className="flex flex-wrap items-center gap-1.5 mt-1">
             <span className="px-2 py-0.5 rounded-full bg-[#f9b318] text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
               <Star className="w-3 h-3 text-white fill-white" />
               <span>{venue.rating}</span>
             </span>
-            {mode === "IN_VENUE" && tableContext && (
-              <span className="px-2.5 py-0.5 rounded-full bg-[#1546d9] text-white text-[11px] font-extrabold flex items-center gap-1 shadow-xs">
-                <span>Table {tableContext.tableNumber}</span>
+            {mode === "IN_VENUE" && tableContext ? (
+              <span className="px-2 py-0.5 rounded-full bg-[#1546d9] text-white text-[10px] font-extrabold flex items-center gap-1 shadow-xs">
+                <span>Table {tableContext.tableNumber} • {tableContext.zoneName || "Indoor Main"}</span>
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-[10px] font-bold flex items-center gap-1">
+                <MapPin className="w-2.5 h-2.5 text-neutral-400" />
+                <span>Gulberg III • Counter Pickup</span>
               </span>
             )}
           </div>

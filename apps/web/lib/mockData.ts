@@ -31,6 +31,7 @@ export interface CategoryData {
   id: string;
   name: string;
   icon: string;
+  image?: string | undefined;
 }
 
 export interface PaymentMethodData {
@@ -142,11 +143,35 @@ export const MOCK_VENUE: VenueData = {
   ]
 };
 
+export interface CuisineShortcut {
+  id: string;
+  name: string;
+  image: string;
+}
+
+export const CUISINE_SHORTCUTS: CuisineShortcut[] = [
+  { id: "cat-breakfast", name: "Breakfast", image: "/categories/cat-breakfast.png" },
+  { id: "cat-paratha", name: "Paratha", image: "/categories/cat-paratha.png" },
+  { id: "cat-fastfood", name: "Fast Food", image: "/categories/cat-fastfood.png" },
+  { id: "cat-biryani", name: "Biryani", image: "/categories/cat-biryani.png" },
+  { id: "cat-icecream", name: "Ice Cream", image: "/categories/cat-icecream.png" },
+  { id: "cat-pulao", name: "Pulao", image: "/categories/cat-pulao.png" },
+  { id: "cat-oriental", name: "Oriental", image: "/categories/cat-oriental.png" },
+  { id: "cat-pakistani", name: "Pakistani", image: "/categories/cat-pakistani.png" },
+];
+
 export const MOCK_CATEGORIES: CategoryData[] = [
   { id: "cat-popular", name: "Popular", icon: "Flame" },
   { id: "cat-all", name: "All", icon: "Utensils" },
-  { id: "cat-burgers", name: "Burgers", icon: "Burger" },
+  { id: "cat-fastfood", name: "Fast Food", icon: "Burger", image: "/categories/cat-fastfood.png" },
+  { id: "cat-paratha", name: "Paratha", icon: "Utensils", image: "/categories/cat-paratha.png" },
+  { id: "cat-biryani", name: "Biryani", icon: "Flame", image: "/categories/cat-biryani.png" },
+  { id: "cat-pulao", name: "Pulao", icon: "Flame", image: "/categories/cat-pulao.png" },
+  { id: "cat-pakistani", name: "Pakistani", icon: "Utensils", image: "/categories/cat-pakistani.png" },
+  { id: "cat-breakfast", name: "Breakfast", icon: "Coffee", image: "/categories/cat-breakfast.png" },
   { id: "cat-coffee", name: "Specialty Coffee", icon: "Coffee" },
+  { id: "cat-icecream", name: "Ice Cream", icon: "CupSoda", image: "/categories/cat-icecream.png" },
+  { id: "cat-oriental", name: "Oriental", icon: "Utensils", image: "/categories/cat-oriental.png" },
   { id: "cat-bites", name: "Quick Bites", icon: "Pizza" },
   { id: "cat-refreshers", name: "Refreshers", icon: "CupSoda" },
 ];
@@ -154,14 +179,14 @@ export const MOCK_CATEGORIES: CategoryData[] = [
 export const MOCK_ITEMS: MenuItemData[] = [
   {
     id: "item-1",
-    categoryId: "cat-burgers",
+    categoryId: "cat-fastfood",
     nameEn: "Double Smash Burger",
     nameRomanUrdu: "Do Patties Smash Burger",
     description: "Two 80g smashed prime beef patties, melted cheddar, caramelized onions, house truffle mayo in glazed brioche.",
     price: 750,
     popular: true,
     weight: "240g",
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80",
+    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
     modifierGroups: [
       {
         id: "mg-addons",
@@ -188,6 +213,66 @@ export const MOCK_ITEMS: MenuItemData[] = [
     ]
   },
   {
+    id: "item-paratha-1",
+    categoryId: "cat-paratha",
+    nameEn: "Chicken Malai Boti Paratha Roll",
+    nameRomanUrdu: "Malai Boti Roll",
+    description: "Charcoal-grilled tender chicken boti, mint coriander chutney, and pickled onions rolled in a flaky layered paratha.",
+    price: 490,
+    popular: true,
+    weight: "220g",
+    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
+    id: "item-biryani-1",
+    categoryId: "cat-biryani",
+    nameEn: "Special Sindhi Chicken Biryani",
+    nameRomanUrdu: "Special Dum Biryani",
+    description: "Aromatic aged basmati rice dum-cooked with tender chicken, spiced aloo, dried plums and fragrant whole saffron.",
+    price: 580,
+    popular: true,
+    weight: "400g",
+    image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
+    id: "item-pulao-1",
+    categoryId: "cat-pulao",
+    nameEn: "Bannu Beef Pulao",
+    nameRomanUrdu: "Bannu Pulao",
+    description: "Traditional slow-cooked bone broth basmati rice infused with tender melt-in-mouth beef chunks and fried onions.",
+    price: 650,
+    popular: true,
+    weight: "420g",
+    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
+    id: "item-pakistani-1",
+    categoryId: "cat-pakistani",
+    nameEn: "Chicken White Karahi (Single)",
+    nameRomanUrdu: "Chicken Safaid Karahi",
+    description: "Tender boneless chicken wok-cooked with thick yogurt, freshly cracked black pepper, slivered ginger and green chilies.",
+    price: 890,
+    popular: true,
+    weight: "350g",
+    image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
+    id: "item-breakfast-1",
+    categoryId: "cat-breakfast",
+    nameEn: "Desi Nashta Thali",
+    nameRomanUrdu: "Halwa Puri Chana",
+    description: "Two freshly fried golden puris served with spiced Lahori chana tarkari, warm suji halwa and mixed pickle.",
+    price: 420,
+    popular: true,
+    weight: "300g",
+    image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
     id: "item-2",
     categoryId: "cat-coffee",
     nameEn: "Spanish Iced Latte",
@@ -196,7 +281,7 @@ export const MOCK_ITEMS: MenuItemData[] = [
     price: 520,
     popular: true,
     weight: "350ml",
-    image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=400&q=80",
+    image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=600&auto=format&fit=crop&q=80",
     modifierGroups: [
       {
         id: "mg-milk",
@@ -221,6 +306,30 @@ export const MOCK_ITEMS: MenuItemData[] = [
     ]
   },
   {
+    id: "item-icecream-1",
+    categoryId: "cat-icecream",
+    nameEn: "Belgian Chocolate Soft Serve",
+    nameRomanUrdu: "Chocolate Soft Serve",
+    description: "Rich dark Belgian chocolate swirled in a waffle cone with roasted almond flakes and warm chocolate fudge.",
+    price: 360,
+    popular: false,
+    weight: "160g",
+    image: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
+    id: "item-oriental-1",
+    categoryId: "cat-oriental",
+    nameEn: "Fiery Szechuan Chow Mein",
+    nameRomanUrdu: "Chilli Garlic Chow Mein",
+    description: "Wok-tossed noodles with shredded chicken, crisp cabbage, spring onions and homemade garlic chili crisp.",
+    price: 590,
+    popular: false,
+    weight: "320g",
+    image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
     id: "item-3",
     categoryId: "cat-bites",
     nameEn: "Loaded Truffle Fries",
@@ -229,19 +338,19 @@ export const MOCK_ITEMS: MenuItemData[] = [
     price: 450,
     popular: true,
     weight: "180g",
-    image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&q=80",
+    image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600&auto=format&fit=crop&q=80",
     modifierGroups: []
   },
   {
     id: "item-4",
-    categoryId: "cat-burgers",
+    categoryId: "cat-fastfood",
     nameEn: "Nashville Hot Chicken Sando",
     nameRomanUrdu: "Nashville Chicken Burger",
     description: "Buttermilk fried chicken breast dipped in fiery cayenne oil, dill pickle chips, creamy coleslaw on soft potato bun.",
     price: 680,
     popular: false,
     weight: "260g",
-    image: "https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?w=400&q=80",
+    image: "https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?w=600&auto=format&fit=crop&q=80",
     modifierGroups: []
   },
   {
@@ -253,7 +362,7 @@ export const MOCK_ITEMS: MenuItemData[] = [
     price: 390,
     popular: false,
     weight: "400ml",
-    image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80",
+    image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&auto=format&fit=crop&q=80",
     modifierGroups: []
   }
 ];
