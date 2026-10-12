@@ -6,11 +6,8 @@ import {
   X,
   Gift,
   Share2,
-  Copy,
-  Check,
   Users,
   MessageCircle,
-  Sparkles,
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -25,8 +22,6 @@ interface InviteFriendsSheetProps {
 export function InviteFriendsSheet({ isOpen, onClose }: InviteFriendsSheetProps) {
   const { currentUser } = useAuthStore();
   const [inviteData, setInviteData] = useState<InviteInfo>(MOCK_INVITE_INFO);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -47,22 +42,6 @@ export function InviteFriendsSheet({ isOpen, onClose }: InviteFriendsSheetProps)
     : inviteData.inviteCode;
   const userInviteUrl = `https://queueless.pk/join/${userCode}`;
 
-  const handleCopyLink = () => {
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(userInviteUrl).catch(() => {});
-    }
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
-  };
-
-  const handleCopyCode = () => {
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(userCode).catch(() => {});
-    }
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
   const handleNativeShare = async () => {
     const shareText = `Hey! Join me on QueueLess to skip the lines at campus cafes. Use my code ${userCode} for Rs. 50 off your first order: ${userInviteUrl}`;
     if (typeof navigator !== "undefined" && navigator.share) {
@@ -74,10 +53,12 @@ export function InviteFriendsSheet({ isOpen, onClose }: InviteFriendsSheetProps)
         });
         return;
       } catch {
-        // Fallback to copy link if user cancelled or share failed
+        // Fallback to clipboard write if share cancelled or unavailable
       }
     }
-    handleCopyLink();
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(userInviteUrl).catch(() => {});
+    }
   };
 
   const shareTextEncoded = encodeURIComponent(
@@ -123,88 +104,31 @@ export function InviteFriendsSheet({ isOpen, onClose }: InviteFriendsSheetProps)
           </div>
 
           {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-5">
-            {/* Hero Visual Card (inspired by Foodpanda/DoorDash invite pattern in reference) */}
-            <div className="p-6 rounded-3xl bg-gradient-to-br from-[#FFF4ED] via-[#FFEADB] to-[#FED6C0] border border-orange-200/70 text-center relative overflow-hidden shadow-2xs">
-              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#fd8535] to-[#EF5A30] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20 mb-3">
-                <Gift className="w-8 h-8 text-white" />
+          <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-4">
+            {/* Hero Card: Reworked and simplified invite reward copy */}
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-[#FFF4ED] via-[#FFEADB] to-[#FED6C0] border border-orange-200/70 text-center relative overflow-hidden shadow-2xs space-y-1.5">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fd8535] to-[#EF5A30] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20 mb-2">
+                <Gift className="w-7 h-7 text-white" />
               </div>
 
-              <h2 className="text-xl font-black text-neutral-900 tracking-tight">
-                {inviteData.headline}
+              <h2 className="text-lg font-black text-neutral-900 tracking-tight">
+                Invite friends, get Rs. 100
               </h2>
-              <p className="text-xs text-neutral-600 font-medium mt-1 max-w-[260px] mx-auto leading-relaxed">
-                Share QueueLess with friends and earn rewards when they place their first order.
+              <p className="text-xs text-neutral-600 font-medium max-w-[280px] mx-auto leading-relaxed">
+                They get Rs. 50 on signup. You get Rs. 100 once they complete their first order (min. Rs. 200).
               </p>
             </div>
 
-            {/* 2-Step Rules Box (matching reference layout: 1. Your friend gets... 2. Then you get...) */}
-            <div className="p-4 rounded-2xl bg-neutral-50/80 border border-neutral-100 space-y-3">
-              <div className="space-y-0.5">
-                <h4 className="text-sm font-black text-neutral-900 flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[#fd8535] text-white text-[11px] font-extrabold inline-flex items-center justify-center shrink-0">
-                    1
-                  </span>
-                  <span>Your friend gets Rs. 50</span>
-                </h4>
-                <p className="text-xs text-neutral-500 font-medium pl-6">
-                  when they sign up with your unique invite link
-                </p>
-              </div>
-
-              <div className="border-t border-neutral-200/60 pt-2.5 space-y-0.5">
-                <h4 className="text-sm font-black text-neutral-900 flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] font-extrabold inline-flex items-center justify-center shrink-0">
-                    2
-                  </span>
-                  <span>Then you get Rs. 100</span>
-                </h4>
-                <p className="text-xs text-neutral-500 font-medium pl-6">
-                  once they complete their first order (min. Rs. 200)
-                </p>
-              </div>
-            </div>
-
-            {/* Referral Code & Link Box */}
-            <div className="p-4 rounded-2xl bg-white border border-neutral-200/90 shadow-2xs space-y-3">
+            {/* Referral Code Box (without button or invite link block) */}
+            <div className="p-4 rounded-2xl bg-white border border-neutral-200/90 shadow-2xs space-y-2">
               <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">
                 Your Referral Code
               </span>
 
-              <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-50 border border-dashed border-neutral-300">
-                <span className="font-mono font-black text-base text-neutral-900 tracking-wider">
+              <div className="p-3 rounded-xl bg-neutral-50 border border-dashed border-neutral-300 text-center">
+                <span className="font-mono font-black text-lg text-neutral-900 tracking-wider">
                   {userCode}
                 </span>
-                <button
-                  type="button"
-                  onClick={handleCopyCode}
-                  className="px-3 py-1.5 rounded-lg bg-white border border-neutral-200 text-neutral-800 text-xs font-bold flex items-center gap-1.5 shadow-2xs hover:bg-neutral-100 active:scale-95 transition-all"
-                >
-                  {copiedCode ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="text-emerald-700">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5 text-neutral-500" />
-                      <span>Copy Code</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-neutral-500 pt-0.5">
-                <span className="truncate max-w-[220px] font-mono text-[11px] text-neutral-400">
-                  {userInviteUrl}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="text-xs font-bold text-[#fd8535] hover:underline shrink-0"
-                >
-                  {copiedLink ? "Link Copied!" : "Copy Link"}
-                </button>
               </div>
             </div>
 

@@ -548,8 +548,8 @@ export const MOCK_INVITE_INFO: InviteInfo = {
   inviteCode: "AAHMADALI",
   inviteUrl: "https://queueless.pk/join/AAHMADALI",
   headline: "Invite friends, get Rs. 100",
-  friendRewardText: "Your friend gets Rs. 50 when they sign up with your invite link",
-  userRewardText: "Then you get Rs. 100 once they place their first order (min. Rs. 200)",
+  friendRewardText: "They get Rs. 50 on signup",
+  userRewardText: "You get Rs. 100 once they complete their first order (min. Rs. 200)",
   invitedFriends: [
     {
       id: "inv-1",
