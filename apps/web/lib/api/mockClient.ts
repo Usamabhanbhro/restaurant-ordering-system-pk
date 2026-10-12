@@ -443,8 +443,7 @@ export class MockApiClient implements ApiClient {
         displayName: "Ahmad Ali",
         emailVerified: true,
         affiliation: "FAST-NUCES",
-        badge: "Verified Student",
-        savedPaymentRails: ["Easypaisa", "SadaPay"],
+        badge: "Student",
         dietaryNotes: "Halal only • Mild spice",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -462,8 +461,7 @@ export class MockApiClient implements ApiClient {
         displayName: input.displayName || "Diner",
         emailVerified: false,
         affiliation: null,
-        badge: undefined,
-        savedPaymentRails: [],
+        badge: "Diner",
         dietaryNotes: undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -473,6 +471,7 @@ export class MockApiClient implements ApiClient {
   }
 
   async updateCustomerProfile(input: UpdateCustomerProfileInput): Promise<{ profile: CustomerProfile }> {
+    const isAffiliated = Boolean(input.affiliation && input.affiliation !== "None");
     return {
       profile: {
         id: "00000000-0000-0000-0000-000000000002",
@@ -480,9 +479,8 @@ export class MockApiClient implements ApiClient {
         phone: input.phone || "+923001234567",
         displayName: input.displayName || "Ahmad Ali",
         emailVerified: true,
-        affiliation: input.affiliation ?? null,
-        badge: input.badge,
-        savedPaymentRails: ["Easypaisa", "SadaPay"],
+        affiliation: isAffiliated ? input.affiliation ?? null : null,
+        badge: isAffiliated ? "Student" : "Diner",
         dietaryNotes: input.dietaryNotes || undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

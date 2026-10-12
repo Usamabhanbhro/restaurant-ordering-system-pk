@@ -37,7 +37,6 @@ export const CustomerProfileSchema = z.object({
   emailVerified: z.boolean(),
   affiliation: z.string().nullable(),
   badge: z.string().optional(),
-  savedPaymentRails: z.array(z.string()).default([]),
   dietaryNotes: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),

@@ -279,7 +279,7 @@ export function EditProfileSheet({
                     placeholder="https://example.com/avatar.jpg"
                     value={photoUrlInput}
                     onChange={(e) => setPhotoUrlInput(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
+                    className="flex-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-base sm:text-xs focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
                   />
                   <button
                     type="button"
@@ -305,7 +305,7 @@ export function EditProfileSheet({
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="e.g. Ahmad Ali"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-neutral-200 text-xs font-medium text-neutral-900 focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-neutral-200 text-base sm:text-xs font-medium text-neutral-900 focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
               />
               <p className="text-[10px] text-neutral-400">
                 What counter staff calls you when your food is ready.
@@ -328,7 +328,7 @@ export function EditProfileSheet({
                 type="email"
                 disabled
                 value={currentUser?.email || ""}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100 border border-neutral-200/80 text-xs font-medium text-neutral-500 cursor-not-allowed select-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100 border border-neutral-200/80 text-base sm:text-xs font-medium text-neutral-500 cursor-not-allowed select-none"
               />
               <p className="text-[10px] text-neutral-400">
                 Email cannot be changed in this release.
@@ -347,7 +347,7 @@ export function EditProfileSheet({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+92 300 1234567"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-medium text-neutral-900 focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-neutral-200 text-base sm:text-xs font-mono font-medium text-neutral-900 focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
               />
               <p className="text-[10px] text-neutral-400">
                 Pakistani mobile number (+923XXXXXXXXX) for pickup SMS updates.
@@ -412,7 +412,7 @@ export function EditProfileSheet({
                 value={dietaryNotes}
                 onChange={(e) => setDietaryNotes(e.target.value)}
                 placeholder="e.g. Halal only • Mild spice • No dairy"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-neutral-200 text-xs font-medium text-neutral-900 focus:ring-1 focus:ring-[#fd8535] focus:outline-none resize-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-neutral-200 text-base sm:text-xs font-medium text-neutral-900 focus:ring-1 focus:ring-[#fd8535] focus:outline-none resize-none"
               />
               <p className="text-[10px] text-neutral-400">
                 Optional preferences printed on counter preparation chits. Can be cleared anytime.

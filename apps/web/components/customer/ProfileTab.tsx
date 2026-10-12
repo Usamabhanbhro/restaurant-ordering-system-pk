@@ -19,6 +19,8 @@ import {
   Handshake,
   Briefcase,
   Edit,
+  UtensilsCrossed,
+  AlertCircle,
 } from "lucide-react";
 import type { OrderingMode, TableContext } from "@/lib/mockData";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -45,6 +47,12 @@ export function ProfileTab({
   const [isVouchersOpen, setIsVouchersOpen] = useState(false);
   const [isInviteFriendsOpen, setIsInviteFriendsOpen] = useState(false);
 
+  const isInVenue = mode === "IN_VENUE" || Boolean(tableContext);
+  const tableNumber = tableContext?.tableNumber || "01";
+  const zoneName =
+    tableContext?.zoneName ||
+    (tableContext?.zoneSlug ? tableContext.zoneSlug.replace(/-/g, " ").toUpperCase() : "Dine-In Area");
+
   const handleStagedClick = (title: string) => {
     setStagedNotice(`${title} panel is staged and will be wired in the next phase.`);
     setTimeout(() => setStagedNotice(null), 2500);
@@ -57,176 +65,315 @@ export function ProfileTab({
 
   return (
     <div className="p-4 space-y-5">
-      {/* 1. Account / Diner Identity Header & Profile Information */}
-      {currentUser ? (
-        <div className="rounded-3xl bg-white border border-neutral-200/80 p-4 shadow-soft space-y-3">
-          {/* Identity Header: Plain text title & Edit icon button */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-neutral-900">Profile Information</span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setIsEditProfileOpen(true)}
-                className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
-                title="Edit Profile"
-                aria-label="Edit Profile"
-              >
-                <Edit className="w-3.5 h-3.5" />
-              </button>
+      {/* 1. Account / Diner Identity Header */}
+      {isInVenue ? (
+        <div className="space-y-3">
+          {/* Table Session Header Card (In-Venue QR Mode) */}
+          <div className="rounded-3xl bg-white border border-neutral-200/80 p-4 shadow-soft space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-neutral-900">Table Session</span>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200/60">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Dine-In Active</span>
+              </span>
+            </div>
+
+            {/* Table Highlight & Zone */}
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-orange-50 text-[#fd8535] flex items-center justify-center shrink-0 border border-orange-100 shadow-2xs">
+                <UtensilsCrossed className="w-6 h-6 text-[#fd8535]" />
+              </div>
+              <div className="flex flex-col justify-center min-w-0">
+                <h3 className="font-black text-lg text-neutral-900 leading-tight truncate">
+                  Table {tableNumber}
+                </h3>
+                <p className="text-xs text-neutral-500 font-medium truncate mt-0.5">
+                  {zoneName}
+                </p>
+              </div>
+            </div>
+
+            {/* Grouped Table Session Details */}
+            <div className="pt-2 border-t border-neutral-100 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400 font-medium">Table Number</span>
+                <span className="font-bold text-neutral-900">Table {tableNumber}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400 font-medium">Dining Zone</span>
+                <span className="font-semibold text-neutral-800">{zoneName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400 font-medium">Ordering Mode</span>
+                <span className="font-semibold text-neutral-800">In-Venue QR</span>
+              </div>
+            </div>
+
+            {/* In-Venue Settlement Notice */}
+            <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-200/60 text-xs text-neutral-600 font-medium leading-relaxed flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+              <span>Orders at this table are settled directly at the counter.</span>
+            </div>
+          </div>
+
+          {/* Secondary Account / Sign-In Banner (Editing Actions Hidden) */}
+          {currentUser ? (
+            <div className="p-3.5 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {currentUser.profilePicture ? (
+                  <img
+                    src={currentUser.profilePicture}
+                    alt={currentUser.name}
+                    className="w-8 h-8 rounded-full object-cover shrink-0 border border-neutral-200"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[#fd8535] text-white font-extrabold flex items-center justify-center text-xs shrink-0">
+                    {currentUser.name
+                      ? currentUser.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()
+                      : "AA"}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="font-extrabold text-neutral-900 truncate">{currentUser.name}</p>
+                  <p className="text-[11px] text-neutral-400 font-medium truncate">{currentUser.email}</p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={signOut}
-                className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
-                title="Sign Out"
-                aria-label="Sign Out"
+                className="px-3 py-1.5 rounded-xl text-neutral-500 hover:text-red-600 hover:bg-red-50 text-xs font-bold transition-colors shrink-0"
               >
-                <LogOut className="w-3.5 h-3.5" />
+                Sign Out
               </button>
             </div>
-          </div>
-
-          {/* Identity Summary: Avatar + Clean Name (no redundant Verified pill) + Affiliation */}
-          <div className="flex items-center gap-3">
-            {currentUser.profilePicture ? (
-              <img
-                src={currentUser.profilePicture}
-                alt={currentUser.name}
-                className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-neutral-200/80"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-[#fd8535] text-white font-extrabold flex items-center justify-center text-xs shadow-sm shrink-0">
-                {currentUser.name
-                  ? currentUser.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()
-                  : "AA"}
+          ) : (
+            <div className="p-4 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs flex items-center justify-between gap-3 text-xs">
+              <div className="min-w-0">
+                <p className="font-bold text-neutral-900">Ordering as Guest Diner</p>
+                <p className="text-[11px] text-neutral-500 truncate">
+                  Sign in to earn vouchers and track orders.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthModal("LOGIN");
+                  setPendingPostAuthAction(null);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs shrink-0 transition-all active:scale-95 shadow-2xs"
+              >
+                Sign In
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* REMOTE Mode */
+        currentUser ? (
+          <div className="space-y-3">
+            {/* Honest Unverified Account Callout */}
+            {!currentUser.isVerified && (
+              <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/80 text-amber-900 flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="text-xs font-semibold text-amber-900 leading-tight">
+                    Verify your email to place remote orders
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthModal("VERIFY_EMAIL");
+                    setStagedNotice("Verification code sent to your email!");
+                    setTimeout(() => setStagedNotice(null), 3000);
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl bg-[#fd8535] hover:bg-[#e0681c] text-white text-[11px] font-bold shrink-0 transition-all active:scale-95 shadow-2xs"
+                >
+                  Resend verification
+                </button>
               </div>
             )}
-            <div className="flex flex-col justify-center min-w-0">
-              <h4 className="font-extrabold text-sm text-neutral-900 leading-tight truncate">
-                {currentUser.name}
-              </h4>
-              {currentUser.affiliation && (
-                <p className="text-[11px] text-neutral-500 font-medium truncate mt-0.5">
-                  {currentUser.affiliation}
-                  {currentUser.badge ? ` • ${currentUser.badge}` : ""}
-                </p>
-              )}
-            </div>
-          </div>
 
-          {/* Grouped Profile Details with reduced gaps */}
-          <div className="pt-2 border-t border-neutral-100 space-y-1.5 text-xs">
-            {/* Display Name */}
-            <div className="flex items-center justify-between">
-              <span className="text-neutral-400 font-medium">Display Name</span>
-              <span className="font-bold text-neutral-900">{currentUser.name}</span>
-            </div>
+            {/* Standard Personal Identity Card */}
+            <div className="rounded-3xl bg-white border border-neutral-200/80 p-4 shadow-soft space-y-3">
+              {/* Identity Header: Plain text title & Edit icon button */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-neutral-900">Profile Information</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditProfileOpen(true)}
+                    className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
+                    title="Edit Profile"
+                    aria-label="Edit Profile"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
+                    title="Sign Out"
+                    aria-label="Sign Out"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
 
-            {/* Email (Label is Email only; verified pill is on the value column) */}
-            <div className="flex items-center justify-between">
-              <span className="text-neutral-400 font-medium">Email</span>
-              <div className="flex items-center gap-1 font-semibold text-neutral-800">
-                <span>{currentUser.email}</span>
-                {currentUser.isVerified && (
-                  <span className="text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1 py-0.5 rounded border border-blue-200/60 inline-flex items-center gap-0.5">
-                    <ShieldCheck className="w-2.5 h-2.5 text-[#1546d9]" />
-                    Verified
-                  </span>
+              {/* Identity Summary: Avatar + Clean Name + Affiliation */}
+              <div className="flex items-center gap-3">
+                {currentUser.profilePicture ? (
+                  <img
+                    src={currentUser.profilePicture}
+                    alt={currentUser.name}
+                    className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-neutral-200/80"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-[#fd8535] text-white font-extrabold flex items-center justify-center text-xs shadow-sm shrink-0">
+                    {currentUser.name
+                      ? currentUser.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()
+                      : "AA"}
+                  </div>
+                )}
+                <div className="flex flex-col justify-center min-w-0">
+                  <h4 className="font-extrabold text-sm text-neutral-900 leading-tight truncate">
+                    {currentUser.name}
+                  </h4>
+                  {currentUser.affiliation && (
+                    <p className="text-[11px] text-neutral-500 font-medium truncate mt-0.5">
+                      {currentUser.affiliation}
+                      {currentUser.badge ? ` • ${currentUser.badge}` : ""}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Grouped Profile Details with reduced gaps */}
+              <div className="pt-2 border-t border-neutral-100 space-y-1.5 text-xs">
+                {/* Display Name */}
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-400 font-medium">Display Name</span>
+                  <span className="font-bold text-neutral-900">{currentUser.name}</span>
+                </div>
+
+                {/* Email */}
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-400 font-medium">Email</span>
+                  <div className="flex items-center gap-1 font-semibold text-neutral-800">
+                    <span>{currentUser.email}</span>
+                    {currentUser.isVerified ? (
+                      <span className="text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1 py-0.5 rounded border border-blue-200/60 inline-flex items-center gap-0.5">
+                        <ShieldCheck className="w-2.5 h-2.5 text-[#1546d9]" />
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1 py-0.5 rounded border border-amber-200/60 inline-flex items-center gap-0.5">
+                        <AlertCircle className="w-2.5 h-2.5 text-amber-600" />
+                        Unverified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile Number */}
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-400 font-medium">Mobile Number</span>
+                  <span className="font-semibold text-neutral-800">{currentUser.phone}</span>
+                </div>
+
+                {/* Campus Affiliation & Status */}
+                {currentUser.affiliation && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-neutral-400 font-medium">Affiliation</span>
+                    <span className="font-semibold text-neutral-800">
+                      {currentUser.affiliation}
+                      {currentUser.badge ? ` • ${currentUser.badge}` : ""}
+                    </span>
+                  </div>
+                )}
+
+                {/* Dietary & Kitchen Notes */}
+                {currentUser.dietaryNotes && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-neutral-400 font-medium">Dietary Note</span>
+                    <span className="font-medium text-neutral-700">{currentUser.dietaryNotes}</span>
+                  </div>
                 )}
               </div>
             </div>
-
-            {/* Mobile Number */}
-            <div className="flex items-center justify-between">
-              <span className="text-neutral-400 font-medium">Mobile Number</span>
-              <span className="font-semibold text-neutral-800">{currentUser.phone}</span>
+          </div>
+        ) : (
+          /* Guest Diner State */
+          <div className="p-6 rounded-3xl bg-white border border-neutral-200/80 shadow-soft text-center space-y-4">
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#FF6B42] to-[#fd8535] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20">
+              <User className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="font-black text-lg text-neutral-900 tracking-tight">
+                Welcome to QueueLess
+              </h3>
+              <p className="text-xs text-neutral-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
+                Sign in or create an account to schedule remote pre-orders, skip counter lines, and unlock
+                student discounts.
+              </p>
             </div>
 
-            {/* Campus Affiliation & Status */}
-            {currentUser.affiliation && (
-              <div className="flex items-center justify-between">
-                <span className="text-neutral-400 font-medium">Affiliation</span>
-                <span className="font-semibold text-neutral-800">
-                  {currentUser.affiliation}
-                  {currentUser.badge ? ` • ${currentUser.badge}` : ""}
-                </span>
-              </div>
-            )}
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthModal("LOGIN");
+                  setPendingPostAuthAction(null);
+                }}
+                className="w-full py-3.5 rounded-2xl bg-[#fd8535] hover:bg-[#e07227] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98]"
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthModal("REGISTER");
+                  setPendingPostAuthAction(null);
+                }}
+                className="w-full py-3.5 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs transition-all active:scale-[0.98]"
+              >
+                Create an Account
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentUser({
+                    name: "Ahmad Ali",
+                    email: "ahmad.ali@nu.edu.pk",
+                    phone: "+92 300 1234567",
+                    affiliation: "FAST-NUCES",
+                    badge: "Student",
+                    isVerified: true,
+                    dietaryNotes: "Halal only • Mild spice",
+                  });
+                }}
+                className="text-[11px] text-neutral-400 hover:text-neutral-700 font-semibold pt-2 inline-flex items-center gap-1.5 transition-colors"
+              >
+                <span>Quick Demo Login as Ahmad Ali</span>
+              </button>
+            </div>
 
-            {/* Dietary & Kitchen Notes */}
-            {currentUser.dietaryNotes && (
-              <div className="flex items-center justify-between">
-                <span className="text-neutral-400 font-medium">Dietary Note</span>
-                <span className="font-medium text-neutral-700">{currentUser.dietaryNotes}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        /* Guest Diner State */
-        <div className="p-6 rounded-3xl bg-white border border-neutral-200/80 shadow-soft text-center space-y-4">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#FF6B42] to-[#fd8535] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20">
-            <User className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="font-black text-lg text-neutral-900 tracking-tight">
-              Welcome to QueueLess
-            </h3>
-            <p className="text-xs text-neutral-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
-              Sign in or create an account to schedule remote pre-orders, skip counter lines, and unlock
-              student discounts.
+            <p className="text-xs text-neutral-500 pt-2 text-center leading-relaxed">
+              Platform member discounts are offered across participating venues with verified email.
             </p>
           </div>
-
-          <div className="space-y-2 pt-1">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthModal("LOGIN");
-                setPendingPostAuthAction(null);
-              }}
-              className="w-full py-3.5 rounded-2xl bg-[#fd8535] hover:bg-[#e07227] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98]"
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthModal("REGISTER");
-                setPendingPostAuthAction(null);
-              }}
-              className="w-full py-3.5 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs transition-all active:scale-[0.98]"
-            >
-              Create an Account
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentUser({
-                  name: "Ahmad Ali",
-                  email: "ahmad.ali@nu.edu.pk",
-                  phone: "+92 300 1234567",
-                  affiliation: "FAST-NUCES",
-                  badge: "Verified Student",
-                  isVerified: true,
-                  savedPaymentRails: ["Easypaisa", "SadaPay"],
-                  dietaryNotes: "Halal only • Mild spice",
-                });
-              }}
-              className="text-[11px] text-neutral-400 hover:text-neutral-700 font-semibold pt-2 inline-flex items-center gap-1.5 transition-colors"
-            >
-              <span>Quick Demo Login as Ahmad Ali</span>
-            </button>
-          </div>
-
-          <p className="text-xs text-neutral-500 pt-2 text-center leading-relaxed">
-            Platform member discounts are offered across participating venues with verified email.
-          </p>
-        </div>
+        )
       )}
 
       {/* 2. Perks Group (Formerly Preferences) */}

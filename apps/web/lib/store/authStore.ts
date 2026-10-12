@@ -7,7 +7,6 @@ export interface UserProfile {
   affiliation?: string | undefined;
   badge?: string | undefined;
   isVerified: boolean;
-  savedPaymentRails?: string[] | undefined;
   dietaryNotes?: string | undefined;
   profilePicture?: string | undefined;
 }
@@ -41,19 +40,46 @@ export const useAuthStore = create<AuthState>((set) => ({
     email: "ahmad.ali@nu.edu.pk",
     phone: "+92 300 1234567",
     affiliation: "FAST-NUCES",
-    badge: "Verified Student",
+    badge: "Student",
     isVerified: true,
-    savedPaymentRails: ["Easypaisa", "SadaPay"],
     dietaryNotes: "Halal only • Mild spice",
   },
   authModal: "NONE",
   pendingPostAuthAction: null,
 
-  setCurrentUser: (user) => set({ currentUser: user }),
+  setCurrentUser: (user) => {
+    if (!user) {
+      set({ currentUser: null });
+      return;
+    }
+    const hasAffiliation =
+      Boolean(user.affiliation) &&
+      user.affiliation !== "None" &&
+      (user.affiliation?.trim().length ?? 0) > 0;
+    set({
+      currentUser: {
+        ...user,
+        affiliation: hasAffiliation ? user.affiliation : undefined,
+        badge: hasAffiliation ? "Student" : "Diner",
+      },
+    });
+  },
   updateProfile: (updates) =>
-    set((state) => ({
-      currentUser: state.currentUser ? { ...state.currentUser, ...updates } : null,
-    })),
+    set((state) => {
+      if (!state.currentUser) return { currentUser: null };
+      const merged = { ...state.currentUser, ...updates };
+      const hasAffiliation =
+        Boolean(merged.affiliation) &&
+        merged.affiliation !== "None" &&
+        (merged.affiliation?.trim().length ?? 0) > 0;
+      return {
+        currentUser: {
+          ...merged,
+          affiliation: hasAffiliation ? merged.affiliation : undefined,
+          badge: hasAffiliation ? "Student" : "Diner",
+        },
+      };
+    }),
   setAuthModal: (mode) => set({ authModal: mode }),
   setPendingPostAuthAction: (action) => set({ pendingPostAuthAction: action }),
   signOut: () => set({ currentUser: null }),

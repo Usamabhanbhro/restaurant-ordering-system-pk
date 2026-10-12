@@ -118,7 +118,7 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
       email: "ahmad.ali@nu.edu.pk",
       phone: "+92 300 1234567",
       affiliation: "FAST-NUCES",
-      badge: "Verified Student",
+      badge: "Student",
       isVerified: true,
     });
   };
@@ -129,7 +129,7 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
       email: "zainab@lums.edu.pk",
       phone: "+92 321 9876543",
       affiliation: "LUMS",
-      badge: "Verified Student",
+      badge: "Student",
       isVerified: true,
     });
   };
@@ -147,14 +147,14 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
     setIsSubmitting(true);
     try {
       const { profile } = await apiClient.loginCustomer(validation.data);
+      const isAffiliated = Boolean(profile.affiliation && profile.affiliation !== "None");
       completeLogin({
         name: profile.displayName || "Ahmad Ali",
         email: profile.email,
         phone: profile.phone,
-        affiliation: profile.affiliation || undefined,
-        badge: profile.badge,
+        affiliation: isAffiliated ? profile.affiliation || undefined : undefined,
+        badge: isAffiliated ? "Student" : "Diner",
         isVerified: profile.emailVerified,
-        savedPaymentRails: profile.savedPaymentRails,
         dietaryNotes: profile.dietaryNotes,
       });
     } catch (err: unknown) {
@@ -272,12 +272,13 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
       return;
     }
 
+    const isAffiliated = Boolean(affiliation && affiliation !== "None" && affiliation.trim().length > 0);
     completeLogin({
       name: displayName.trim() || "Ahmad Ali",
       email: email.trim() || "student@nu.edu.pk",
       phone: phone || "+92 300 1234567",
-      affiliation: affiliation === "None" ? "" : affiliation,
-      badge: "Verified Student",
+      affiliation: isAffiliated ? affiliation : undefined,
+      badge: isAffiliated ? "Student" : "Diner",
       isVerified: true,
     });
   };
@@ -289,12 +290,13 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
       return;
     }
 
+    const isAffiliated = Boolean(affiliation && affiliation !== "None" && affiliation.trim().length > 0);
     completeLogin({
       name: displayName.trim(),
       email: email.trim() || "student@nu.edu.pk",
       phone: phone.startsWith("+92") ? phone : `+92 ${phone.replace(/^0/, "")}`,
-      affiliation: affiliation === "None" ? "" : affiliation,
-      badge: affiliation !== "None" ? "Student" : "Diner",
+      affiliation: isAffiliated ? affiliation : undefined,
+      badge: isAffiliated ? "Student" : "Diner",
       isVerified: true,
     });
   };
