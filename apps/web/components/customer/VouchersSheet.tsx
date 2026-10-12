@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Drawer } from "vaul";
 import {
-  X,
   Ticket,
   Copy,
   Check,
@@ -60,19 +59,10 @@ export function VouchersSheet({ isOpen, onClose }: VouchersSheetProps) {
           </div>
 
           {/* Sheet Header: Single centered word "Vouchers" */}
-          <div className="relative px-5 py-3 border-b border-neutral-100 flex items-center justify-center shrink-0 bg-white">
+          <div className="px-5 py-3 border-b border-neutral-100 flex items-center justify-center shrink-0 bg-white">
             <h3 className="font-extrabold text-base text-neutral-900 tracking-tight text-center">
               Vouchers
             </h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute right-4 p-2 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
-              title="Close"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </div>
 
           {/* Scrollable Content */}

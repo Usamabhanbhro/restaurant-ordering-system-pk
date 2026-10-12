@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Drawer } from "vaul";
 import {
-  X,
   Gift,
   Share2,
   Users,
@@ -92,15 +91,6 @@ export function InviteFriendsSheet({ isOpen, onClose }: InviteFriendsSheetProps)
                 Invite Friends
               </h3>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
-              title="Close"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </div>
 
           {/* Scrollable Body */}

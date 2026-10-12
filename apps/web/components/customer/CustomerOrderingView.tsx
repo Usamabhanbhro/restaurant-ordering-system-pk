@@ -136,11 +136,15 @@ export function CustomerOrderingView({
   const handleToggleMode = (newMode: OrderingMode) => {
     setMode(newMode);
     if (newMode === "IN_VENUE" && !tableContext) {
-      setTableContext({
-        zoneSlug: "indoor-main",
-        tableNumber: "04",
-        zoneName: "Indoor Main",
-      });
+      setTableContext(
+        defaultTableContext || {
+          zoneSlug: "indoor-main",
+          tableNumber: "04",
+          zoneName: "Indoor Main",
+        }
+      );
+    } else if (newMode === "REMOTE" && !defaultTableContext) {
+      setTableContext(null);
     }
   };
 

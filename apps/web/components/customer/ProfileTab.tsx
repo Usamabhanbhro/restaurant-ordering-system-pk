@@ -47,7 +47,7 @@ export function ProfileTab({
   const [isVouchersOpen, setIsVouchersOpen] = useState(false);
   const [isInviteFriendsOpen, setIsInviteFriendsOpen] = useState(false);
 
-  const isInVenue = mode === "IN_VENUE" || Boolean(tableContext);
+  const isInVenue = mode === "IN_VENUE";
   const tableNumber = tableContext?.tableNumber || "01";
   const zoneName =
     tableContext?.zoneName ||
@@ -250,12 +250,6 @@ export function ProfileTab({
                   <h4 className="font-extrabold text-sm text-neutral-900 leading-tight truncate">
                     {currentUser.name}
                   </h4>
-                  {currentUser.affiliation && (
-                    <p className="text-[11px] text-neutral-500 font-medium truncate mt-0.5">
-                      {currentUser.affiliation}
-                      {currentUser.badge ? ` • ${currentUser.badge}` : ""}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -300,14 +294,6 @@ export function ProfileTab({
                       {currentUser.affiliation}
                       {currentUser.badge ? ` • ${currentUser.badge}` : ""}
                     </span>
-                  </div>
-                )}
-
-                {/* Dietary & Kitchen Notes */}
-                {currentUser.dietaryNotes && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-neutral-400 font-medium">Dietary Note</span>
-                    <span className="font-medium text-neutral-700">{currentUser.dietaryNotes}</span>
                   </div>
                 )}
               </div>

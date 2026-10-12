@@ -42,7 +42,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     affiliation: "FAST-NUCES",
     badge: "Student",
     isVerified: true,
-    dietaryNotes: "Halal only • Mild spice",
   },
   authModal: "NONE",
   pendingPostAuthAction: null,

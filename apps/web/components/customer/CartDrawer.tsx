@@ -18,6 +18,7 @@ import {
   ChevronRight,
   MapPin,
   Copy,
+  Upload,
 } from "lucide-react";
 import type { VenueData, OrderData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useTenantCart } from "@/lib/store/cartStore";
@@ -73,9 +74,11 @@ export function CartDrawer({
   const [copiedText, setCopiedText] = useState("");
   const [localPromoInput, setLocalPromoInput] = useState(promoCode);
   const [errorMessage, setErrorMessage] = useState("");
+  const [proofScreenshotName, setProofScreenshotName] = useState<string | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const termsRef = useRef<HTMLDivElement>(null);
+  const proofFileInputRef = useRef<HTMLInputElement>(null);
 
   // Pickup Slots horizontal scroll affordances & arrow controls
   const slotsScrollRef = useRef<HTMLDivElement>(null);
@@ -374,7 +377,6 @@ export function CartDrawer({
                       Account Title:{" "}
                       <strong className="text-neutral-800">{activePaymentMethod.accountTitle}</strong>
                     </span>
-                    <span className="font-black text-[#fd8535]">Amount: Rs. {cartFinalTotal}</span>
                   </div>
 
                   {/* Account Number below Account Title */}
@@ -415,13 +417,46 @@ export function CartDrawer({
                         Auto-fill Test ID
                       </button>
                     </div>
-                    <input
-                      type="text"
-                      placeholder="e.g. EP-9823411 or Bank Txn ID"
-                      value={claimedTxnId}
-                      onChange={(e) => setClaimedTxnId(e.target.value)}
-                      className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
-                    />
+                    <div className="mt-1 flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="e.g. EP-9823411 or Bank Txn ID"
+                        value={claimedTxnId}
+                        onChange={(e) => {
+                          setClaimedTxnId(e.target.value);
+                          if (errorMessage) setErrorMessage("");
+                        }}
+                        className="flex-1 px-3 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-mono font-bold focus:ring-1 focus:ring-[#fd8535] focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => proofFileInputRef.current?.click()}
+                        className="p-2 rounded-xl border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 transition-colors shrink-0 flex items-center justify-center shadow-2xs active:scale-95"
+                        title="Upload payment proof screenshot"
+                        aria-label="Upload payment proof screenshot"
+                      >
+                        <Upload className="w-4 h-4" />
+                      </button>
+                      <input
+                        ref={proofFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setProofScreenshotName(file.name);
+                            if (errorMessage) setErrorMessage("");
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </div>
+                    {proofScreenshotName && (
+                      <p className="text-[10px] text-emerald-600 font-semibold mt-1.5 flex items-center gap-1">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span>Screenshot attached ({proofScreenshotName})</span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -626,12 +661,6 @@ export function CartDrawer({
 
             {/* Terms Acknowledgment */}
             <div ref={termsRef} className="space-y-2 px-1">
-              {errorMessage && errorMessage.includes("terms") && (
-                <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
               <div className="flex items-start gap-2">
                 <input
                   type="checkbox"
@@ -702,7 +731,13 @@ export function CartDrawer({
           </div>
 
           {/* Bottom Sticky Action CTA */}
-          <div className="p-4 bg-white/95 backdrop-blur-md border-t border-neutral-100 shrink-0">
+          <div className="p-4 bg-white/95 backdrop-blur-md border-t border-neutral-100 shrink-0 space-y-2.5">
+            {errorMessage && (
+              <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
             <button
               type="button"
               disabled={items.length === 0 || isSubmitting}
