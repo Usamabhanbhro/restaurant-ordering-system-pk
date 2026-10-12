@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, type UIEvent } from "react";
+import { useState, useRef, useEffect, useMemo, type UIEvent } from "react";
+import Link from "next/link";
+import { AlertTriangle, Store, Utensils, QrCode } from "lucide-react";
 import { SplashScreen } from "@/components/splash/SplashScreen";
 import { HeroHeader } from "@/components/customer/HeroHeader";
 import { CuisineShortcutRow } from "@/components/customer/CuisineShortcutRow";
@@ -31,6 +33,7 @@ import { toVenueViewModel } from "@/lib/domain/venue/venueViewModel";
 import { OrderingModeProvider } from "@/lib/domain/ordering/OrderingModeContext";
 import { useMenu } from "@/lib/hooks/useMenu";
 import { toMenuItemViewModel, toCategoryViewModel } from "@/lib/domain/menu/menuViewModel";
+import { getRegistryVenueBySlug } from "@/lib/domain/venue/venueRegistry";
 
 export interface CustomerOrderingViewProps {
   tenantSlug: string;
@@ -43,13 +46,26 @@ export function CustomerOrderingView({
   initialMode = "REMOTE",
   tableContext: defaultTableContext,
 }: CustomerOrderingViewProps) {
+  // Registry info for multi-tenant awareness
+  const registryVenue = useMemo(
+    () => getRegistryVenueBySlug(tenantSlug),
+    [tenantSlug]
+  );
+  const supportedModes = registryVenue?.supportedModes ?? ["REMOTE", "IN_VENUE"];
+  const isMultiMode = supportedModes.length > 1;
+  const isVenueOpen = registryVenue?.isOpen ?? true;
+
+  // Resolve initial mode against supported modes
+  const resolvedInitialMode = supportedModes.includes(initialMode)
+    ? initialMode
+    : supportedModes[0] || "REMOTE";
+
   // Mode state: Remote vs In-Venue (Table QR)
-  const [mode, setMode] = useState<OrderingMode>(initialMode);
+  const [mode, setMode] = useState<OrderingMode>(resolvedInitialMode);
   const [tableContext, setTableContext] = useState<TableContext | null>(
-    defaultTableContext ||
-      (initialMode === "IN_VENUE"
-        ? { zoneSlug: "indoor-main", tableNumber: "04", zoneName: "Indoor Main" }
-        : null)
+    resolvedInitialMode === "IN_VENUE"
+      ? (defaultTableContext || { zoneSlug: "indoor-main", tableNumber: "04", zoneName: "Indoor Main" })
+      : null
   );
 
   // Splash Screen State (shown once per session; will not replay on back navigation)
@@ -76,20 +92,20 @@ export function CustomerOrderingView({
   const [customizingItem, setCustomizingItem] = useState<MenuItemData | null>(null);
   const [showCartDrawer, setShowCartDrawer] = useState(false);
 
-  // Venue Status / 86 State
-  const [venue86List] = useState<Record<string, boolean>>({});
-  const [remoteOrdersPaused] = useState(false);
-
-  // Scroll Direction Awareness for Bottom Dock (Floating Pill vs Docked Bar)
-  const [isFloatingNav, setIsFloatingNav] = useState(true);
-  const lastScrollTop = useRef(0);
-
   // Stores & Tenant Context
   const { venue } = useTenant();
   const venueVm = toVenueViewModel(venue);
   const { itemCount: cartItemCount, subtotal: cartSubtotal } = useTenantCart();
   const { currentUser, pendingPostAuthAction, setPendingPostAuthAction } = useAuthStore();
   const { placeOrder, cancelOrder, getActiveOrder } = useTenantOrders();
+
+  // Venue Status / 86 State
+  const [venue86List] = useState<Record<string, boolean>>({});
+  const remoteOrdersPaused = !isVenueOpen || Boolean(venue.isOrderingPaused);
+
+  // Scroll Direction Awareness for Bottom Dock (Floating Pill vs Docked Bar)
+  const [isFloatingNav, setIsFloatingNav] = useState(true);
+  const lastScrollTop = useRef(0);
 
   // Active Order lookup: In-Venue orders resolve by table/session, Remote orders resolve by account email
   const activeOrder = getActiveOrder(
@@ -137,6 +153,7 @@ export function CustomerOrderingView({
   };
 
   const handleToggleMode = (newMode: OrderingMode) => {
+    if (!supportedModes.includes(newMode)) return;
     setMode(newMode);
     if (newMode === "IN_VENUE" && !tableContext) {
       setTableContext(
@@ -154,29 +171,63 @@ export function CustomerOrderingView({
   // Domain Menu Data
   const { categories: apiCategories, items: apiItems } = useMenu();
 
-  const categories = apiCategories.length > 0
-    ? apiCategories.map(toCategoryViewModel)
-    : MOCK_CATEGORIES;
+  const allCategories = useMemo(
+    () => (apiCategories.length > 0 ? apiCategories.map(toCategoryViewModel) : MOCK_CATEGORIES),
+    [apiCategories]
+  );
 
-  const menuItems = apiItems.length > 0
-    ? apiItems.map(toMenuItemViewModel)
-    : MOCK_ITEMS;
+  const allMenuItems = useMemo(
+    () => (apiItems.length > 0 ? apiItems.map(toMenuItemViewModel) : MOCK_ITEMS),
+    [apiItems]
+  );
 
-  const filteredItems = menuItems.filter((it) => {
-    if (searchQuery.trim()) {
-      return (
-        it.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        it.nameRomanUrdu.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Scoped menu items: filtered to venue itemIds (or all items if unspecified)
+  const menuItems = useMemo(() => {
+    if (registryVenue?.itemIds && registryVenue.itemIds.length > 0) {
+      const idSet = new Set(registryVenue.itemIds);
+      return allMenuItems.filter((it) => idSet.has(it.id));
     }
-    if (selectedCategory === "cat-popular") return it.popular;
-    if (selectedCategory === "cat-all" || selectedCategory === "all") return true;
-    return it.categoryId === selectedCategory;
-  });
+    return allMenuItems;
+  }, [allMenuItems, registryVenue]);
+
+  // Scoped categories: filtered to categories present in menu items + Popular & All
+  const categories = useMemo(() => {
+    const presentCategoryIds = new Set(menuItems.map((it) => it.categoryId));
+    return allCategories.filter(
+      (cat) =>
+        cat.id === "cat-popular" ||
+        cat.id === "cat-all" ||
+        cat.id === "all" ||
+        presentCategoryIds.has(cat.id)
+    );
+  }, [allCategories, menuItems]);
+
+  const filteredItems = useMemo(() => {
+    return menuItems.filter((it) => {
+      if (searchQuery.trim()) {
+        return (
+          it.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          it.nameRomanUrdu.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+      if (selectedCategory === "cat-popular") return it.popular;
+      if (selectedCategory === "cat-all" || selectedCategory === "all") return true;
+      return it.categoryId === selectedCategory;
+    });
+  }, [menuItems, searchQuery, selectedCategory]);
 
   // Featured Signature Dish & Popular favorites for home discovery
-  const featuredItem = menuItems.find((it) => it.id === "item-1") || menuItems[0];
-  const popularItems = menuItems.filter((it) => it.popular);
+  const featuredItem = useMemo(() => {
+    if (registryVenue?.signatureItemId) {
+      const match = menuItems.find((it) => it.id === registryVenue.signatureItemId);
+      if (match) return match;
+    }
+    return menuItems.find((it) => it.popular) || menuItems[0];
+  }, [menuItems, registryVenue]);
+
+  const popularItems = useMemo(() => {
+    return menuItems.filter((it) => it.popular);
+  }, [menuItems]);
 
   return (
     <OrderingModeProvider mode={mode} tableContext={tableContext}>
@@ -217,29 +268,78 @@ export function CustomerOrderingView({
           {/* Architecture Mode Selector Bar (Enables effortless switching on entry/ordering screen; hidden on table QR screen) */}
           {activeTab === "menu" && !defaultTableContext && (
             <div className="px-4 pt-2">
-              <div className="p-1 rounded-xl bg-neutral-100 flex items-center text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => handleToggleMode("REMOTE")}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-center transition-all ${
-                    mode === "REMOTE"
-                      ? "bg-white text-neutral-900 font-bold shadow-xs"
-                      : "text-neutral-500 hover:text-neutral-800"
-                  }`}
+              {isMultiMode ? (
+                <div className="p-1 rounded-xl bg-neutral-100 flex items-center text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleMode("REMOTE")}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      mode === "REMOTE"
+                        ? "bg-white text-neutral-900 font-bold shadow-xs"
+                        : "text-neutral-500 hover:text-neutral-800"
+                    }`}
+                  >
+                    <Utensils className="w-3.5 h-3.5 text-[#fd8535]" />
+                    <span>Counter Pickup</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleMode("IN_VENUE")}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      mode === "IN_VENUE"
+                        ? "bg-white text-neutral-900 font-bold shadow-xs"
+                        : "text-neutral-500 hover:text-neutral-800"
+                    }`}
+                  >
+                    <QrCode className="w-3.5 h-3.5 text-[#1546d9]" />
+                    <span>Table QR Dine-In</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="py-2 px-3.5 rounded-xl bg-neutral-100/90 border border-neutral-200/60 flex items-center justify-between text-xs font-bold text-neutral-700">
+                  <div className="flex items-center gap-2">
+                    {mode === "REMOTE" ? (
+                      <>
+                        <Utensils className="w-3.5 h-3.5 text-[#fd8535]" />
+                        <span>Service Mode: Counter Pickup Only</span>
+                      </>
+                    ) : (
+                      <>
+                        <QrCode className="w-3.5 h-3.5 text-[#1546d9]" />
+                        <span>Service Mode: Table QR Only</span>
+                      </>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">
+                    Direct Prep
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Honest Closed State Notice Banner */}
+          {activeTab === "menu" && !isVenueOpen && (
+            <div className="mx-4 mt-2 p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 shadow-xs space-y-2">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <h3 className="text-xs font-black text-amber-900 tracking-tight">
+                    Kitchen Currently Closed • {registryVenue?.openStatusText || "Closed"}
+                  </h3>
+                  <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                    Operating hours: {registryVenue?.operatingHours || "Closed"}. Menu is available for preview. Direct ordering and checkout will resume when the kitchen opens.
+                  </p>
+                </div>
+              </div>
+              <div className="pt-1 flex items-center justify-end">
+                <Link
+                  href="/"
+                  className="px-3 py-1.5 rounded-xl bg-amber-900 hover:bg-amber-950 text-white text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
                 >
-                  Remote
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleToggleMode("IN_VENUE")}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-center transition-all ${
-                    mode === "IN_VENUE"
-                      ? "bg-white text-neutral-900 font-bold shadow-xs"
-                      : "text-neutral-500 hover:text-neutral-800"
-                  }`}
-                >
-                  In-Venue
-                </button>
+                  <Store className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Explore Open Partner Venues</span>
+                </Link>
               </div>
             </div>
           )}

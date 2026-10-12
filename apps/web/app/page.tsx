@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { PlatformHomeView } from "@/components/customer/PlatformHomeView";
 
 export default function HomePage() {
-  redirect("/brewery-gulberg");
+  return <PlatformHomeView />;
 }

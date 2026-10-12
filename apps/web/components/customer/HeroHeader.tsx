@@ -1,6 +1,7 @@
 "use client";
 
-import { Star, Search, AlertTriangle, ShoppingBag, MapPin } from "lucide-react";
+import Link from "next/link";
+import { Star, Search, AlertTriangle, ShoppingBag, MapPin, Store } from "lucide-react";
 import type { VenueData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
 
@@ -43,14 +44,23 @@ export function HeroHeader({
         {/* Restored warm cream bottom gradient overlay for maximum contrast and seamless text grounding */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
 
-        {/* Floating Top Elements: Cart icon button inside a clean white circle (hidden in Order Tracker) */}
-        {showCart && (
-          <div className="absolute top-3 left-4 right-4 flex items-center justify-end z-10">
+        {/* Floating Top Elements: Back to all venues + Cart button */}
+        <div className="absolute top-3 left-4 right-4 flex items-center justify-between z-10">
+          <Link
+            href="/"
+            aria-label="Back to all venues"
+            className="h-8 px-2.5 rounded-full bg-white/95 backdrop-blur-md text-neutral-800 shadow-md hover:bg-white active:scale-95 flex items-center gap-1.5 transition-all border border-neutral-200/60 text-xs font-bold cursor-pointer"
+          >
+            <Store className="w-3.5 h-3.5 text-[#fd8535]" />
+            <span>All Venues</span>
+          </Link>
+
+          {showCart && (
             <button
               type="button"
               onClick={onOpenCart}
               aria-label={`Shopping Cart (${cartItemCount} items)`}
-              className="relative w-9 h-9 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100"
+              className="relative w-8 h-8 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100 cursor-pointer"
             >
               <ShoppingBag className="w-4 h-4 text-neutral-900" />
               {cartItemCount > 0 && (
@@ -59,8 +69,8 @@ export function HeroHeader({
                 </span>
               )}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Venue Profile Section (Positioned outside overflow-hidden with negative margin to ensure zero logo clipping) */}
@@ -96,7 +106,7 @@ export function HeroHeader({
             ) : (
               <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-[10px] font-bold flex items-center gap-1">
                 <MapPin className="w-2.5 h-2.5 text-neutral-400" />
-                <span>Gulberg III • Counter Pickup</span>
+                <span>{venue.neighborhood || "Lahore"} • Counter Pickup</span>
               </span>
             )}
           </div>

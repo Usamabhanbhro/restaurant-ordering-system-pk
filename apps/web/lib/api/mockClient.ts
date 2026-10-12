@@ -24,6 +24,8 @@ import {
   type PickupSlot,
   type VenueSettings,
 } from "@queueless/types";
+import { getRegistryVenueBySlug, getAllRegistryVenues } from "../domain/venue/venueRegistry";
+import { MOCK_ITEMS, MOCK_CATEGORIES as APP_MOCK_CATEGORIES } from "../mockData";
 
 export const MOCK_VENUE_SETTINGS: VenueSettings = {
   id: "00000000-0000-0000-0000-000000000001",
@@ -343,18 +345,79 @@ export const MOCK_PICKUP_SLOTS: PickupSlot[] = [
   },
 ];
 
+export const CANONICAL_MOCK_CATEGORIES: MenuCategory[] = APP_MOCK_CATEGORIES.map((c, idx) => ({
+  id: c.id,
+  tenantId: MOCK_VENUE_SETTINGS.tenantId,
+  nameEn: c.name,
+  nameUrdu: c.name,
+  iconName: c.icon,
+  sortOrder: idx + 1,
+}));
+
+export const CANONICAL_MOCK_ITEMS: MenuItem[] = MOCK_ITEMS.map((it) => ({
+  id: it.id,
+  tenantId: MOCK_VENUE_SETTINGS.tenantId,
+  categoryId: it.categoryId,
+  nameEn: it.nameEn,
+  nameUrdu: it.nameRomanUrdu,
+  descriptionEn: it.description,
+  portionWeightGrams: it.weight ? parseInt(it.weight) || 250 : 250,
+  pricePkr: it.price,
+  imageUrl: it.image,
+  prepTimeMinutes: 8,
+  isAvailable: true,
+  isPopular: it.popular,
+  modifierGroups: (it.modifierGroups || []).map((mg) => ({
+    id: mg.id,
+    nameEn: mg.title,
+    required: mg.min > 0,
+    minSelections: mg.min,
+    maxSelections: mg.max,
+    options: mg.modifiers.map((m) => ({
+      id: m.id,
+      nameEn: m.nameEn,
+      nameUrdu: m.nameRomanUrdu,
+      pricePkr: m.priceDelta,
+      type: m.type,
+    })),
+  })),
+}));
+
 export class MockApiClient implements ApiClient {
   async getVenue(tenantSlug: string): Promise<VenueSettings> {
+    const registryItem = getRegistryVenueBySlug(tenantSlug);
+    if (registryItem) {
+      return registryItem.settings;
+    }
     return {
       ...MOCK_VENUE_SETTINGS,
       slug: tenantSlug,
     };
   }
 
+  async getVenues(): Promise<VenueSettings[]> {
+    return getAllRegistryVenues().map((v) => v.settings);
+  }
+
   async getMenu(tenantId: string): Promise<MenuResponse> {
+    const registryItem = getAllRegistryVenues().find(
+      (v) => v.tenantId === tenantId || v.settings.tenantId === tenantId
+    );
+    let items = CANONICAL_MOCK_ITEMS;
+    if (registryItem?.itemIds && registryItem.itemIds.length > 0) {
+      const idSet = new Set(registryItem.itemIds);
+      items = CANONICAL_MOCK_ITEMS.filter((it) => idSet.has(it.id));
+    }
+    const presentCategoryIds = new Set(items.map((it) => it.categoryId));
+    const categories = CANONICAL_MOCK_CATEGORIES.filter(
+      (c) =>
+        c.id === "cat-popular" ||
+        c.id === "cat-all" ||
+        presentCategoryIds.has(c.id)
+    );
     return {
-      categories: MOCK_CATEGORIES,
-      items: MOCK_MENU_ITEMS,
+      categories,
+      items,
     };
   }
 
@@ -365,7 +428,9 @@ export class MockApiClient implements ApiClient {
   async createOrder(input: OrderCreateInput): Promise<Order> {
     const orderNumber = Math.floor(100 + Math.random() * 900);
     const subtotal = input.items.reduce((acc, it) => {
-      const match = MOCK_MENU_ITEMS.find((m) => m.id === it.menuItemId);
+      const match =
+        CANONICAL_MOCK_ITEMS.find((m) => m.id === it.menuItemId) ||
+        MOCK_MENU_ITEMS.find((m) => m.id === it.menuItemId);
       const base = match ? match.pricePkr : 890;
       const mods = it.selectedModifiers.reduce((mSum, m) => mSum + m.pricePkr, 0);
       return acc + (base + mods) * it.quantity;
@@ -392,7 +457,9 @@ export class MockApiClient implements ApiClient {
       servedAt: null,
       voidedAt: null,
       items: input.items.map((it) => {
-        const itemMatch = MOCK_MENU_ITEMS.find((m) => m.id === it.menuItemId);
+        const itemMatch =
+          CANONICAL_MOCK_ITEMS.find((m) => m.id === it.menuItemId) ||
+          MOCK_MENU_ITEMS.find((m) => m.id === it.menuItemId);
         return {
           id: crypto.randomUUID(),
           orderId: "",

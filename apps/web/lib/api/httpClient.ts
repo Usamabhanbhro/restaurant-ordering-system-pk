@@ -163,4 +163,12 @@ export class HttpApiClient implements ApiClient {
       return this.fallback.submitFeedback(input);
     }
   }
+
+  async getVenues(): Promise<VenueSettings[]> {
+    try {
+      return await this.request<VenueSettings[]>("/api/v1/venues");
+    } catch {
+      return this.fallback.getVenues();
+    }
+  }
 }

@@ -79,4 +79,5 @@ export interface ApiClient {
   getVouchers(): Promise<VoucherItem[]>;
   getInviteLink(): Promise<InviteInfo>;
   submitFeedback(input: FeedbackSubmitInput): Promise<{ success: boolean; message: string }>;
+  getVenues(): Promise<VenueSettings[]>;
 }

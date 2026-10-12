@@ -47,6 +47,7 @@ export interface VenueData {
   name: string;
   slug: string;
   tagline: string;
+  neighborhood?: string | undefined;
   coverImage: string;
   rating: string;
   reviewsCount: string;
@@ -363,6 +364,54 @@ export const MOCK_ITEMS: MenuItemData[] = [
     popular: false,
     weight: "400ml",
     image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
+    id: "item-bundu-seekh",
+    categoryId: "cat-pakistani",
+    nameEn: "Mutton Seekh Kabab",
+    nameRomanUrdu: "Kabab Seekh",
+    description: "Charcoal-grilled minced mutton skewers seasoned with coriander, cumin, crushed chili and fresh ginger.",
+    price: 680,
+    popular: true,
+    weight: "4 skewers",
+    image: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
+    id: "item-bundu-paratha",
+    categoryId: "cat-paratha",
+    nameEn: "Puri Paratha",
+    nameRomanUrdu: "Crispy Puri Paratha",
+    description: "Golden flaky deep-fried multi-layered paratha, perfectly paired with charcoal grilled kababs.",
+    price: 150,
+    popular: false,
+    weight: "120g",
+    image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
+    id: "item-savour-broast",
+    categoryId: "cat-fastfood",
+    nameEn: "Crispy Chicken Broast",
+    nameRomanUrdu: "Chicken Broast",
+    description: "Deep-fried golden quarter chicken coated in signature spiced crust with dinner roll and garlic mayo.",
+    price: 520,
+    popular: true,
+    weight: "Quarter chicken",
+    image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80",
+    modifierGroups: []
+  },
+  {
+    id: "item-chaikhana-chai",
+    categoryId: "cat-coffee",
+    nameEn: "Doodh Patti Karak Chai",
+    nameRomanUrdu: "Karak Chai",
+    description: "Slow-brewed full cream milk tea infused with crushed cardamom pods and Kashmiri saffron strands.",
+    price: 180,
+    popular: true,
+    weight: "250ml",
+    image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80",
     modifierGroups: []
   }
 ];
