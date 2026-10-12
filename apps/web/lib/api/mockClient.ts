@@ -1,6 +1,9 @@
 import type {
   ApiClient,
   MenuResponse,
+  UpdateCustomerProfileInput,
+  VoucherItem,
+  InviteInfo,
 } from "./types";
 import {
   ORDER_STATUS,
@@ -468,4 +471,100 @@ export class MockApiClient implements ApiClient {
       token: "mock-jwt-token-unverified",
     };
   }
+
+  async updateCustomerProfile(input: UpdateCustomerProfileInput): Promise<{ profile: CustomerProfile }> {
+    return {
+      profile: {
+        id: "00000000-0000-0000-0000-000000000002",
+        email: "ahmad.ali@nu.edu.pk",
+        phone: input.phone || "+923001234567",
+        displayName: input.displayName || "Ahmad Ali",
+        emailVerified: true,
+        affiliation: input.affiliation ?? null,
+        badge: input.badge,
+        savedPaymentRails: ["Easypaisa", "SadaPay"],
+        dietaryNotes: input.dietaryNotes || undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    };
+  }
+
+  async getVouchers(): Promise<VoucherItem[]> {
+    return MOCK_VOUCHERS;
+  }
+
+  async getInviteLink(): Promise<InviteInfo> {
+    return MOCK_INVITE_INFO;
+  }
 }
+
+export const MOCK_VOUCHERS: VoucherItem[] = [
+  {
+    id: "vouch-1",
+    code: "PROMO50",
+    title: "First Order Discount",
+    description: "50% off your first order",
+    discountType: "PERCENTAGE",
+    discountValue: 50,
+    validUntil: "Dec 31, 2026",
+    status: "UNUSED",
+    minOrderAmount: 300,
+  },
+  {
+    id: "vouch-2",
+    code: "STUDENT10",
+    title: "Campus Partner Perk",
+    description: "10% off as a verified student",
+    discountType: "PERCENTAGE",
+    discountValue: 10,
+    validUntil: "Dec 31, 2026",
+    status: "UNUSED",
+    minOrderAmount: 200,
+  },
+  {
+    id: "vouch-3",
+    code: "WELCOME15",
+    title: "Welcome Order",
+    description: "15% off your welcome order",
+    discountType: "PERCENTAGE",
+    discountValue: 15,
+    validUntil: "Nov 30, 2026",
+    status: "USED",
+    minOrderAmount: 250,
+  },
+  {
+    id: "vouch-4",
+    code: "FRIENDME",
+    title: "Referral Bonus",
+    description: "Rs. 100 off when a friend orders",
+    discountType: "FIXED",
+    discountValue: 100,
+    validUntil: "Dec 31, 2026",
+    status: "UNUSED",
+    minOrderAmount: 400,
+  },
+];
+
+export const MOCK_INVITE_INFO: InviteInfo = {
+  inviteCode: "AAHMADALI",
+  inviteUrl: "https://queueless.pk/join/AAHMADALI",
+  headline: "Invite friends, get Rs. 100",
+  friendRewardText: "Your friend gets Rs. 50 when they sign up with your invite link",
+  userRewardText: "Then you get Rs. 100 once they place their first order (min. Rs. 200)",
+  invitedFriends: [
+    {
+      id: "inv-1",
+      name: "Bilal Khan",
+      joinedDate: "Oct 10, 2026",
+      status: "PENDING",
+    },
+    {
+      id: "inv-2",
+      name: "Sarah Ahmed",
+      joinedDate: "Sep 28, 2026",
+      status: "COMPLETED",
+      rewardClaimed: true,
+    },
+  ],
+};

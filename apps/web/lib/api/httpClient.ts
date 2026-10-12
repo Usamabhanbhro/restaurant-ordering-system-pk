@@ -1,4 +1,10 @@
-import type { ApiClient, MenuResponse } from "./types";
+import type {
+  ApiClient,
+  MenuResponse,
+  UpdateCustomerProfileInput,
+  VoucherItem,
+  InviteInfo,
+} from "./types";
 import type {
   CustomerLoginInput,
   CustomerProfile,
@@ -116,6 +122,33 @@ export class HttpApiClient implements ApiClient {
       });
     } catch {
       return this.fallback.registerCustomer(input);
+    }
+  }
+
+  async updateCustomerProfile(input: UpdateCustomerProfileInput): Promise<{ profile: CustomerProfile }> {
+    try {
+      return await this.request<{ profile: CustomerProfile }>("/api/v1/auth/profile", {
+        method: "PUT",
+        body: JSON.stringify(input),
+      });
+    } catch {
+      return this.fallback.updateCustomerProfile(input);
+    }
+  }
+
+  async getVouchers(): Promise<VoucherItem[]> {
+    try {
+      return await this.request<VoucherItem[]>("/api/v1/vouchers");
+    } catch {
+      return this.fallback.getVouchers();
+    }
+  }
+
+  async getInviteLink(): Promise<InviteInfo> {
+    try {
+      return await this.request<InviteInfo>("/api/v1/invite");
+    } catch {
+      return this.fallback.getInviteLink();
     }
   }
 }

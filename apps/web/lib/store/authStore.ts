@@ -9,6 +9,7 @@ export interface UserProfile {
   isVerified: boolean;
   savedPaymentRails?: string[] | undefined;
   dietaryNotes?: string | undefined;
+  profilePicture?: string | undefined;
 }
 
 export type AuthModalMode =
@@ -28,6 +29,7 @@ interface AuthState {
   authModal: AuthModalMode;
   pendingPostAuthAction: PendingPostAuthAction;
   setCurrentUser: (user: UserProfile | null) => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
   setAuthModal: (mode: AuthModalMode) => void;
   setPendingPostAuthAction: (action: PendingPostAuthAction) => void;
   signOut: () => void;
@@ -48,6 +50,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   pendingPostAuthAction: null,
 
   setCurrentUser: (user) => set({ currentUser: user }),
+  updateProfile: (updates) =>
+    set((state) => ({
+      currentUser: state.currentUser ? { ...state.currentUser, ...updates } : null,
+    })),
   setAuthModal: (mode) => set({ authModal: mode }),
   setPendingPostAuthAction: (action) => set({ pendingPostAuthAction: action }),
   signOut: () => set({ currentUser: null }),

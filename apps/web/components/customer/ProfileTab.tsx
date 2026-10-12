@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   User,
   LogOut,
-  Utensils,
   HelpCircle,
   MessageSquare,
   MessageCircle,
@@ -23,6 +22,9 @@ import {
 } from "lucide-react";
 import type { OrderingMode, TableContext } from "@/lib/mockData";
 import { useAuthStore } from "@/lib/store/authStore";
+import { EditProfileSheet } from "./EditProfileSheet";
+import { VouchersSheet } from "./VouchersSheet";
+import { InviteFriendsSheet } from "./InviteFriendsSheet";
 
 interface ProfileTabProps {
   onReplaySplash: () => void;
@@ -39,9 +41,17 @@ export function ProfileTab({
     useAuthStore();
 
   const [stagedNotice, setStagedNotice] = useState<string | null>(null);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isVouchersOpen, setIsVouchersOpen] = useState(false);
+  const [isInviteFriendsOpen, setIsInviteFriendsOpen] = useState(false);
 
   const handleStagedClick = (title: string) => {
     setStagedNotice(`${title} panel is staged and will be wired in the next phase.`);
+    setTimeout(() => setStagedNotice(null), 2500);
+  };
+
+  const handleProfileSaved = () => {
+    setStagedNotice("Profile updated successfully!");
     setTimeout(() => setStagedNotice(null), 2500);
   };
 
@@ -56,7 +66,7 @@ export function ProfileTab({
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => handleStagedClick("Edit Profile")}
+                onClick={() => setIsEditProfileOpen(true)}
                 className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors"
                 title="Edit Profile"
                 aria-label="Edit Profile"
@@ -75,30 +85,30 @@ export function ProfileTab({
             </div>
           </div>
 
-          {/* Identity Summary: Avatar + Name + Verification + Affiliation */}
+          {/* Identity Summary: Avatar + Clean Name (no redundant Verified pill) + Affiliation */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#fd8535] text-white font-extrabold flex items-center justify-center text-xs shadow-sm shrink-0">
-              {currentUser.name
-                ? currentUser.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()
-                : "AA"}
-            </div>
-            <div className="flex flex-col justify-center min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h4 className="font-extrabold text-sm text-neutral-900 leading-tight truncate">
-                  {currentUser.name}
-                </h4>
-                {currentUser.isVerified && (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60 shrink-0">
-                    <ShieldCheck className="w-2.5 h-2.5 text-[#1546d9]" />
-                    Verified
-                  </span>
-                )}
+            {currentUser.profilePicture ? (
+              <img
+                src={currentUser.profilePicture}
+                alt={currentUser.name}
+                className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-neutral-200/80"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[#fd8535] text-white font-extrabold flex items-center justify-center text-xs shadow-sm shrink-0">
+                {currentUser.name
+                  ? currentUser.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()
+                  : "AA"}
               </div>
+            )}
+            <div className="flex flex-col justify-center min-w-0">
+              <h4 className="font-extrabold text-sm text-neutral-900 leading-tight truncate">
+                {currentUser.name}
+              </h4>
               {currentUser.affiliation && (
                 <p className="text-[11px] text-neutral-500 font-medium truncate mt-0.5">
                   {currentUser.affiliation}
@@ -116,13 +126,14 @@ export function ProfileTab({
               <span className="font-bold text-neutral-900">{currentUser.name}</span>
             </div>
 
-            {/* Verified Email */}
+            {/* Email (Label is Email only; verified pill is on the value column) */}
             <div className="flex items-center justify-between">
-              <span className="text-neutral-400 font-medium">Verified Email</span>
+              <span className="text-neutral-400 font-medium">Email</span>
               <div className="flex items-center gap-1 font-semibold text-neutral-800">
                 <span>{currentUser.email}</span>
                 {currentUser.isVerified && (
-                  <span className="text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1 py-0.5 rounded border border-blue-200/60">
+                  <span className="text-[10px] font-bold text-[#1546d9] bg-blue-50 px-1 py-0.5 rounded border border-blue-200/60 inline-flex items-center gap-0.5">
+                    <ShieldCheck className="w-2.5 h-2.5 text-[#1546d9]" />
                     Verified
                   </span>
                 )}
@@ -226,7 +237,7 @@ export function ProfileTab({
         <div className="rounded-2xl bg-white border border-neutral-200/80 divide-y divide-neutral-100 overflow-hidden shadow-xs">
           <button
             type="button"
-            onClick={() => handleStagedClick("Vouchers")}
+            onClick={() => setIsVouchersOpen(true)}
             className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -238,7 +249,7 @@ export function ProfileTab({
 
           <button
             type="button"
-            onClick={() => handleStagedClick("Invite Friends")}
+            onClick={() => setIsInviteFriendsOpen(true)}
             className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -397,6 +408,23 @@ export function ProfileTab({
           v1.0.0
         </p>
       </div>
+
+      {/* Sheets & Dialogs */}
+      <EditProfileSheet
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        onSaved={handleProfileSaved}
+      />
+
+      <VouchersSheet
+        isOpen={isVouchersOpen}
+        onClose={() => setIsVouchersOpen(false)}
+      />
+
+      <InviteFriendsSheet
+        isOpen={isInviteFriendsOpen}
+        onClose={() => setIsInviteFriendsOpen(false)}
+      />
 
       {/* Staged Notification Feedback Toast */}
       {stagedNotice && (
