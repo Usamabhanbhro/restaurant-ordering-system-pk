@@ -27,6 +27,7 @@ import { useAuthStore } from "@/lib/store/authStore";
 import { EditProfileSheet } from "./EditProfileSheet";
 import { VouchersSheet } from "./VouchersSheet";
 import { InviteFriendsSheet } from "./InviteFriendsSheet";
+import { ShareFeedbackSheet } from "./ShareFeedbackSheet";
 
 interface ProfileTabProps {
   onReplaySplash: () => void;
@@ -46,6 +47,7 @@ export function ProfileTab({
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isVouchersOpen, setIsVouchersOpen] = useState(false);
   const [isInviteFriendsOpen, setIsInviteFriendsOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const isInVenue = mode === "IN_VENUE";
   const tableNumber = tableContext?.tableNumber || "01";
@@ -72,10 +74,6 @@ export function ProfileTab({
           <div className="rounded-3xl bg-white border border-neutral-200/80 p-4 shadow-soft space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-neutral-900">Table Session</span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Dine-In Active</span>
-              </span>
             </div>
 
             {/* Table Highlight & Zone */}
@@ -426,7 +424,7 @@ export function ProfileTab({
 
           <button
             type="button"
-            onClick={() => handleStagedClick("Share feedback")}
+            onClick={() => setIsFeedbackOpen(true)}
             className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -557,6 +555,13 @@ export function ProfileTab({
       <InviteFriendsSheet
         isOpen={isInviteFriendsOpen}
         onClose={() => setIsInviteFriendsOpen(false)}
+      />
+
+      <ShareFeedbackSheet
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        tableContext={tableContext}
+        mode={mode}
       />
 
       {/* Staged Notification Feedback Toast */}

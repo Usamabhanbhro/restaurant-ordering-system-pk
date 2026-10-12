@@ -56,6 +56,15 @@ export interface InviteInfo {
   invitedFriends: InvitedFriend[];
 }
 
+export interface FeedbackSubmitInput {
+  rating: number;
+  tags?: string[] | undefined;
+  comment?: string | undefined;
+  notifyOnResolution?: boolean | undefined;
+  orderId?: string | undefined;
+  tableNumber?: string | undefined;
+}
+
 export interface ApiClient {
   getVenue(tenantSlug: string): Promise<VenueSettings>;
   getMenu(tenantId: string): Promise<MenuResponse>;
@@ -69,4 +78,5 @@ export interface ApiClient {
   updateCustomerProfile(input: UpdateCustomerProfileInput): Promise<{ profile: CustomerProfile }>;
   getVouchers(): Promise<VoucherItem[]>;
   getInviteLink(): Promise<InviteInfo>;
+  submitFeedback(input: FeedbackSubmitInput): Promise<{ success: boolean; message: string }>;
 }

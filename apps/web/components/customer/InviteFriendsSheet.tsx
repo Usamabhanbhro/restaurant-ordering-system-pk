@@ -122,20 +122,15 @@ export function InviteFriendsSheet({ isOpen, onClose }: InviteFriendsSheetProps)
 
             {/* Credits / Rupees Earned Display */}
             <div className="p-4 rounded-2xl bg-white border border-neutral-200/90 shadow-2xs space-y-1.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">
-                    Credits Earned
-                  </span>
-                  <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-2xl font-black text-neutral-950 tracking-tight">
-                      Rs. {inviteData.earnedRupees ?? 100}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full">
-                  Available Balance
+              <div>
+                <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">
+                  Credits Earned
                 </span>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="text-2xl font-black text-neutral-950 tracking-tight">
+                    Rs. {inviteData.earnedRupees ?? 100}
+                  </span>
+                </div>
               </div>
               <p className="text-[11px] text-neutral-500 pt-1.5 border-t border-neutral-100">
                 Reward credits earned from completed friend referrals.

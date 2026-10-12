@@ -203,7 +203,7 @@ export function CustomerOrderingView({
               onSelectTab={setActiveTab}
               onOpenCart={() => setShowCartDrawer(true)}
               showSearch={activeTab === "menu"}
-              showCart={activeTab !== "status"}
+              showCart={activeTab === "menu"}
               mode={mode}
               tableContext={tableContext}
             />

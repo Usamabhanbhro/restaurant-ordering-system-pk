@@ -4,6 +4,7 @@ import type {
   UpdateCustomerProfileInput,
   VoucherItem,
   InviteInfo,
+  FeedbackSubmitInput,
 } from "./types";
 import {
   ORDER_STATUS,
@@ -494,6 +495,13 @@ export class MockApiClient implements ApiClient {
 
   async getInviteLink(): Promise<InviteInfo> {
     return MOCK_INVITE_INFO;
+  }
+
+  async submitFeedback(_input: FeedbackSubmitInput): Promise<{ success: boolean; message: string }> {
+    return {
+      success: true,
+      message: "Thank you for your feedback! We will review it shortly.",
+    };
   }
 }
 
