@@ -16,6 +16,7 @@ import {
 import { useAuthStore, type UserProfile } from "@/lib/store/authStore";
 import { CustomerLoginSchema, CustomerRegisterSchema } from "@queueless/types";
 import { apiClient } from "@/lib/api";
+import { CodeSlots, type CodeSlotsStatus } from "@/components/ui/CodeSlots";
 
 // Google Vector SVG Icon
 function GoogleIcon({ className }: { className?: string }) {
@@ -69,7 +70,8 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [resendTimer, setResendTimer] = useState(59);
-  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpStatus, setOtpStatus] = useState<CodeSlotsStatus>("idle");
   const [isRecoveryFlow, setIsRecoveryFlow] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -198,7 +200,8 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
       setPhone(formattedPhone);
       setIsRecoveryFlow(false);
       setResendTimer(59);
-      setOtpDigits(["", "", "", "", "", ""]);
+      setOtpCode("");
+      setOtpStatus("idle");
       setMode("VERIFY_EMAIL");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Registration failed.");
@@ -207,56 +210,26 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
     }
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    const nextDigits = [...otpDigits];
-    if (value.length > 1) {
-      const pasted = value.slice(0, 6).split("");
-      pasted.forEach((char, i) => {
-        if (i < 6) nextDigits[i] = char;
-      });
-      setOtpDigits(nextDigits);
-    } else {
-      nextDigits[index] = value;
-      setOtpDigits(nextDigits);
-
-      if (value && index < 5) {
-        const nextInput = document.getElementById(`web-otp-input-${index + 1}`);
-        if (nextInput) nextInput.focus();
+  const handleOtpComplete = (code: string) => {
+    setErrorMessage("");
+    setOtpStatus("success");
+    setTimeout(() => {
+      if (isRecoveryFlow) {
+        setMode("RESET_PASSWORD");
+      } else {
+        setMode("ONBOARDING");
       }
-    }
-
-    // Auto-advance to the next screen immediately once all 6 digits are entered
-    if (nextDigits.every((d) => d.trim().length === 1)) {
-      setTimeout(() => {
-        setErrorMessage("");
-        if (isRecoveryFlow) {
-          setMode("RESET_PASSWORD");
-        } else {
-          setMode("ONBOARDING");
-        }
-      }, 150);
-    }
+    }, 600);
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
-      const prevInput = document.getElementById(`web-otp-input-${index - 1}`);
-      if (prevInput) prevInput.focus();
-    }
-  };
-
-  const handleVerifyEmail = (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = otpDigits.join("");
-    if (code.length < 4) {
-      setErrorMessage("Please enter the verification code sent to your email.");
+  const handleVerifyEmail = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (otpCode.length < 6) {
+      setOtpStatus("error");
+      setErrorMessage("Please enter the complete 6-digit verification code.");
       return;
     }
-    if (isRecoveryFlow) {
-      setMode("RESET_PASSWORD");
-    } else {
-      setMode("ONBOARDING");
-    }
+    handleOtpComplete(otpCode);
   };
 
   const handleResetPasswordSubmit = (e: React.FormEvent) => {
@@ -769,24 +742,31 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
                   </div>
                 )}
 
-                <div className="flex items-center justify-center gap-2 py-2">
-                  {otpDigits.map((digit, i) => (
-                    <input
-                      key={i}
-                      id={`web-otp-input-${i}`}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={digit}
-                      onChange={(e) => handleOtpChange(i, e.target.value)}
-                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      className={`w-11 h-14 text-center text-lg font-black rounded-2xl border transition-all outline-none ${
-                        digit
-                          ? "bg-white border-[#EF5A30] text-[#EF5A30] shadow-sm"
-                          : "bg-neutral-50 border-neutral-200 text-neutral-900 focus:bg-white focus:border-[#EF5A30] focus:ring-2 focus:ring-[#EF5A30]/20"
-                      }`}
-                    />
-                  ))}
+                <div className="flex items-center justify-center py-2">
+                  <CodeSlots
+                    length={6}
+                    value={otpCode}
+                    status={otpStatus}
+                    onChange={(code) => {
+                      setOtpCode(code);
+                      if (otpStatus !== "idle") setOtpStatus("idle");
+                    }}
+                    onComplete={handleOtpComplete}
+                    accentColor="#fd8535"
+                    inkColor="#fd8535"
+                    slotColor="#f4f4f5"
+                    digitColor="#ffffff"
+                    dangerColor="#ff3b30"
+                    slotSize={44}
+                    gap={8}
+                    radius={14}
+                    bounce={0.2}
+                    settle={0.3}
+                    rise={8}
+                    cascade={20}
+                    autoFocus
+                    ariaLabel="6-digit verification code"
+                  />
                 </div>
 
                 {/* In recovery flow, action buttons are removed and code auto-advances on 6th digit */}
@@ -805,6 +785,8 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
                           type="button"
                           onClick={() => {
                             setResendTimer(59);
+                            setOtpCode("");
+                            setOtpStatus("idle");
                           }}
                           className="text-[#EF5A30] font-bold hover:underline"
                         >
@@ -973,7 +955,8 @@ export function CustomerAuthSheet({ onAuthSuccess }: CustomerAuthSheetProps) {
                     }
                     setIsRecoveryFlow(true);
                     setResendTimer(59);
-                    setOtpDigits(["", "", "", "", "", ""]);
+                    setOtpCode("");
+                    setOtpStatus("idle");
                     setMode("VERIFY_EMAIL");
                   }}
                   className="w-full py-3.5 rounded-2xl bg-[#EF5A30] hover:bg-[#DE4920] text-white font-extrabold text-xs shadow-soft transition-all active:scale-[0.98]"
