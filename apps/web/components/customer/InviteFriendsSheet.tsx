@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react";
 import { Drawer } from "vaul";
 import {
-  Gift,
   Share2,
-  Users,
   MessageCircle,
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
@@ -80,36 +78,36 @@ export function InviteFriendsSheet({ isOpen, onClose }: InviteFriendsSheetProps)
             <div className="w-12 h-1.5 rounded-full bg-neutral-300" />
           </div>
 
-          {/* Sheet Header */}
-          <div className="px-5 py-3 border-b border-neutral-100 flex items-center justify-between shrink-0 bg-white">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-neutral-400">
-                Perks
-              </span>
-              <span className="text-xs text-neutral-300">•</span>
-              <h3 className="font-extrabold text-sm text-neutral-900 tracking-tight">
-                Invite Friends
-              </h3>
-            </div>
+          {/* Sheet Header: Just "Invite Friends" */}
+          <div className="px-5 py-3 border-b border-neutral-100 flex items-center justify-center shrink-0 bg-white">
+            <h3 className="font-extrabold text-base text-neutral-900 tracking-tight text-center">
+              Invite Friends
+            </h3>
           </div>
 
           {/* Scrollable Body */}
           <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-4">
-            {/* Hero Card: Reworked and simplified invite reward copy */}
-            <div className="p-6 rounded-3xl bg-gradient-to-br from-[#FFF4ED] via-[#FFEADB] to-[#FED6C0] border border-orange-200/70 text-center relative overflow-hidden shadow-2xs space-y-1.5">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fd8535] to-[#EF5A30] text-white flex items-center justify-center mx-auto shadow-md shadow-orange-950/20 mb-2">
-                <Gift className="w-7 h-7 text-white" />
+            {/* Hero Card: Food-app-style giftbox visual & simplified reward copy */}
+            <div className="p-5 rounded-3xl bg-gradient-to-b from-[#FFF5EE] via-[#FFF9F5] to-white border border-orange-200/60 text-center relative overflow-hidden shadow-2xs space-y-2.5">
+              <div className="relative mx-auto w-32 h-32 flex items-center justify-center">
+                <img
+                  src="/images/queueless-giftbox.jpg"
+                  alt="QueueLess Gift Box"
+                  className="w-32 h-32 object-contain rounded-2xl shadow-sm"
+                />
               </div>
 
-              <h2 className="text-lg font-black text-neutral-900 tracking-tight">
-                Invite friends, get Rs. 100
-              </h2>
-              <p className="text-xs text-neutral-600 font-medium max-w-[280px] mx-auto leading-relaxed">
-                They get Rs. 50 on signup. You get Rs. 100 once they complete their first order (min. Rs. 200).
-              </p>
+              <div className="space-y-1">
+                <h2 className="text-lg font-black text-neutral-900 tracking-tight">
+                  Invite friends, get Rs. 100
+                </h2>
+                <p className="text-xs text-neutral-600 font-medium max-w-[280px] mx-auto leading-relaxed">
+                  They get Rs. 50 on signup. You get Rs. 100 after their first order (min. Rs. 200).
+                </p>
+              </div>
             </div>
 
-            {/* Referral Code Box (without button or invite link block) */}
+            {/* Referral Code Box */}
             <div className="p-4 rounded-2xl bg-white border border-neutral-200/90 shadow-2xs space-y-2">
               <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">
                 Your Referral Code
@@ -122,51 +120,31 @@ export function InviteFriendsSheet({ isOpen, onClose }: InviteFriendsSheetProps)
               </div>
             </div>
 
-            {/* Friends Invited Progress Section */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-1.5 text-neutral-700">
-                  <Users className="w-3.5 h-3.5 text-neutral-500" />
-                  <span className="text-xs font-bold">Friends Invited</span>
+            {/* Credits / Rupees Earned Display */}
+            <div className="p-4 rounded-2xl bg-white border border-neutral-200/90 shadow-2xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">
+                    Credits Earned
+                  </span>
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-2xl font-black text-neutral-950 tracking-tight">
+                      Rs. {inviteData.earnedRupees ?? 100}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-[11px] font-bold text-neutral-400">
-                  {inviteData.invitedFriends.length} total
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full">
+                  Available Balance
                 </span>
               </div>
-
-              {inviteData.invitedFriends.length > 0 ? (
-                <div className="rounded-2xl bg-white border border-neutral-200/80 divide-y divide-neutral-100 overflow-hidden shadow-2xs">
-                  {inviteData.invitedFriends.map((friend) => (
-                    <div
-                      key={friend.id}
-                      className="px-3.5 py-2.5 flex items-center justify-between text-xs"
-                    >
-                      <div>
-                        <p className="font-bold text-neutral-900">{friend.name}</p>
-                        <p className="text-[10px] text-neutral-400">Joined {friend.joinedDate}</p>
-                      </div>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                          friend.status === "COMPLETED"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200/70"
-                            : "bg-orange-50 text-orange-700 border-orange-200/60"
-                        }`}
-                      >
-                        {friend.status === "COMPLETED" ? "Reward Earned" : "Pending Order"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-4 rounded-2xl bg-neutral-50 text-center text-xs text-neutral-400 border border-neutral-100">
-                  No friends invited yet. Start sharing your link today!
-                </div>
-              )}
+              <p className="text-[11px] text-neutral-500 pt-1.5 border-t border-neutral-100">
+                Reward credits earned from completed friend referrals.
+              </p>
             </div>
 
             {/* Terms Footer Note */}
             <p className="text-[10px] text-neutral-400 text-center leading-relaxed px-4">
-              Friends receive a Rs. 50 welcome discount on their first order. You earn a Rs. 100 voucher perk once their order is settled at the pickup counter.
+              Credits are awarded after your friend completes their first counter-settled order.
             </p>
           </div>
 

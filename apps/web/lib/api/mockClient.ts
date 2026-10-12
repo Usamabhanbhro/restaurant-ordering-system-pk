@@ -550,6 +550,7 @@ export const MOCK_INVITE_INFO: InviteInfo = {
   headline: "Invite friends, get Rs. 100",
   friendRewardText: "They get Rs. 50 on signup",
   userRewardText: "You get Rs. 100 once they complete their first order (min. Rs. 200)",
+  earnedRupees: 100,
   invitedFriends: [
     {
       id: "inv-1",

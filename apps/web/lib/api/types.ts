@@ -52,6 +52,7 @@ export interface InviteInfo {
   headline: string;
   friendRewardText: string;
   userRewardText: string;
+  earnedRupees?: number | undefined;
   invitedFriends: InvitedFriend[];
 }
 
