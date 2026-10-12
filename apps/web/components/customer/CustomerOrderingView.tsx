@@ -5,7 +5,8 @@ import Link from "next/link";
 import { AlertTriangle, Store, Utensils, QrCode } from "lucide-react";
 import { SplashScreen } from "@/components/splash/SplashScreen";
 import { HeroHeader } from "@/components/customer/HeroHeader";
-import { CuisineShortcutRow } from "@/components/customer/CuisineShortcutRow";
+import { JellyRadio } from "@/components/customer/JellyRadio";
+import { TableQrScannerSheet } from "@/components/customer/TableQrScannerSheet";
 import { FeaturedSpotlightCard } from "@/components/customer/FeaturedSpotlightCard";
 import { PopularHorizontalShelf } from "@/components/customer/PopularHorizontalShelf";
 import { CategoryCarousel } from "@/components/customer/CategoryCarousel";
@@ -91,6 +92,7 @@ export function CustomerOrderingView({
   // Modals & Sheets
   const [customizingItem, setCustomizingItem] = useState<MenuItemData | null>(null);
   const [showCartDrawer, setShowCartDrawer] = useState(false);
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
 
   // Stores & Tenant Context
   const { venue } = useTenant();
@@ -154,16 +156,12 @@ export function CustomerOrderingView({
 
   const handleToggleMode = (newMode: OrderingMode) => {
     if (!supportedModes.includes(newMode)) return;
-    setMode(newMode);
     if (newMode === "IN_VENUE" && !tableContext) {
-      setTableContext(
-        defaultTableContext || {
-          zoneSlug: "indoor-main",
-          tableNumber: "04",
-          zoneName: "Indoor Main",
-        }
-      );
-    } else if (newMode === "REMOTE" && !defaultTableContext) {
+      setIsQrScannerOpen(true);
+      return;
+    }
+    setMode(newMode);
+    if (newMode === "REMOTE" && !defaultTableContext) {
       setTableContext(null);
     }
   };
@@ -269,31 +267,22 @@ export function CustomerOrderingView({
           {activeTab === "menu" && !defaultTableContext && (
             <div className="px-4 pt-2">
               {isMultiMode ? (
-                <div className="p-1 rounded-xl bg-neutral-100 flex items-center text-xs font-semibold">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleMode("REMOTE")}
-                    className={`flex-1 py-1.5 px-3 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      mode === "REMOTE"
-                        ? "bg-white text-neutral-900 font-bold shadow-xs"
-                        : "text-neutral-500 hover:text-neutral-800"
-                    }`}
-                  >
-                    <Utensils className="w-3.5 h-3.5 text-[#fd8535]" />
-                    <span>Counter Pickup</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleMode("IN_VENUE")}
-                    className={`flex-1 py-1.5 px-3 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      mode === "IN_VENUE"
-                        ? "bg-white text-neutral-900 font-bold shadow-xs"
-                        : "text-neutral-500 hover:text-neutral-800"
-                    }`}
-                  >
-                    <QrCode className="w-3.5 h-3.5 text-[#1546d9]" />
-                    <span>Table QR Dine-In</span>
-                  </button>
+                <div className="flex justify-center">
+                  <JellyRadio
+                    items={[
+                      { value: "REMOTE", label: "Counter Pickup", icon: <Utensils className="w-3.5 h-3.5 text-[#fd8535]" /> },
+                      { value: "IN_VENUE", label: "Table QR Dine-In", icon: <QrCode className="w-3.5 h-3.5 text-[#1546d9]" /> },
+                    ]}
+                    value={mode}
+                    onChange={(val) => handleToggleMode(val as OrderingMode)}
+                    chipColor="#F4F4F5"
+                    activeColor="#18181B"
+                    textColor="#52525B"
+                    activeTextColor="#FFFBF8"
+                    size="md"
+                    gap={8}
+                    radius={16}
+                  />
                 </div>
               ) : (
                 <div className="py-2 px-3.5 rounded-xl bg-neutral-100/90 border border-neutral-200/60 flex items-center justify-between text-xs font-bold text-neutral-700">
@@ -347,15 +336,7 @@ export function CustomerOrderingView({
           {/* TAB 1: MENU CATALOG / DISCOVERY HOME SCREEN */}
           {activeTab === "menu" && (
             <div className="space-y-4 pt-1">
-              {/* 1. Cuisine Category 3D Shortcuts (Hidden while actively searching) */}
-              {!searchQuery.trim() && (
-                <CuisineShortcutRow
-                  selectedCategory={selectedCategory}
-                  onSelectCategory={setSelectedCategory}
-                />
-              )}
-
-              {/* 2. Discovery Home Shelf & Spotlight (Visible on Popular/All views when not searching) */}
+              {/* Discovery Home Shelf & Spotlight (Visible on Popular/All views when not searching) */}
               {!searchQuery.trim() && (selectedCategory === "cat-popular" || selectedCategory === "cat-all") && (
                 <>
                   {featuredItem && (
@@ -456,6 +437,19 @@ export function CustomerOrderingView({
         />
 
         {/* 4. Bottom Sheets & Modals */}
+        {/* Table QR Scanner Sheet */}
+        <TableQrScannerSheet
+          isOpen={isQrScannerOpen}
+          onClose={() => setIsQrScannerOpen(false)}
+          tenantSlug={tenantSlug}
+          venueName={venueVm.name}
+          onTableSelected={(table) => {
+            setTableContext(table);
+            setMode("IN_VENUE");
+            setIsQrScannerOpen(false);
+          }}
+        />
+
         {/* Item Customizer Sheet */}
         <ItemCustomizerSheet
           item={customizingItem}

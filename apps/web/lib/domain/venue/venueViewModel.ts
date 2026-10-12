@@ -13,7 +13,7 @@ export function toVenueViewModel(settings: VenueSettings): VenueData {
     name: settings.name,
     slug: settings.slug,
     tagline: settings.tagline || reg?.tagline || "Specialty Smash Burgers & Third-Wave Coffee",
-    neighborhood: reg?.neighborhood || "Lahore",
+    neighborhood: reg?.neighborhood || reg?.city || "Dining Hub",
     coverImage:
       settings.coverImageUrl ||
       reg?.coverImageUrl ||

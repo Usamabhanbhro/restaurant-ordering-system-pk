@@ -106,7 +106,7 @@ export function HeroHeader({
             ) : (
               <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-[10px] font-bold flex items-center gap-1">
                 <MapPin className="w-2.5 h-2.5 text-neutral-400" />
-                <span>{venue.neighborhood || "Lahore"} • Counter Pickup</span>
+                <span>{venue.neighborhood || "Dining Hub"} • Counter Pickup</span>
               </span>
             )}
           </div>

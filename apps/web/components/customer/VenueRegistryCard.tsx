@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Star, MapPin, Clock, ArrowRight, Utensils, QrCode } from "lucide-react";
 import type { VenueRegistryItem } from "@/lib/domain/venue/venueRegistry";
 import type { OrderingMode } from "@/lib/mockData";
+import { TableQrScannerSheet } from "@/components/customer/TableQrScannerSheet";
 
 interface VenueRegistryCardProps {
   venue: VenueRegistryItem;
@@ -14,6 +16,8 @@ export function VenueRegistryCard({
   venue,
   preferredMode = "ALL",
 }: VenueRegistryCardProps) {
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
   // Determine target entry mode based on what the venue actually supports
   const resolvedMode: OrderingMode =
     preferredMode === "IN_VENUE" && venue.supportedModes.includes("IN_VENUE")
@@ -147,12 +151,14 @@ export function VenueRegistryCard({
 
               <div className="flex items-center gap-2">
                 {venue.supportedModes.includes("IN_VENUE") && (
-                  <Link
-                    href={`/${venue.slug}?mode=in_venue`}
-                    className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1546d9] text-xs font-bold transition-colors flex items-center gap-1"
+                  <button
+                    type="button"
+                    onClick={() => setIsScannerOpen(true)}
+                    className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1546d9] text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
                   >
+                    <QrCode className="w-3.5 h-3.5" />
                     <span>Dine-In</span>
-                  </Link>
+                  </button>
                 )}
                 <Link
                   href={targetHref}
@@ -179,6 +185,13 @@ export function VenueRegistryCard({
           )}
         </div>
       </div>
+
+      <TableQrScannerSheet
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        tenantSlug={venue.slug}
+        venueName={venue.name}
+      />
     </article>
   );
 }

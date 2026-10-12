@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Clock, Plus } from "lucide-react";
+import { Clock, Plus } from "lucide-react";
 import type { MenuItemData } from "@/lib/mockData";
 
 interface FeaturedSpotlightCardProps {
@@ -15,9 +15,6 @@ export function FeaturedSpotlightCard({ item, onCustomize }: FeaturedSpotlightCa
         <h3 className="font-extrabold text-xs uppercase tracking-wider text-neutral-400">
           Signature Spotlight
         </h3>
-        <span className="text-[11px] font-bold text-[#fd8535]">
-          Chef&apos;s Pick
-        </span>
       </div>
 
       <div
@@ -34,14 +31,6 @@ export function FeaturedSpotlightCard({ item, onCustomize }: FeaturedSpotlightCa
 
           {/* Top Gradient & Pill Badges */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-          {/* Top Left: Chef's Pick Badge */}
-          <div className="absolute top-3 left-3 flex items-center gap-1.5">
-            <span className="px-2.5 py-1 rounded-full bg-[#f9b318] text-neutral-950 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
-              <Sparkles className="w-3 h-3 text-neutral-950 fill-neutral-950" />
-              <span>Chef&apos;s Signature</span>
-            </span>
-          </div>
 
           {/* Top Right: Fast Prep Badge */}
           <div className="absolute top-3 right-3 flex items-center gap-1.5">
