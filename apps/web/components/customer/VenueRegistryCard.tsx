@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Star, MapPin, Clock, ArrowRight, Utensils, QrCode } from "lucide-react";
+import { Star, MapPin, Clock, ArrowRight, Utensils, QrCode, Heart, Sparkles } from "lucide-react";
 import type { VenueRegistryItem } from "@/lib/domain/venue/venueRegistry";
 import type { OrderingMode } from "@/lib/mockData";
 import { TableQrScannerSheet } from "@/components/customer/TableQrScannerSheet";
+import { useVenueFavoriteStore } from "@/lib/store/venueFavoriteStore";
 
 interface VenueRegistryCardProps {
   venue: VenueRegistryItem;
   preferredMode?: OrderingMode | "ALL";
-  variant?: "standard" | "compact";
+  variant?: "standard" | "compact" | "carousel";
 }
 
 export function VenueRegistryCard({
@@ -19,6 +20,8 @@ export function VenueRegistryCard({
   variant = "compact",
 }: VenueRegistryCardProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const isFavorite = useVenueFavoriteStore((s) => s.isFavorite(venue.id));
+  const toggleFavorite = useVenueFavoriteStore((s) => s.toggleFavorite);
 
   // Determine target entry mode based on what the venue actually supports
   const resolvedMode: OrderingMode =
@@ -29,6 +32,145 @@ export function VenueRegistryCard({
       : venue.supportedModes[0] || "REMOTE";
 
   const targetHref = `/${venue.slug}?mode=${resolvedMode === "IN_VENUE" ? "in_venue" : "remote"}`;
+
+  if (variant === "carousel") {
+    return (
+      <article className="group rounded-2xl bg-white border border-neutral-200/80 shadow-xs hover:border-[#fd8535]/50 hover:shadow-md transition-all duration-200 overflow-hidden w-[265px] sm:w-[285px] shrink-0 snap-start flex flex-col justify-between select-none">
+        {/* Top: 16:10 Cover Photo with floating status, favorite toggle, and price pill */}
+        <div className="relative h-36 sm:h-40 w-full overflow-hidden bg-neutral-900 block">
+          <Link href={targetHref} className="block w-full h-full">
+            <img
+              src={venue.coverImageUrl}
+              alt={venue.name}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+          </Link>
+
+          {/* Top-Left: Availability cue */}
+          <div className="absolute top-2 left-2 pointer-events-none">
+            {venue.isOpen ? (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-600/90 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span>Open Now</span>
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full bg-neutral-900/90 backdrop-blur-md text-amber-300 border border-amber-400/30 text-[9px] font-black uppercase tracking-wider shadow-xs">
+                Closed
+              </span>
+            )}
+          </div>
+
+          {/* Top-Right: Favorite Heart Toggle */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleFavorite(venue.id);
+            }}
+            className="absolute top-2 right-2 p-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white transition-all active:scale-90 cursor-pointer shadow-xs border border-white/10"
+            title={isFavorite ? "Remove from favorites" : "Save to favorites"}
+          >
+            <Heart
+              className={`w-3.5 h-3.5 transition-colors ${
+                isFavorite ? "fill-[#fd8535] text-[#fd8535]" : "text-white"
+              }`}
+            />
+          </button>
+
+          {/* Bottom-Left: Price Range Badge */}
+          <div className="absolute bottom-2 left-2 pointer-events-none">
+            <span className="px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white text-[9px] font-bold border border-white/10">
+              {venue.priceRange}
+            </span>
+          </div>
+
+          {/* Bottom-Right: Prep Lead Time */}
+          <div className="absolute bottom-2 right-2 pointer-events-none">
+            <span className="px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white text-[9px] font-bold border border-white/10 flex items-center gap-1">
+              <Clock className="w-2.5 h-2.5 text-neutral-300" />
+              <span>{venue.prepLeadMinutes}m</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Card Body: Information, Rating, Perks & Actions */}
+        <div className="p-3 flex-1 flex flex-col justify-between gap-2.5">
+          <div className="space-y-1">
+            {/* Title & Star Rating Badge */}
+            <div className="flex items-start justify-between gap-1.5">
+              <Link href={targetHref} className="hover:underline flex-1 min-w-0">
+                <h4 className="font-extrabold text-sm text-neutral-900 truncate group-hover:text-[#fd8535] transition-colors leading-snug">
+                  {venue.name}
+                </h4>
+              </Link>
+              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#f9b318] text-white text-[10px] font-black shrink-0 shadow-2xs">
+                <Star className="w-2.5 h-2.5 fill-white text-white" />
+                <span>{venue.rating}</span>
+              </div>
+            </div>
+
+            {/* Direct Kitchen Perk Tag (matches Uber One benefits style from screenshot) */}
+            <div className="flex items-center gap-1 text-[10px] font-bold text-[#fd8535]">
+              <Sparkles className="w-3 h-3 text-[#fd8535] shrink-0" />
+              <span className="truncate">Direct Kitchen • 0% Markup</span>
+            </div>
+
+            {/* Distance & Area */}
+            <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium">
+              <span>{venue.distance}</span>
+              <span>•</span>
+              <span className="truncate">{venue.neighborhood.split(",")[0]}</span>
+            </div>
+          </div>
+
+          {/* Modes & Action Row */}
+          <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-neutral-100">
+            <div className="flex items-center gap-1">
+              {venue.supportedModes.includes("REMOTE") && (
+                <span className="px-1.5 py-0.5 rounded-md bg-orange-50 text-[#fd8535] text-[9px] font-bold border border-orange-200/50">
+                  Pickup
+                </span>
+              )}
+              {venue.supportedModes.includes("IN_VENUE") && (
+                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-[#1546d9] text-[9px] font-bold border border-blue-200/50">
+                  Table QR
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {venue.supportedModes.includes("IN_VENUE") && venue.isOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsScannerOpen(true)}
+                  className="p-1 rounded-lg text-[#1546d9] hover:bg-blue-50 transition-colors cursor-pointer"
+                  title="Scan Table QR"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <Link
+                href={targetHref}
+                className="px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-[#fd8535] text-white text-[11px] font-bold transition-all flex items-center gap-1 shadow-2xs active:scale-95"
+              >
+                <span>{venue.isOpen ? "Order" : "Menu"}</span>
+                <ArrowRight className="w-2.5 h-2.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <TableQrScannerSheet
+          isOpen={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          tenantSlug={venue.slug}
+          venueName={venue.name}
+        />
+      </article>
+    );
+  }
 
   if (variant === "compact") {
     return (

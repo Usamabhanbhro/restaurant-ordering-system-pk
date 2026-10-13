@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Check,
   Flame,
+  ArrowRight,
 } from "lucide-react";
 import {
   VENUE_REGISTRY,
@@ -124,22 +125,50 @@ export function PlatformHomeView() {
     return activeVenueOrders[0] ?? null;
   }, [activeVenueOrders, selectedActiveOrderId]);
 
-  // Group venues by cuisine type for vertical sliding layout
+  // Group venues by cuisine type with multi-tag matching for horizontal carousels
   const cuisineGroups = useMemo(() => {
     if (selectedCuisine) {
       return [{ cuisine: selectedCuisine, venues: filteredVenues }];
     }
-    const map = new Map<string, VenueRegistryItem[]>();
+
+    // Determine candidate cuisines, prioritizing official shortcuts first
+    const shortcutNames = CUISINE_SHORTCUTS.map((c) => c.name);
+    const extraCuisines = new Set<string>();
     filteredVenues.forEach((venue) => {
-      const primaryCuisine = venue.cuisines[0] || "Featured Cafes";
-      const list = map.get(primaryCuisine) || [];
-      list.push(venue);
-      map.set(primaryCuisine, list);
+      venue.cuisines.forEach((c) => {
+        if (!shortcutNames.some((sn) => sn.toLowerCase() === c.toLowerCase())) {
+          extraCuisines.add(c);
+        }
+      });
     });
-    return Array.from(map.entries()).map(([cuisine, venues]) => ({
-      cuisine,
-      venues,
-    }));
+
+    const orderedCuisineNames = [...shortcutNames, ...Array.from(extraCuisines)];
+    const groups: { cuisine: string; venues: VenueRegistryItem[] }[] = [];
+    const matchedVenueIds = new Set<string>();
+
+    orderedCuisineNames.forEach((cuisineName) => {
+      const matchingVenues = filteredVenues.filter((venue) =>
+        venue.cuisines.some((c) => c.toLowerCase() === cuisineName.toLowerCase())
+      );
+      if (matchingVenues.length > 0) {
+        groups.push({
+          cuisine: cuisineName,
+          venues: matchingVenues,
+        });
+        matchingVenues.forEach((v) => matchedVenueIds.add(v.id));
+      }
+    });
+
+    // Fallback group for any venue that did not match known category names
+    const leftoverVenues = filteredVenues.filter((v) => !matchedVenueIds.has(v.id));
+    if (leftoverVenues.length > 0) {
+      groups.push({
+        cuisine: "Featured Kitchens",
+        venues: leftoverVenues,
+      });
+    }
+
+    return groups;
   }, [filteredVenues, selectedCuisine]);
 
   const handleResetFilters = () => {
@@ -517,23 +546,49 @@ export function PlatformHomeView() {
                 </section>
               )}
 
-              {/* Vertically sliding compact venue cards grouped by cuisine */}
-              <section className="px-4 space-y-5">
+              {/* Horizontally scrolling venue carousels categorized by cuisine */}
+              <section className="space-y-6">
                 {cuisineGroups.map(({ cuisine, venues }) => (
                   <div key={cuisine} className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-extrabold text-xs uppercase tracking-wider text-neutral-500">
-                        {cuisine}
-                      </h3>
+                    {/* Category Section Header with Circular Arrow Action */}
+                    <div className="flex items-center justify-between px-4">
+                      <div>
+                        <h3 className="font-black text-sm text-neutral-900 tracking-tight">
+                          {cuisine}
+                        </h3>
+                        <p className="text-[10px] font-semibold text-neutral-400">
+                          {venues.length} {venues.length === 1 ? "partner kitchen" : "partner kitchens"}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedCuisine(selectedCuisine === cuisine ? null : cuisine)
+                        }
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95 border shadow-2xs ${
+                          selectedCuisine === cuisine
+                            ? "bg-[#fd8535] text-white border-[#fd8535]"
+                            : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700 hover:text-[#fd8535] border-neutral-200/80"
+                        }`}
+                        title={
+                          selectedCuisine === cuisine
+                            ? "Clear cuisine filter"
+                            : `Filter to ${cuisine}`
+                        }
+                      >
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
 
-                    <div className="space-y-2.5">
+                    {/* Horizontal Carousel Track with Snap, Peek & Zero-Jitter */}
+                    <div className="flex items-stretch gap-3 overflow-x-auto no-scrollbar pb-2 pt-1 px-4 snap-x snap-mandatory overscroll-x-contain">
                       {venues.map((venue) => (
                         <VenueRegistryCard
-                          key={venue.id}
+                          key={`${cuisine}-${venue.id}`}
                           venue={venue}
                           preferredMode={selectedModeFilter}
-                          variant="compact"
+                          variant="carousel"
                         />
                       ))}
                     </div>
@@ -542,7 +597,7 @@ export function PlatformHomeView() {
 
                 {/* Honest Empty State */}
                 {filteredVenues.length === 0 && (
-                  <div className="p-8 text-center bg-white rounded-3xl border border-neutral-200/80 shadow-soft space-y-3">
+                  <div className="mx-4 p-8 text-center bg-white rounded-3xl border border-neutral-200/80 shadow-soft space-y-3">
                     <Store className="w-8 h-8 text-neutral-400 mx-auto" />
                     <div className="space-y-1">
                       <h4 className="text-sm font-extrabold text-neutral-900">
