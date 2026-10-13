@@ -263,38 +263,36 @@ export function CustomerOrderingView({
             </header>
           )}
 
-          {/* Architecture Mode Selector Bar (Enables effortless switching on entry/ordering screen; hidden on table QR screen) */}
+          {/* Architecture Mode Selector Bar */}
           {activeTab === "menu" && !defaultTableContext && (
-            <div className="px-4 pt-2">
+            <div className="px-4 pt-1.5 pb-1 flex items-center justify-center gap-2">
               {isMultiMode ? (
-                <div className="flex justify-center">
-                  <div className="bg-neutral-100 p-1 rounded-full flex items-center gap-1 w-full max-w-xs border border-neutral-200/60 shadow-xs">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleMode("REMOTE")}
-                      className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
-                        mode === "REMOTE"
-                          ? "bg-white text-neutral-900 shadow-xs"
-                          : "text-neutral-500 hover:text-neutral-800"
-                      }`}
-                    >
-                      Counter Pickup
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleMode("IN_VENUE")}
-                      className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
-                        mode === "IN_VENUE"
-                          ? "bg-white text-neutral-900 shadow-xs"
-                          : "text-neutral-500 hover:text-neutral-800"
-                      }`}
-                    >
-                      Table QR Dine-In
-                    </button>
-                  </div>
-                </div>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleMode("REMOTE")}
+                    className={`h-8 px-4 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                      mode === "REMOTE"
+                        ? "bg-neutral-900 text-white border-neutral-900 shadow-xs"
+                        : "bg-white text-neutral-600 border-neutral-200/90 hover:border-neutral-300 hover:bg-neutral-50"
+                    }`}
+                  >
+                    <span>Counter Pickup</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleMode("IN_VENUE")}
+                    className={`h-8 px-4 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                      mode === "IN_VENUE"
+                        ? "bg-neutral-900 text-white border-neutral-900 shadow-xs"
+                        : "bg-white text-neutral-600 border-neutral-200/90 hover:border-neutral-300 hover:bg-neutral-50"
+                    }`}
+                  >
+                    <span>Table QR Dine-In</span>
+                  </button>
+                </>
               ) : (
-                <div className="py-1.5 px-3 rounded-full bg-neutral-100 text-center text-xs font-semibold text-neutral-600 max-w-xs mx-auto">
+                <div className="h-7 px-3.5 rounded-full bg-neutral-100 text-center text-xs font-semibold text-neutral-600 flex items-center">
                   {mode === "REMOTE" ? "Counter Pickup Only" : "Table QR Only"}
                 </div>
               )}

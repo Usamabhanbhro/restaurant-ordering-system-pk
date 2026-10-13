@@ -10,11 +10,13 @@ import { TableQrScannerSheet } from "@/components/customer/TableQrScannerSheet";
 interface VenueRegistryCardProps {
   venue: VenueRegistryItem;
   preferredMode?: OrderingMode | "ALL";
+  variant?: "standard" | "compact";
 }
 
 export function VenueRegistryCard({
   venue,
   preferredMode = "ALL",
+  variant = "compact",
 }: VenueRegistryCardProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
@@ -27,6 +29,116 @@ export function VenueRegistryCard({
       : venue.supportedModes[0] || "REMOTE";
 
   const targetHref = `/${venue.slug}?mode=${resolvedMode === "IN_VENUE" ? "in_venue" : "remote"}`;
+
+  if (variant === "compact") {
+    return (
+      <article className="group rounded-2xl bg-white border border-neutral-200/80 shadow-xs hover:border-[#fd8535]/50 hover:shadow-md transition-all duration-200 overflow-hidden p-3 flex gap-3 items-center">
+        {/* Left: Compact Cover Image */}
+        <Link href={targetHref} className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0 bg-neutral-900 block">
+          <img
+            src={venue.coverImageUrl}
+            alt={venue.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+
+          {/* Open/Closed indicator */}
+          <div className="absolute top-1.5 left-1.5">
+            {venue.isOpen ? (
+              <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white/80 block animate-pulse" title="Open Now" />
+            ) : (
+              <span className="px-1.5 py-0.5 rounded bg-neutral-900/90 text-amber-300 text-[8px] font-black uppercase tracking-wider block">
+                Closed
+              </span>
+            )}
+          </div>
+
+          {/* Price Range */}
+          <div className="absolute bottom-1.5 left-1.5">
+            <span className="px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white text-[9px] font-bold border border-white/10">
+              {venue.priceRange}
+            </span>
+          </div>
+        </Link>
+
+        {/* Right: Venue Information & CTAs */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 self-stretch">
+          <div>
+            {/* Title & Rating */}
+            <div className="flex items-start justify-between gap-1.5">
+              <Link href={targetHref} className="hover:underline flex-1 min-w-0">
+                <h4 className="font-extrabold text-sm text-neutral-900 truncate group-hover:text-[#fd8535] transition-colors leading-snug">
+                  {venue.name}
+                </h4>
+              </Link>
+              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#f9b318] text-white text-[10px] font-black shrink-0 shadow-2xs">
+                <Star className="w-2.5 h-2.5 text-white fill-white" />
+                <span>{venue.rating}</span>
+              </div>
+            </div>
+
+            {/* Distance • Prep Lead */}
+            <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium mt-1">
+              <span>{venue.distance}</span>
+              <span>•</span>
+              <span className="flex items-center gap-0.5">
+                <Clock className="w-2.5 h-2.5 text-neutral-400" />
+                <span>{venue.prepLeadMinutes}m</span>
+              </span>
+            </div>
+
+            {/* Cuisine tags */}
+            <p className="text-[11px] text-neutral-400 truncate mt-0.5 font-normal">
+              {venue.cuisines.join(" • ")}
+            </p>
+          </div>
+
+          {/* Modes & Action Row */}
+          <div className="flex items-center justify-between gap-1.5 mt-2 pt-1.5 border-t border-neutral-100">
+            <div className="flex items-center gap-1">
+              {venue.supportedModes.includes("REMOTE") && (
+                <span className="px-1.5 py-0.5 rounded-md bg-orange-50 text-[#fd8535] text-[9px] font-bold border border-orange-200/50">
+                  Pickup
+                </span>
+              )}
+              {venue.supportedModes.includes("IN_VENUE") && (
+                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-[#1546d9] text-[9px] font-bold border border-blue-200/50">
+                  Table QR
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {venue.supportedModes.includes("IN_VENUE") && venue.isOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsScannerOpen(true)}
+                  className="p-1 rounded-lg text-[#1546d9] hover:bg-blue-50 transition-colors cursor-pointer"
+                  title="Scan Table QR"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <Link
+                href={targetHref}
+                className="px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-[#fd8535] text-white text-[11px] font-bold transition-all flex items-center gap-1 shadow-2xs active:scale-95"
+              >
+                <span>Order</span>
+                <ArrowRight className="w-2.5 h-2.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <TableQrScannerSheet
+          isOpen={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          tenantSlug={venue.slug}
+          venueName={venue.name}
+        />
+      </article>
+    );
+  }
 
   return (
     <article className="group rounded-3xl bg-white border border-neutral-200/80 shadow-soft overflow-hidden transition-all duration-200 hover:border-[#fd8535]/50 hover:shadow-md flex flex-col justify-between">

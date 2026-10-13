@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type UIEvent } from "react";
+import { useState, useRef, useEffect, useMemo, type UIEvent } from "react";
 import Link from "next/link";
 import {
   MapPin,
@@ -18,14 +18,18 @@ import {
   VENUE_REGISTRY,
   CITY_REGISTRY,
   type CityName,
+  type VenueRegistryItem,
 } from "@/lib/domain/venue/venueRegistry";
 import { useFilteredVenues } from "@/lib/domain/venue/useFilteredVenues";
 import { VenueRegistryCard } from "@/components/customer/VenueRegistryCard";
 import { PlatformBottomDock, type HomeDockTabId } from "@/components/customer/PlatformBottomDock";
-import { PerksTab } from "@/components/customer/PerksTab";
+import { OrderProgressTracker } from "@/components/customer/OrderProgressTracker";
 import { ProfileTab } from "@/components/customer/ProfileTab";
 import { CustomerAuthSheet } from "@/components/customer/CustomerAuthSheet";
 import { TableQrScannerSheet } from "@/components/customer/TableQrScannerSheet";
+import { SplashScreen } from "@/components/splash/SplashScreen";
+import { useOrderStore } from "@/lib/store/orderStore";
+import { useAuthStore } from "@/lib/store/authStore";
 import { CUISINE_SHORTCUTS } from "@/lib/mockData";
 import type { OrderingMode } from "@/lib/mockData";
 
@@ -53,6 +57,90 @@ export function PlatformHomeView() {
     onlyOpenNow,
     cuisine: selectedCuisine,
   });
+
+  // Splash Screen State (shown once per session on platform home)
+  const [showSplash, setShowSplash] = useState(false);
+  const [splashExiting, setSplashExiting] = useState(false);
+
+  useEffect(() => {
+    try {
+      const hasSeen = sessionStorage.getItem("queueless_platform_splash_shown");
+      if (!hasSeen) {
+        setShowSplash(true);
+      }
+    } catch {
+      // In private browsing or storage-restricted contexts
+    }
+  }, []);
+
+  const handleDismissSplash = () => {
+    if (splashExiting) return;
+    setSplashExiting(true);
+    try {
+      sessionStorage.setItem("queueless_platform_splash_shown", "true");
+    } catch {
+      // Storage restricted
+    }
+    setTimeout(() => {
+      setShowSplash(false);
+      setSplashExiting(false);
+    }, 400);
+  };
+
+  // Multi-venue order tracking
+  const ordersByTenant = useOrderStore((s) => s.ordersByTenant);
+  const cancelOrder = useOrderStore((s) => s.cancelOrder);
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const [selectedActiveOrderId, setSelectedActiveOrderId] = useState<string | null>(null);
+
+  const allVenueOrders = useMemo(() => {
+    return Object.entries(ordersByTenant).flatMap(([tenantSlug, orders]) => {
+      const v = VENUE_REGISTRY.find((venue) => venue.slug === tenantSlug);
+      return orders.map((o) => ({
+        ...o,
+        tenantSlug,
+        venueName: v?.name ?? tenantSlug,
+      }));
+    });
+  }, [ordersByTenant]);
+
+  const activeVenueOrders = useMemo(() => {
+    return allVenueOrders.filter((o) => {
+      const isActiveState =
+        o.state !== "SERVED" && o.state !== "VOIDED";
+      if (currentUser?.email) {
+        return isActiveState && o.customerEmail === currentUser.email;
+      }
+      return isActiveState;
+    });
+  }, [allVenueOrders, currentUser?.email]);
+
+  const currentTrackedOrder = useMemo(() => {
+    if (activeVenueOrders.length === 0) return null;
+    if (selectedActiveOrderId) {
+      const found = activeVenueOrders.find((o) => o.id === selectedActiveOrderId);
+      if (found) return found;
+    }
+    return activeVenueOrders[0] ?? null;
+  }, [activeVenueOrders, selectedActiveOrderId]);
+
+  // Group venues by cuisine type for vertical sliding layout
+  const cuisineGroups = useMemo(() => {
+    if (selectedCuisine) {
+      return [{ cuisine: selectedCuisine, venues: filteredVenues }];
+    }
+    const map = new Map<string, VenueRegistryItem[]>();
+    filteredVenues.forEach((venue) => {
+      const primaryCuisine = venue.cuisines[0] || "Featured Cafes";
+      const list = map.get(primaryCuisine) || [];
+      list.push(venue);
+      map.set(primaryCuisine, list);
+    });
+    return Array.from(map.entries()).map(([cuisine, venues]) => ({
+      cuisine,
+      venues,
+    }));
+  }, [filteredVenues, selectedCuisine]);
 
   const handleResetFilters = () => {
     setSelectedCity("ALL");
@@ -98,6 +186,11 @@ export function PlatformHomeView() {
     <div className="min-h-screen bg-[#FFFBF8] text-neutral-900 flex justify-center">
       {/* Mobile Shell constrained to max-w-md */}
       <main className="w-full max-w-md bg-[#FFFBF8] flex flex-col relative h-screen shadow-2xl overflow-hidden">
+        {/* 1. Opening Splash Screen */}
+        {showSplash && (
+          <SplashScreen isExiting={splashExiting} onDismiss={handleDismissSplash} />
+        )}
+
         {/* Scrollable Container */}
         <div
           onScroll={handleScroll}
@@ -424,56 +517,51 @@ export function PlatformHomeView() {
                 </section>
               )}
 
-              {/* Venue Registry Catalog Feed */}
-              <section className="px-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="font-extrabold text-xs uppercase tracking-wider text-neutral-400">
-                      Venue Registry
-                    </h2>
-                    <p className="text-sm font-black text-neutral-900 tracking-tight">
-                      Partner Cafes & Venues
-                    </p>
-                  </div>
-
-                  <span className="text-xs font-bold text-neutral-400">
-                    {filteredVenues.length} {filteredVenues.length === 1 ? "venue" : "venues"}
-                  </span>
-                </div>
-
-                {/* List of Venue Cards */}
-                <div className="space-y-4">
-                  {filteredVenues.map((venue) => (
-                    <VenueRegistryCard
-                      key={venue.id}
-                      venue={venue}
-                      preferredMode={selectedModeFilter}
-                    />
-                  ))}
-
-                  {/* Honest Empty State */}
-                  {filteredVenues.length === 0 && (
-                    <div className="p-8 text-center bg-white rounded-3xl border border-neutral-200/80 shadow-soft space-y-3">
-                      <Store className="w-8 h-8 text-neutral-400 mx-auto" />
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-extrabold text-neutral-900">
-                          No partner venues found
-                        </h4>
-                        <p className="text-xs text-neutral-500">
-                          Try adjusting your city, mode, cuisine, or search filters.
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleResetFilters}
-                        className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-[#fd8535] text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Reset all filters</span>
-                      </button>
+              {/* Vertically sliding compact venue cards grouped by cuisine */}
+              <section className="px-4 space-y-5">
+                {cuisineGroups.map(({ cuisine, venues }) => (
+                  <div key={cuisine} className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-extrabold text-xs uppercase tracking-wider text-neutral-500">
+                        {cuisine}
+                      </h3>
                     </div>
-                  )}
-                </div>
+
+                    <div className="space-y-2.5">
+                      {venues.map((venue) => (
+                        <VenueRegistryCard
+                          key={venue.id}
+                          venue={venue}
+                          preferredMode={selectedModeFilter}
+                          variant="compact"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Honest Empty State */}
+                {filteredVenues.length === 0 && (
+                  <div className="p-8 text-center bg-white rounded-3xl border border-neutral-200/80 shadow-soft space-y-3">
+                    <Store className="w-8 h-8 text-neutral-400 mx-auto" />
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-extrabold text-neutral-900">
+                        No partner venues found
+                      </h4>
+                      <p className="text-xs text-neutral-500">
+                        Try adjusting your city, mode, cuisine, or search filters.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-[#fd8535] text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Reset all filters</span>
+                    </button>
+                  </div>
+                )}
               </section>
 
               {/* Platform Trust & Compliance Footer */}
@@ -498,15 +586,68 @@ export function PlatformHomeView() {
             </div>
           )}
 
-          {/* TAB 2: MEMBER PERKS */}
-          {activeHomeTab === "perks" && <PerksTab />}
+          {/* TAB 2: MULTI-VENUE ORDERS TRACKER */}
+          {activeHomeTab === "tracker" && (
+            <div className="space-y-4">
+              {/* Multi-venue order switcher pills if more than 1 active order */}
+              {activeVenueOrders.length > 1 && (
+                <div className="px-4 pt-3 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                  {activeVenueOrders.map((ord) => {
+                    const isSelected = ord.id === currentTrackedOrder?.id;
+                    return (
+                      <button
+                        key={ord.id}
+                        type="button"
+                        onClick={() => setSelectedActiveOrderId(ord.id)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-[#fd8535] text-white shadow-xs"
+                            : "bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
+                        }`}
+                      >
+                        <span>{ord.venueName} • {ord.code}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Active venue context indicator if order active */}
+              {currentTrackedOrder && (
+                <div className="px-4 pt-2 flex items-center justify-between text-xs">
+                  <span className="font-bold text-neutral-500">
+                    Venue: <strong className="text-neutral-900">{currentTrackedOrder.venueName}</strong>
+                  </span>
+                  <Link
+                    href={`/${currentTrackedOrder.tenantSlug}`}
+                    className="font-bold text-[#fd8535] hover:underline"
+                  >
+                    View Cafe
+                  </Link>
+                </div>
+              )}
+
+              <OrderProgressTracker
+                activeOrder={currentTrackedOrder}
+                onCancelOrder={(id) => {
+                  if (currentTrackedOrder) {
+                    cancelOrder(id, currentTrackedOrder.tenantSlug);
+                  }
+                }}
+                onBrowseMenu={() => setActiveHomeTab("venues")}
+              />
+            </div>
+          )}
 
           {/* TAB 3: CUSTOMER PROFILE */}
           {activeHomeTab === "profile" && (
             <div className="p-4">
               <ProfileTab
                 mode="REMOTE"
-                onReplaySplash={() => {}}
+                onReplaySplash={() => {
+                  setShowSplash(true);
+                  setSplashExiting(false);
+                }}
               />
             </div>
           )}

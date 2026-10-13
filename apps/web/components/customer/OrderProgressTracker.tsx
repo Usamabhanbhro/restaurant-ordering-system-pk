@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Coffee } from "lucide-react";
+import { Check } from "lucide-react";
+import { QueueLessMascot } from "@/components/mascot/QueueLessMascot";
 import type { OrderData } from "@/lib/mockData";
 
 interface OrderProgressTrackerProps {
@@ -21,9 +22,9 @@ export function OrderProgressTracker({
           Active Pre-Order Status
         </h2>
 
-        <div className="text-center py-12 px-4 bg-white rounded-3xl border border-neutral-200/80 shadow-soft">
-          <Coffee className="w-10 h-10 text-neutral-300 mx-auto" />
-          <h3 className="font-bold text-sm text-neutral-900 mt-2">No Active Pre-Orders</h3>
+        <div className="text-center py-10 px-4 bg-white rounded-3xl border border-neutral-200/80 shadow-soft">
+          <QueueLessMascot state="sad" size="md" className="mx-auto mb-3" />
+          <h3 className="font-bold text-sm text-neutral-900 mt-1">No Active Pre-Orders</h3>
           <p className="text-xs text-neutral-500 mt-1">
             Select items and schedule your next counter pickup slot.
           </p>

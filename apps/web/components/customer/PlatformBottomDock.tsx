@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Store, QrCode, Gift, User } from "lucide-react";
+import { Store, QrCode, Clock, User } from "lucide-react";
 
-export type HomeDockTabId = "venues" | "scan" | "perks" | "profile";
+export type HomeDockTabId = "venues" | "scan" | "tracker" | "profile";
 
 interface PlatformBottomDockProps {
   activeTab: HomeDockTabId;
@@ -19,7 +19,7 @@ export function PlatformBottomDock({
   const navItems = [
     { id: "venues" as const, label: "Venues", icon: Store },
     { id: "scan" as const, label: "Scan QR", icon: QrCode },
-    { id: "perks" as const, label: "Perks", icon: Gift },
+    { id: "tracker" as const, label: "Orders", icon: Clock },
     { id: "profile" as const, label: "Profile", icon: User },
   ];
 
