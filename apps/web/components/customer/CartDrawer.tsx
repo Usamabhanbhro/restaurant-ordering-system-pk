@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Drawer } from "vaul";
 import {
@@ -8,12 +8,10 @@ import {
   Check,
   Clock,
   Ticket,
-  AlertTriangle,
   Minus,
   Plus,
   Trash2,
   ArrowRight,
-  ShoppingBag,
   ChevronLeft,
   ChevronRight,
   MapPin,
@@ -21,7 +19,9 @@ import {
   Upload,
 } from "lucide-react";
 import type { VenueData, OrderData, OrderingMode, TableContext } from "@/lib/mockData";
-import { useTenantCart } from "@/lib/store/cartStore";
+import { useCartStore } from "@/lib/store/cartStore";
+import { useOrderStore } from "@/lib/store/orderStore";
+import { getRegistryVenueBySlug } from "@/lib/domain/venue/venueRegistry";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useSlots } from "@/lib/hooks/useSlots";
 import { useCheckout } from "@/lib/hooks/useCheckout";
@@ -48,19 +48,42 @@ export function CartDrawer({
   mode = "REMOTE",
   tableContext,
 }: CartDrawerProps) {
-  const {
-    items,
-    updateQuantity,
-    promoCode,
-    promoApplied,
-    applyPromo,
-    removePromo,
-    subtotal: cartSubtotal,
-    voucherDiscount,
-    finalTotal: cartFinalTotal,
-    itemCount: cartItemCount,
-    clearCart,
-  } = useTenantCart();
+  const populatedSlugs = useCartStore((s) => s.getPopulatedTenantSlugs());
+  const [selectedCartSlug, setSelectedCartSlug] = useState<string>(venue.slug || "burns-road-cafe");
+
+  useEffect(() => {
+    if (venue.slug) {
+      setSelectedCartSlug(venue.slug);
+    }
+  }, [venue.slug]);
+
+  const allCartSlugs = useMemo(() => {
+    return Array.from(new Set([...(venue.slug ? [venue.slug] : []), ...populatedSlugs]));
+  }, [venue.slug, populatedSlugs]);
+
+  const activeVenue = getRegistryVenueBySlug(selectedCartSlug) || venue;
+
+  const items = useCartStore((s) => s.getItems(selectedCartSlug));
+  const cartItemCount = useCartStore((s) => s.getItemCount(selectedCartSlug));
+  const cartSubtotal = useCartStore((s) => s.getSubtotal(selectedCartSlug));
+  const voucherDiscount = useCartStore((s) => s.getVoucherDiscount(selectedCartSlug));
+  const cartFinalTotal = useCartStore((s) => s.getFinalTotal(selectedCartSlug));
+  const currentPromo = useCartStore((s) => s.getPromo(selectedCartSlug));
+  const promoCode = currentPromo?.code || "";
+  const promoApplied = Boolean(currentPromo);
+
+  const updateQuantity = (index: number, delta: number) => {
+    useCartStore.getState().updateQuantity(index, delta, selectedCartSlug);
+  };
+  const clearCart = () => {
+    useCartStore.getState().clearCart(selectedCartSlug);
+  };
+  const applyPromo = (code: string) => {
+    return useCartStore.getState().applyPromo(code, selectedCartSlug);
+  };
+  const removePromo = () => {
+    useCartStore.getState().removePromo(selectedCartSlug);
+  };
 
   const { currentUser, setAuthModal, setPendingPostAuthAction } = useAuthStore();
   const { slots: availableSlots, selectedSlot, setSelectedSlot } = useSlots();
@@ -159,21 +182,57 @@ export function CartDrawer({
       return;
     }
 
-    const order = await submitOrder({
-      pickupSlot: selectedSlot?.time,
-      paymentMethod: selectedMethod as any,
-      claimedTxnId: claimedTxnId.trim(),
-    });
+    let placedOrderData: OrderData | null = null;
+    if (selectedCartSlug === venue.slug) {
+      const order = await submitOrder({
+        pickupSlot: selectedSlot?.time,
+        paymentMethod: selectedMethod as any,
+        claimedTxnId: claimedTxnId.trim(),
+      });
+      if (order) {
+        placedOrderData = toOrderData(order, currentUser?.email);
+      } else if (checkoutError) {
+        setErrorMessage(checkoutError);
+        return;
+      }
+    } else {
+      placedOrderData = {
+        id: `ord-${Date.now().toString(36)}`,
+        code: `QL-${Math.floor(1000 + Math.random() * 9000)}`,
+        customerName: currentUser?.name || "Guest Diner",
+        customerEmail: currentUser?.email || "guest@queueless.pk",
+        items: items.map((line) => ({
+          name: line.item.nameEn,
+          qty: line.quantity,
+          price: line.item.price,
+          mods: line.selectedModifiers.map((m) => m.nameEn),
+          note: line.note,
+        })),
+        total: cartFinalTotal,
+        slot: selectedSlot?.time || "Express Counter",
+        breakSlot: selectedSlot?.time || "Express Counter",
+        state: "PREPARING",
+        paymentMethod: selectedMethod,
+        txnId: claimedTxnId.trim() || `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
+        hasScreenshot: Boolean(proofScreenshotName),
+        createdAt: new Date().toISOString(),
+        kitchenStartAt: new Date().toISOString(),
+        undoUntil: Date.now() + 60000,
+        rejectionReason: null,
+        refundOwed: false,
+        mode: mode,
+      };
+      useOrderStore.getState().placeOrder(placedOrderData, selectedCartSlug);
+      clearCart();
+    }
 
-    if (order) {
+    if (placedOrderData) {
       playChime();
       if (onOrderPlaced) {
-        onOrderPlaced(toOrderData(order, currentUser?.email));
+        onOrderPlaced(placedOrderData);
       }
       onClose();
       onSelectTab("status");
-    } else if (checkoutError) {
-      setErrorMessage(checkoutError);
     }
   };
 
@@ -186,9 +245,14 @@ export function CartDrawer({
     instructions: "Transfer exact amount & enter the 11-digit Txn ID.",
   };
 
+  const activePaymentMethods =
+    ("paymentMethods" in activeVenue && Array.isArray(activeVenue.paymentMethods))
+      ? activeVenue.paymentMethods
+      : venue.paymentMethods;
+
   const activePaymentMethod =
-    venue.paymentMethods.find((m) => m.kind === selectedMethod) ||
-    venue.paymentMethods[0] ||
+    activePaymentMethods.find((m) => m.kind === selectedMethod) ||
+    activePaymentMethods[0] ||
     defaultPaymentMethod;
 
   return (
@@ -213,19 +277,75 @@ export function CartDrawer({
             </h3>
           </div>
 
+          {/* Multi-Venue Cart Switcher Tabs */}
+          {allCartSlugs.length > 1 && (
+            <div className="px-4 py-2 bg-neutral-50/90 border-b border-neutral-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 shrink-0 mr-1">
+                Active Carts:
+              </span>
+              {allCartSlugs.map((slug) => {
+                const regVenue = getRegistryVenueBySlug(slug);
+                const name = regVenue?.name || slug;
+                const count = useCartStore.getState().getItemCount(slug);
+                const isActive = slug === selectedCartSlug;
+                return (
+                  <button
+                    key={slug}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCartSlug(slug);
+                      setLocalPromoInput("");
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+                      isActive
+                        ? "bg-[#fd8535] text-white shadow-xs"
+                        : "bg-white text-neutral-700 border border-neutral-200/80 hover:bg-neutral-100"
+                    }`}
+                  >
+                    <span>{name}</span>
+                    {count > 0 && (
+                      <span
+                        className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+                          isActive ? "bg-white/20 text-white" : "bg-neutral-200 text-neutral-800"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Scrollable Cart Content Area */}
           <div ref={scrollContainerRef} className="p-4 overflow-y-auto no-scrollbar space-y-4 flex-1">
             {/* Header: Your Order */}
             <div>
-              <h2 className="text-lg font-black text-neutral-900 tracking-tight">
-                Your Order
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-black text-neutral-900 tracking-tight">
+                  Your Order
+                </h2>
+                <span className="text-xs font-bold text-[#fd8535]">
+                  {activeVenue.name}
+                </span>
+              </div>
+              {selectedCartSlug !== venue.slug && (
+                <div className="mt-1 flex items-center justify-between text-xs">
+                  <span className="text-neutral-500 font-medium">Ordering from {activeVenue.name}</span>
+                  <Link
+                    href={`/${selectedCartSlug}`}
+                    className="text-[#1546d9] font-bold hover:underline"
+                  >
+                    View Menu →
+                  </Link>
+                </div>
+              )}
             </div>
 
-            {/* Error Message if any (non-terms errors displayed at top) */}
+            {/* Error Message if any */}
             {(errorMessage || checkoutError) && !(errorMessage || checkoutError)!.includes("terms") && (
               <div className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage || checkoutError}</span>
               </div>
             )}
@@ -309,8 +429,7 @@ export function CartDrawer({
               </div>
             ) : (
               <div className="p-8 text-center bg-white rounded-3xl border border-neutral-100 shadow-soft">
-                <ShoppingBag className="w-10 h-10 text-neutral-300 mx-auto mb-2" />
-                <p className="text-xs font-bold text-neutral-600">Your cart is empty</p>
+                <p className="text-xs font-bold text-neutral-600">Your cart is empty for this venue</p>
               </div>
             )}
 
@@ -734,7 +853,6 @@ export function CartDrawer({
           <div className="p-4 bg-white/95 backdrop-blur-md border-t border-neutral-100 shrink-0 space-y-2.5">
             {errorMessage && (
               <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}

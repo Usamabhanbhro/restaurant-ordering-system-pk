@@ -3,18 +3,15 @@
 import { useState, useRef, type UIEvent } from "react";
 import Link from "next/link";
 import {
-  Search,
   MapPin,
   ChevronDown,
   Sparkles,
   Utensils,
   QrCode,
-  Clock,
   RotateCcw,
   Store,
   ShieldCheck,
   Check,
-  ArrowRight,
   Flame,
 } from "lucide-react";
 import {
@@ -251,9 +248,8 @@ export function PlatformHomeView() {
                   placeholder="Search partner cafes, burgers, biryani, coffee..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-full bg-neutral-100/90 border border-neutral-200/80 text-xs font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#fd8535] shadow-xs placeholder-neutral-400"
+                  className="w-full px-4 py-2.5 rounded-full bg-neutral-100/90 border border-neutral-200/80 text-xs font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#fd8535] shadow-xs placeholder-neutral-400"
                 />
-                <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3" />
               </div>
 
               {/* Mode & Availability Filter Pills */}
@@ -277,13 +273,12 @@ export function PlatformHomeView() {
                       selectedModeFilter === "REMOTE" ? "ALL" : "REMOTE"
                     )
                   }
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center gap-1 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center cursor-pointer ${
                     selectedModeFilter === "REMOTE"
                       ? "bg-[#fd8535] text-white shadow-xs"
                       : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                   }`}
                 >
-                  <Utensils className="w-3 h-3" />
                   <span>Counter Pickup</span>
                 </button>
 
@@ -294,26 +289,24 @@ export function PlatformHomeView() {
                       selectedModeFilter === "IN_VENUE" ? "ALL" : "IN_VENUE"
                     )
                   }
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center gap-1 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center cursor-pointer ${
                     selectedModeFilter === "IN_VENUE"
                       ? "bg-[#1546d9] text-white shadow-xs"
                       : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                   }`}
                 >
-                  <QrCode className="w-3 h-3" />
                   <span>Table QR</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setOnlyOpenNow(!onlyOpenNow)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center gap-1 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center cursor-pointer ${
                     onlyOpenNow
                       ? "bg-emerald-600 text-white shadow-xs"
                       : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                   }`}
                 >
-                  <Clock className="w-3 h-3" />
                   <span>Open Now</span>
                 </button>
               </div>
@@ -505,93 +498,10 @@ export function PlatformHomeView() {
             </div>
           )}
 
-          {/* TAB 2: ORDERING MODES DIRECTORY */}
-          {activeHomeTab === "modes" && (
-            <div className="p-4 space-y-4">
-              <div>
-                <h2 className="text-base font-extrabold text-neutral-900 tracking-tight">
-                  Platform Service Modes
-                </h2>
-                <p className="text-xs text-neutral-500 font-medium mt-0.5">
-                  QueueLess lets you choose how you order based on your dining situation
-                </p>
-              </div>
-
-              {/* Mode Card 1: Counter Pickup */}
-              <div className="p-4 rounded-3xl bg-white border border-neutral-200/80 shadow-soft space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-2xl bg-orange-50 text-[#fd8535] flex items-center justify-center border border-orange-200/60">
-                    <Utensils className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-neutral-900">
-                      Counter Pickup (Remote Pre-Order)
-                    </h3>
-                    <p className="text-[11px] text-[#fd8535] font-bold">
-                      Zero Waiting in Line
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs text-neutral-600 leading-relaxed font-medium">
-                  Order from your phone while walking to the cafe or from your office desk. The kitchen preps your food, sends an SMS/push notification when ready, and you grab it directly from the express counter.
-                </p>
-                <div className="pt-1 flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">
-                    Supported at {VENUE_REGISTRY.filter((v) => v.supportedModes.includes("REMOTE")).length} Partner Venues
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedModeFilter("REMOTE");
-                      setActiveHomeTab("venues");
-                    }}
-                    className="px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#fd8535] text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>Browse Venues</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Mode Card 2: Table QR Dine-In */}
-              <div className="p-4 rounded-3xl bg-white border border-neutral-200/80 shadow-soft space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-2xl bg-blue-50 text-[#1546d9] flex items-center justify-center border border-blue-200/60">
-                    <QrCode className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-neutral-900">
-                      Table QR Dine-In
-                    </h3>
-                    <p className="text-[11px] text-[#1546d9] font-bold">
-                      No Waiter Calling Needed
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs text-neutral-600 leading-relaxed font-medium">
-                  Walk in, take any available table, and scan the high-contrast QR code on your table standee. The menu loads instantly with your table locked in. Kitchen prepares your order and delivers right to your seat.
-                </p>
-                <div className="pt-1 flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">
-                    Supported at {VENUE_REGISTRY.filter((v) => v.supportedModes.includes("IN_VENUE")).length} Partner Venues
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsPlatformScannerOpen(true)}
-                    className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1546d9] text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>Scan Table QR</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: MEMBER PERKS */}
+          {/* TAB 2: MEMBER PERKS */}
           {activeHomeTab === "perks" && <PerksTab />}
 
-          {/* TAB 4: CUSTOMER PROFILE */}
+          {/* TAB 3: CUSTOMER PROFILE */}
           {activeHomeTab === "profile" && (
             <div className="p-4">
               <ProfileTab
@@ -605,7 +515,13 @@ export function PlatformHomeView() {
         {/* Discovery Bottom Dock */}
         <PlatformBottomDock
           activeTab={activeHomeTab}
-          onSelectTab={setActiveHomeTab}
+          onSelectTab={(tab) => {
+            if (tab === "scan") {
+              setIsPlatformScannerOpen(true);
+              return;
+            }
+            setActiveHomeTab(tab);
+          }}
           isFloatingNav={isFloatingNav}
         />
 

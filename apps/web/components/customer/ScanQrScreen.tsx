@@ -58,20 +58,50 @@ export function ScanQrScreen({
   const [scannedSuccess, setScannedSuccess] = useState<string | null>(null);
   const [showManualModal, setShowManualModal] = useState(false);
 
+  // Live Camera Video Stream Support
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
+  const [hasCameraStream, setHasCameraStream] = useState(false);
+
+  React.useEffect(() => {
+    let stream: MediaStream | null = null;
+    if (activeTab === "scan" && typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices
+        .getUserMedia({ video: { facingMode: "environment" } })
+        .then((s) => {
+          stream = s;
+          if (videoRef.current) {
+            videoRef.current.srcObject = s;
+            setHasCameraStream(true);
+          }
+        })
+        .catch(() => {
+          setHasCameraStream(false);
+        });
+    }
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [activeTab]);
+
   const handleApplyTable = (zoneSlug: string, tableNumber: string, zoneName: string) => {
     setIsScanning(true);
     setScannedSuccess(`Table ${tableNumber} • ${zoneName}`);
 
+    // Immediately notify consumer so tableContext and mode update without latency
+    if (onTableSelected) {
+      onTableSelected({ zoneSlug, tableNumber, zoneName });
+    }
+
     setTimeout(() => {
       setIsScanning(false);
-      if (onTableSelected) {
-        onTableSelected({ zoneSlug, tableNumber, zoneName });
-      }
       if (onClose) {
         onClose();
       }
       router.push(`/${tenantSlug}/t/${zoneSlug}/${tableNumber}`);
-    }, 700);
+    }, 450);
   };
 
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -153,9 +183,20 @@ export function ScanQrScreen({
         {activeTab === "scan" ? (
           /* --- SCAN CAMERA VIEWPORT --- */
           <div className="flex-1 bg-[#232429] flex flex-col items-center justify-center relative p-6 overflow-hidden">
+            {/* Live Camera Video Stream */}
+            {hasCameraStream && (
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover z-0"
+              />
+            )}
+
             {/* Subtle camera ambient grid */}
             <div
-              className="absolute inset-0 opacity-10 pointer-events-none"
+              className="absolute inset-0 opacity-10 pointer-events-none z-0"
               style={{
                 backgroundImage:
                   "radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)",

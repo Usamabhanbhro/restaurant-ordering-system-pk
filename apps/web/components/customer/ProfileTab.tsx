@@ -21,6 +21,7 @@ import {
   Edit,
   UtensilsCrossed,
   AlertCircle,
+  Clock,
 } from "lucide-react";
 import type { OrderingMode, TableContext } from "@/lib/mockData";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -28,6 +29,7 @@ import { EditProfileSheet } from "./EditProfileSheet";
 import { VouchersSheet } from "./VouchersSheet";
 import { InviteFriendsSheet } from "./InviteFriendsSheet";
 import { ShareFeedbackSheet } from "./ShareFeedbackSheet";
+import { OrderHistorySheet } from "./OrderHistorySheet";
 
 interface ProfileTabProps {
   onReplaySplash: () => void;
@@ -48,6 +50,7 @@ export function ProfileTab({
   const [isVouchersOpen, setIsVouchersOpen] = useState(false);
   const [isInviteFriendsOpen, setIsInviteFriendsOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false);
 
   const isInVenue = mode === "IN_VENUE";
   const tableNumber = tableContext?.tableNumber || "01";
@@ -400,6 +403,21 @@ export function ProfileTab({
         <div className="rounded-2xl bg-white border border-neutral-200/80 divide-y divide-neutral-100 overflow-hidden shadow-xs">
           <button
             type="button"
+            onClick={() => setIsOrderHistoryOpen(true)}
+            className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <Clock className="w-4 h-4 text-[#fd8535] shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-neutral-900">Order history</p>
+                <p className="text-[10px] text-neutral-500 font-medium">View past receipts and completed orders</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
+          </button>
+
+          <button
+            type="button"
             onClick={() => handleStagedClick("Frequently Asked Questions")}
             className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors"
           >
@@ -562,6 +580,11 @@ export function ProfileTab({
         onClose={() => setIsFeedbackOpen(false)}
         tableContext={tableContext}
         mode={mode}
+      />
+
+      <OrderHistorySheet
+        isOpen={isOrderHistoryOpen}
+        onClose={() => setIsOrderHistoryOpen(false)}
       />
 
       {/* Staged Notification Feedback Toast */}

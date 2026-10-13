@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo, type UIEvent } from "react";
 import Link from "next/link";
-import { AlertTriangle, Store, Utensils, QrCode } from "lucide-react";
+// Imports without Lucide icons
 import { SplashScreen } from "@/components/splash/SplashScreen";
 import { HeroHeader } from "@/components/customer/HeroHeader";
 import { JellyRadio } from "@/components/customer/JellyRadio";
@@ -270,8 +270,8 @@ export function CustomerOrderingView({
                 <div className="flex justify-center">
                   <JellyRadio
                     items={[
-                      { value: "REMOTE", label: "Counter Pickup", icon: <Utensils className="w-3.5 h-3.5 text-[#fd8535]" /> },
-                      { value: "IN_VENUE", label: "Table QR Dine-In", icon: <QrCode className="w-3.5 h-3.5 text-[#1546d9]" /> },
+                      { value: "REMOTE", label: "Counter Pickup" },
+                      { value: "IN_VENUE", label: "Table QR Dine-In" },
                     ]}
                     value={mode}
                     onChange={(val) => handleToggleMode(val as OrderingMode)}
@@ -288,15 +288,9 @@ export function CustomerOrderingView({
                 <div className="py-2 px-3.5 rounded-xl bg-neutral-100/90 border border-neutral-200/60 flex items-center justify-between text-xs font-bold text-neutral-700">
                   <div className="flex items-center gap-2">
                     {mode === "REMOTE" ? (
-                      <>
-                        <Utensils className="w-3.5 h-3.5 text-[#fd8535]" />
-                        <span>Service Mode: Counter Pickup Only</span>
-                      </>
+                      <span>Service Mode: Counter Pickup Only</span>
                     ) : (
-                      <>
-                        <QrCode className="w-3.5 h-3.5 text-[#1546d9]" />
-                        <span>Service Mode: Table QR Only</span>
-                      </>
+                      <span>Service Mode: Table QR Only</span>
                     )}
                   </div>
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">
@@ -307,11 +301,34 @@ export function CustomerOrderingView({
             </div>
           )}
 
+          {/* Active In-Venue Table Status Bar */}
+          {activeTab === "menu" && mode === "IN_VENUE" && tableContext && (
+            <div className="mx-4 mt-2 p-3 rounded-2xl bg-blue-50/90 border border-blue-200/90 shadow-xs flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#1546d9] animate-pulse shrink-0" />
+                <div>
+                  <h4 className="text-xs font-black text-[#1546d9]">
+                    Table {tableContext.tableNumber} • {tableContext.zoneName || "Indoor Main"} Active
+                  </h4>
+                  <p className="text-[10px] text-neutral-500 font-medium">
+                    Orders delivered directly to your table. No queueing required.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsQrScannerOpen(true)}
+                className="px-2.5 py-1 rounded-xl bg-white hover:bg-blue-100 text-[#1546d9] text-[11px] font-bold border border-blue-200 cursor-pointer transition-colors shrink-0"
+              >
+                Change
+              </button>
+            </div>
+          )}
+
           {/* Honest Closed State Notice Banner */}
           {activeTab === "menu" && !isVenueOpen && (
             <div className="mx-4 mt-2 p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 shadow-xs space-y-2">
               <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <h3 className="text-xs font-black text-amber-900 tracking-tight">
                     Kitchen Currently Closed • {registryVenue?.openStatusText || "Closed"}
@@ -326,7 +343,6 @@ export function CustomerOrderingView({
                   href="/"
                   className="px-3 py-1.5 rounded-xl bg-amber-900 hover:bg-amber-950 text-white text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
                 >
-                  <Store className="w-3.5 h-3.5 text-amber-300" />
                   <span>Explore Open Partner Venues</span>
                 </Link>
               </div>

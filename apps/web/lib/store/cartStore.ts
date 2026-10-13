@@ -43,6 +43,10 @@ interface CartState {
   getFinalTotal: (tenantSlug?: string) => number;
   getPromo: (tenantSlug?: string) => AppliedPromo | null;
 
+  // Multi-Cart Queries
+  getPopulatedTenantSlugs: () => string[];
+  getTotalItemCountAcrossAllCarts: () => number;
+
   // Backwards-compatible properties
   items: CartLineItem[];
   promoCode: string;
@@ -111,6 +115,18 @@ export const useCartStore = create<CartState>((set, get) => ({
   getPromo: (tenantSlug) => {
     const slug = tenantSlug || get().activeTenantSlug;
     return get().promosByTenant[slug] || null;
+  },
+
+  getPopulatedTenantSlugs: () => {
+    const carts = get().cartsByTenant;
+    return Object.keys(carts).filter((slug) => (carts[slug]?.length ?? 0) > 0);
+  },
+
+  getTotalItemCountAcrossAllCarts: () => {
+    const carts = get().cartsByTenant;
+    return Object.values(carts).reduce((total, items) => {
+      return total + items.reduce((sum, item) => sum + item.quantity, 0);
+    }, 0);
   },
 
   addItem: (item, quantity, selectedModifiers, note, tenantSlug) => {
