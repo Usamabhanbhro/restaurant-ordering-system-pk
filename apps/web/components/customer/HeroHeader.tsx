@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
 import type { VenueData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
 
@@ -49,15 +49,14 @@ export function HeroHeader({
         {/* Restored warm cream bottom gradient overlay for maximum contrast and seamless text grounding */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
 
-        {/* Floating Top Elements: Simple back button + Cart button */}
+        {/* Floating Top Elements: Icon-only back button + Icon-only cart button */}
         <div className="absolute top-3 left-4 right-4 flex items-center justify-between z-10">
           <Link
             href="/"
-            aria-label="Back to home"
-            className="h-8 px-2.5 rounded-full bg-white/95 backdrop-blur-md text-neutral-800 shadow-md hover:bg-white active:scale-95 flex items-center gap-1.5 transition-all border border-neutral-200/60 text-xs font-bold cursor-pointer"
+            aria-label="Back to all venues"
+            className="w-8 h-8 rounded-full bg-white/95 backdrop-blur-md text-neutral-800 shadow-md hover:bg-white active:scale-95 flex items-center justify-center transition-all border border-neutral-200/60 cursor-pointer"
           >
-            <ArrowLeft className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Back</span>
+            <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
           </Link>
 
           {showCart && (
@@ -65,12 +64,11 @@ export function HeroHeader({
               type="button"
               onClick={onOpenCart}
               aria-label={`Shopping Cart (${cartItemCount} items)`}
-              className="relative h-8 px-3 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center gap-1.5 transition-all border border-neutral-100 cursor-pointer text-xs font-bold"
+              className="relative w-8 h-8 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center transition-all border border-neutral-100 cursor-pointer"
             >
-              <ShoppingBag className="w-3.5 h-3.5 text-neutral-800" />
-              <span>Cart</span>
+              <ShoppingCart className="w-4 h-4 text-neutral-800" />
               {cartItemCount > 0 && (
-                <span className="px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-[#fd8535] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
+                <span className="absolute -top-1 -right-1 px-1 min-w-4 h-4 rounded-full bg-[#fd8535] text-white text-[9px] font-black flex items-center justify-center shadow-xs">
                   {cartItemCount}
                 </span>
               )}

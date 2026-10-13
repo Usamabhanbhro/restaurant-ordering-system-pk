@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Drawer } from "vaul";
 import { useOrderStore, EMPTY_ORDERS } from "@/lib/store/orderStore";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useTenant } from "@/lib/tenant/TenantContext";
+import { VENUE_REGISTRY } from "@/lib/domain/venue/venueRegistry";
 import type { OrderData } from "@/lib/mockData";
 
 export interface OrderHistorySheetProps {
@@ -25,6 +26,21 @@ const STATE_BADGES: Record<
   VOIDED: { label: "Cancelled", bg: "bg-red-50", text: "text-red-600" },
 };
 
+function formatOrderDate(createdAt: string | undefined): string {
+  if (!createdAt) return "Recently";
+  if (/^\d{1,2}:\d{2}/.test(createdAt)) {
+    return `Today at ${createdAt}`;
+  }
+  const d = new Date(createdAt);
+  if (isNaN(d.getTime())) return `Today at ${createdAt}`;
+  return d.toLocaleDateString("en-PK", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function OrderHistorySheet({
   isOpen,
   onClose,
@@ -33,15 +49,25 @@ export function OrderHistorySheet({
   const { tenantSlug } = useTenant();
   const { currentUser } = useAuthStore();
   const ordersByTenant = useOrderStore((s) => s.ordersByTenant);
-  const orders = ordersByTenant[tenantSlug] || EMPTY_ORDERS;
 
-  // Filter orders for the signed in customer or current session
-  const customerOrders = orders.filter((o) => {
-    if (currentUser?.email && o.customerEmail) {
-      return o.customerEmail === currentUser.email;
-    }
-    return true;
-  });
+  // Surface all orders made across all venues for the customer
+  const customerOrders = useMemo(() => {
+    const all = Object.entries(ordersByTenant).flatMap(([slug, list]) => {
+      const v = VENUE_REGISTRY.find((venue) => venue.slug === slug);
+      return list.map((o) => ({
+        ...o,
+        tenantSlug: slug,
+        venueName: v?.name ?? (slug === tenantSlug ? "Current Venue" : slug),
+      }));
+    });
+
+    return all.filter((o) => {
+      if (currentUser?.email && o.customerEmail) {
+        return o.customerEmail === currentUser.email;
+      }
+      return true;
+    });
+  }, [ordersByTenant, tenantSlug, currentUser?.email]);
 
   return (
     <Drawer.Root
@@ -58,10 +84,10 @@ export function OrderHistorySheet({
             <div className="w-12 h-1.5 rounded-full bg-neutral-300" />
           </div>
 
-          {/* Header: Centered Order History, Subtitle & Close Button Removed */}
+          {/* Header: Centered Order History */}
           <div className="py-3.5 px-4 border-b border-neutral-100 flex items-center justify-center bg-white shrink-0">
             <h3 className="font-extrabold text-base text-neutral-900 tracking-tight text-center">
-              Order History
+              All Orders Made ({customerOrders.length})
             </h3>
           </div>
 
@@ -74,14 +100,10 @@ export function OrderHistorySheet({
                   bg: "bg-neutral-100",
                   text: "text-neutral-700",
                 };
-                const formattedDate = order.createdAt
-                  ? new Date(order.createdAt).toLocaleDateString("en-PK", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : "Recently";
+                const formattedDate = formatOrderDate(order.createdAt);
+                const orderCodeDisplay = order.code
+                  ? order.code
+                  : `#${order.id.replace("ORD-", "")}`;
 
                 return (
                   <div
@@ -94,18 +116,23 @@ export function OrderHistorySheet({
                     }}
                     className="p-4 rounded-2xl bg-neutral-50/70 border border-neutral-200/80 shadow-xs space-y-2.5 transition-all hover:border-neutral-300 cursor-pointer"
                   >
-                    {/* Top Row: ID & State */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-xs text-neutral-900">
-                          Order #{order.id.slice(-4).toUpperCase()}
+                    {/* Top Row: ID, Venue & State */}
+                    <div className="flex items-center justify-between gap-1.5">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-extrabold text-xs text-neutral-900 shrink-0">
+                          Order {orderCodeDisplay}
                         </span>
-                        <span className="text-[10px] text-neutral-400 font-medium">
+                        {order.venueName && (
+                          <span className="text-[10px] font-bold text-[#fd8535] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200/60 truncate">
+                            {order.venueName}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-neutral-400 font-medium shrink-0">
                           {formattedDate}
                         </span>
                       </div>
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${badge.bg} ${badge.text}`}
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold shrink-0 ${badge.bg} ${badge.text}`}
                       >
                         {badge.label}
                       </span>

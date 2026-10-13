@@ -17,7 +17,7 @@ import {
   MapPin,
   Copy,
   Upload,
-  ShoppingBag,
+  ShoppingCart,
 } from "lucide-react";
 import type { VenueData, OrderData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore, EMPTY_CART } from "@/lib/store/cartStore";
@@ -285,12 +285,11 @@ export function CartDrawer({
             <div className="w-12 h-1.5 rounded-full bg-neutral-300" />
           </div>
 
-          {/* Top App Header: "Cart" with icon */}
-          <div className="py-3.5 px-4 border-b border-neutral-100 flex items-center justify-center gap-2 bg-white shrink-0">
-            <ShoppingBag className="w-4 h-4 text-neutral-800" />
-            <h3 className="font-extrabold text-base text-neutral-900 tracking-tight">
-              Cart
-            </h3>
+          {/* Top App Header: Icon-only Cart Header */}
+          <div className="py-3 px-4 border-b border-neutral-100 flex items-center justify-center bg-white shrink-0">
+            <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-800 shadow-2xs">
+              <ShoppingCart className="w-4 h-4 text-neutral-800" />
+            </div>
           </div>
 
           {/* Multi-Venue Cart Switcher Tabs */}

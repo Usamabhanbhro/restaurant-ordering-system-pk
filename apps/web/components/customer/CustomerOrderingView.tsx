@@ -28,13 +28,13 @@ import {
 } from "@/lib/mockData";
 import { useTenantCart } from "@/lib/store/cartStore";
 import { useAuthStore } from "@/lib/store/authStore";
-import { useTenantOrders } from "@/lib/store/orderStore";
+import { useTenantOrders, useOrderStore } from "@/lib/store/orderStore";
 import { useTenant } from "@/lib/tenant/TenantContext";
 import { toVenueViewModel } from "@/lib/domain/venue/venueViewModel";
 import { OrderingModeProvider } from "@/lib/domain/ordering/OrderingModeContext";
 import { useMenu } from "@/lib/hooks/useMenu";
 import { toMenuItemViewModel, toCategoryViewModel } from "@/lib/domain/menu/menuViewModel";
-import { getRegistryVenueBySlug } from "@/lib/domain/venue/venueRegistry";
+import { getRegistryVenueBySlug, VENUE_REGISTRY } from "@/lib/domain/venue/venueRegistry";
 
 export interface CustomerOrderingViewProps {
   tenantSlug: string;
@@ -100,6 +100,30 @@ export function CustomerOrderingView({
   const { itemCount: cartItemCount, subtotal: cartSubtotal } = useTenantCart();
   const { currentUser, pendingPostAuthAction, setPendingPostAuthAction } = useAuthStore();
   const { placeOrder, cancelOrder, getActiveOrder } = useTenantOrders();
+  const ordersByTenant = useOrderStore((s) => s.ordersByTenant);
+  const [selectedTrackedOrderId, setSelectedTrackedOrderId] = useState<string | null>(null);
+
+  // Cross-Venue Shared Order Tracker Store
+  const allCrossVenueOrders = useMemo(() => {
+    return Object.entries(ordersByTenant).flatMap(([slug, orders]) => {
+      const v = VENUE_REGISTRY.find((venue) => venue.slug === slug);
+      return orders.map((o) => ({
+        ...o,
+        tenantSlug: slug,
+        venueName: v?.name ?? (slug === tenantSlug ? venueVm.name : slug),
+      }));
+    });
+  }, [ordersByTenant, tenantSlug, venueVm.name]);
+
+  const activeCrossVenueOrders = useMemo(() => {
+    return allCrossVenueOrders.filter((o) => {
+      const isActive = o.state !== "SERVED" && o.state !== "VOIDED";
+      if (currentUser?.email) {
+        return isActive && o.customerEmail === currentUser.email;
+      }
+      return isActive;
+    });
+  }, [allCrossVenueOrders, currentUser?.email]);
 
   // Venue Status / 86 State
   const [venue86List] = useState<Record<string, boolean>>({});
@@ -114,6 +138,23 @@ export function CustomerOrderingView({
     currentUser?.email,
     mode === "IN_VENUE" ? tableContext : null
   );
+
+  const displayedTrackedOrder = useMemo(() => {
+    if (selectedTrackedOrderId) {
+      const found = allCrossVenueOrders.find((o) => o.id === selectedTrackedOrderId);
+      if (found) return found;
+    }
+    if (activeOrder) {
+      const found = allCrossVenueOrders.find((o) => o.id === activeOrder.id);
+      if (found) return found;
+      return {
+        ...activeOrder,
+        tenantSlug,
+        venueName: venueVm.name,
+      };
+    }
+    return activeCrossVenueOrders[0] ?? null;
+  }, [selectedTrackedOrderId, allCrossVenueOrders, activeOrder, activeCrossVenueOrders, tenantSlug, venueVm.name]);
 
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const currentScrollTop = e.currentTarget.scrollTop;
@@ -420,12 +461,16 @@ export function CustomerOrderingView({
           {/* TAB 2: PERKS & REWARDS */}
           {activeTab === "perks" && <PerksTab />}
 
-          {/* TAB 3: ORDER PROGRESS TRACKER */}
+          {/* TAB 3: ORDER PROGRESS TRACKER (Shared Multi-Venue with Order Tabs) */}
           {activeTab === "status" && (
             <OrderProgressTracker
-              activeOrder={activeOrder}
+              activeOrder={displayedTrackedOrder}
               onCancelOrder={cancelOrder}
               onBrowseMenu={() => setActiveTab("menu")}
+              allOrders={activeCrossVenueOrders.length > 0 ? activeCrossVenueOrders : allCrossVenueOrders.slice(0, 5)}
+              selectedOrderId={displayedTrackedOrder?.id}
+              onSelectOrder={setSelectedTrackedOrderId}
+              historyOrders={allCrossVenueOrders}
             />
           )}
 
@@ -447,7 +492,7 @@ export function CustomerOrderingView({
           cartSubtotal={cartSubtotal}
           onOpenCart={() => setShowCartDrawer(true)}
           isFloatingNav={isFloatingNav}
-          hasActiveOrder={Boolean(activeOrder)}
+          hasActiveOrder={Boolean(activeOrder || activeCrossVenueOrders.length > 0)}
         />
 
         {/* 4. Bottom Sheets & Modals */}
