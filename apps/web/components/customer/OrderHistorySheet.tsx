@@ -52,7 +52,7 @@ export function OrderHistorySheet({
 
   // Surface all orders made across all venues for the customer
   const customerOrders = useMemo(() => {
-    const all = Object.entries(ordersByTenant).flatMap(([slug, list]) => {
+    return Object.entries(ordersByTenant).flatMap(([slug, list]) => {
       const v = VENUE_REGISTRY.find((venue) => venue.slug === slug);
       return list.map((o) => ({
         ...o,
@@ -60,14 +60,7 @@ export function OrderHistorySheet({
         venueName: v?.name ?? (slug === tenantSlug ? "Current Venue" : slug),
       }));
     });
-
-    return all.filter((o) => {
-      if (currentUser?.email && o.customerEmail) {
-        return o.customerEmail === currentUser.email;
-      }
-      return true;
-    });
-  }, [ordersByTenant, tenantSlug, currentUser?.email]);
+  }, [ordersByTenant, tenantSlug]);
 
   return (
     <Drawer.Root
@@ -79,6 +72,7 @@ export function OrderHistorySheet({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
         <Drawer.Content className="fixed bottom-0 inset-x-0 z-50 max-w-md mx-auto max-h-[85vh] bg-white rounded-t-[2.5rem] shadow-2xl overflow-hidden flex flex-col focus:outline-none">
+          <Drawer.Title className="sr-only">All Orders Made</Drawer.Title>
           {/* iOS Drawer Handle */}
           <div className="pt-3 pb-1 flex justify-center shrink-0">
             <div className="w-12 h-1.5 rounded-full bg-neutral-300" />
