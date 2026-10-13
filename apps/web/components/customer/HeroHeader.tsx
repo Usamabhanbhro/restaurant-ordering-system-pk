@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import type { VenueData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
@@ -28,8 +29,12 @@ export function HeroHeader({
   mode = "REMOTE",
   tableContext,
 }: HeroHeaderProps) {
-  const { getItemCount } = useCartStore();
-  const cartItemCount = getItemCount();
+  const cartsByTenant = useCartStore((s) => s.cartsByTenant);
+  const cartItemCount = useMemo(() => {
+    return Object.values(cartsByTenant).reduce((total, items) => {
+      return total + items.reduce((sum, line) => sum + line.quantity, 0);
+    }, 0);
+  }, [cartsByTenant]);
 
   return (
     <header className="relative w-full">

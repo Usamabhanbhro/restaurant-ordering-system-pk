@@ -54,6 +54,7 @@ interface CartState {
 }
 
 const DEFAULT_TENANT = "brewery-gulberg";
+export const EMPTY_CART: CartLineItem[] = [];
 
 function calculateSubtotalForItems(items: CartLineItem[]): number {
   return items.reduce((sum, line) => {
@@ -75,7 +76,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   promoApplied: false,
 
   setActiveTenantSlug: (slug) => {
-    const tenantCart = get().cartsByTenant[slug] || [];
+    const tenantCart = get().cartsByTenant[slug] || EMPTY_CART;
     const tenantPromo = get().promosByTenant[slug];
     set({
       activeTenantSlug: slug,
@@ -87,7 +88,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   getItems: (tenantSlug) => {
     const slug = tenantSlug || get().activeTenantSlug;
-    return get().cartsByTenant[slug] || [];
+    return get().cartsByTenant[slug] || EMPTY_CART;
   },
 
   getItemCount: (tenantSlug) => {

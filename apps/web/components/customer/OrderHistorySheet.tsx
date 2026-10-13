@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Drawer } from "vaul";
-import { useOrderStore } from "@/lib/store/orderStore";
+import { useOrderStore, EMPTY_ORDERS } from "@/lib/store/orderStore";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useTenant } from "@/lib/tenant/TenantContext";
 import type { OrderData } from "@/lib/mockData";
@@ -32,7 +32,8 @@ export function OrderHistorySheet({
 }: OrderHistorySheetProps) {
   const { tenantSlug } = useTenant();
   const { currentUser } = useAuthStore();
-  const orders = useOrderStore((s) => s.getOrders(tenantSlug));
+  const ordersByTenant = useOrderStore((s) => s.ordersByTenant);
+  const orders = ordersByTenant[tenantSlug] || EMPTY_ORDERS;
 
   // Filter orders for the signed in customer or current session
   const customerOrders = orders.filter((o) => {

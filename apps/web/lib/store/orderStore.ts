@@ -27,6 +27,7 @@ interface OrderState {
 }
 
 const DEFAULT_TENANT = "brewery-gulberg";
+export const EMPTY_ORDERS: OrderData[] = [];
 
 export const useOrderStore = create<OrderState>((set, get) => ({
   ordersByTenant: {
@@ -39,7 +40,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   orders: INITIAL_ORDERS,
 
   setActiveTenantSlug: (slug) => {
-    const list = get().ordersByTenant[slug] || [];
+    const list = get().ordersByTenant[slug] || EMPTY_ORDERS;
     set({
       activeTenantSlug: slug,
       orders: list,
@@ -48,7 +49,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   getOrders: (tenantSlug) => {
     const slug = tenantSlug || get().activeTenantSlug;
-    return get().ordersByTenant[slug] || [];
+    return get().ordersByTenant[slug] || EMPTY_ORDERS;
   },
 
   getActiveOrder: (tenantSlug, customerEmail, tableContext) => {

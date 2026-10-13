@@ -19,7 +19,7 @@ import {
   Upload,
 } from "lucide-react";
 import type { VenueData, OrderData, OrderingMode, TableContext } from "@/lib/mockData";
-import { useCartStore } from "@/lib/store/cartStore";
+import { useCartStore, EMPTY_CART } from "@/lib/store/cartStore";
 import { useOrderStore } from "@/lib/store/orderStore";
 import { getRegistryVenueBySlug } from "@/lib/domain/venue/venueRegistry";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -48,7 +48,8 @@ export function CartDrawer({
   mode = "REMOTE",
   tableContext,
 }: CartDrawerProps) {
-  const populatedSlugs = useCartStore((s) => s.getPopulatedTenantSlugs());
+  const cartsByTenant = useCartStore((s) => s.cartsByTenant);
+  const promosByTenant = useCartStore((s) => s.promosByTenant);
   const [selectedCartSlug, setSelectedCartSlug] = useState<string>(venue.slug || "burns-road-cafe");
 
   useEffect(() => {
@@ -57,20 +58,33 @@ export function CartDrawer({
     }
   }, [venue.slug]);
 
+  const populatedSlugs = useMemo(() => {
+    return Object.keys(cartsByTenant).filter(
+      (slug) => (cartsByTenant[slug]?.length ?? 0) > 0
+    );
+  }, [cartsByTenant]);
+
   const allCartSlugs = useMemo(() => {
     return Array.from(new Set([...(venue.slug ? [venue.slug] : []), ...populatedSlugs]));
   }, [venue.slug, populatedSlugs]);
 
   const activeVenue = getRegistryVenueBySlug(selectedCartSlug) || venue;
 
-  const items = useCartStore((s) => s.getItems(selectedCartSlug));
-  const cartItemCount = useCartStore((s) => s.getItemCount(selectedCartSlug));
-  const cartSubtotal = useCartStore((s) => s.getSubtotal(selectedCartSlug));
-  const voucherDiscount = useCartStore((s) => s.getVoucherDiscount(selectedCartSlug));
-  const cartFinalTotal = useCartStore((s) => s.getFinalTotal(selectedCartSlug));
-  const currentPromo = useCartStore((s) => s.getPromo(selectedCartSlug));
+  const items = cartsByTenant[selectedCartSlug] || EMPTY_CART;
+  const cartItemCount = useMemo(() => {
+    return items.reduce((sum, it) => sum + it.quantity, 0);
+  }, [items]);
+  const cartSubtotal = useMemo(() => {
+    return items.reduce((sum, line) => {
+      const modTotal = line.selectedModifiers.reduce((mSum, m) => mSum + m.priceDelta, 0);
+      return sum + (line.item.price + modTotal) * line.quantity;
+    }, 0);
+  }, [items]);
+  const currentPromo = promosByTenant[selectedCartSlug] || null;
   const promoCode = currentPromo?.code || "";
   const promoApplied = Boolean(currentPromo);
+  const voucherDiscount = currentPromo ? currentPromo.discountPkr : 0;
+  const cartFinalTotal = Math.max(0, cartSubtotal - voucherDiscount);
 
   const updateQuantity = (index: number, delta: number) => {
     useCartStore.getState().updateQuantity(index, delta, selectedCartSlug);
@@ -286,7 +300,7 @@ export function CartDrawer({
               {allCartSlugs.map((slug) => {
                 const regVenue = getRegistryVenueBySlug(slug);
                 const name = regVenue?.name || slug;
-                const count = useCartStore.getState().getItemCount(slug);
+                const count = (cartsByTenant[slug] || EMPTY_CART).reduce((sum, it) => sum + it.quantity, 0);
                 const isActive = slug === selectedCartSlug;
                 return (
                   <button
