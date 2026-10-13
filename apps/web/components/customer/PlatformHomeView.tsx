@@ -196,8 +196,8 @@ export function PlatformHomeView() {
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto no-scrollbar pb-32 relative"
         >
-          {/* 1. Platform Brand Header & Location Selector (Hidden on Profile view) */}
-          {activeHomeTab !== "profile" && (
+          {/* 1. Platform Brand Header & Location Selector (Rendered on Venues tab) */}
+          {activeHomeTab === "venues" && (
             <header className="px-4 pt-6 pb-3 space-y-3 bg-white border-b border-neutral-100 sticky top-0 z-30 shadow-xs">
               {/* Top row: Brand Identity + Location Hub Pill */}
               <div className="flex items-center justify-between gap-2">
@@ -588,10 +588,15 @@ export function PlatformHomeView() {
 
           {/* TAB 2: MULTI-VENUE ORDERS TRACKER */}
           {activeHomeTab === "tracker" && (
-            <div className="space-y-4">
+            <div className="space-y-4 pb-12">
+              <header className="px-5 pt-8 pb-1">
+                <h1 className="text-xl font-black text-neutral-900 tracking-tight">Active Orders</h1>
+                <p className="text-xs text-neutral-500 font-medium">Track your pre-orders and dine-in orders across partner cafes</p>
+              </header>
+
               {/* Multi-venue order switcher pills if more than 1 active order */}
               {activeVenueOrders.length > 1 && (
-                <div className="px-4 pt-3 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <div className="px-4 pt-1 flex items-center gap-2 overflow-x-auto no-scrollbar">
                   {activeVenueOrders.map((ord) => {
                     const isSelected = ord.id === currentTrackedOrder?.id;
                     return (
@@ -614,7 +619,7 @@ export function PlatformHomeView() {
 
               {/* Active venue context indicator if order active */}
               {currentTrackedOrder && (
-                <div className="px-4 pt-2 flex items-center justify-between text-xs">
+                <div className="px-5 pt-1 flex items-center justify-between text-xs">
                   <span className="font-bold text-neutral-500">
                     Venue: <strong className="text-neutral-900">{currentTrackedOrder.venueName}</strong>
                   </span>
@@ -641,14 +646,20 @@ export function PlatformHomeView() {
 
           {/* TAB 3: CUSTOMER PROFILE */}
           {activeHomeTab === "profile" && (
-            <div className="p-4">
-              <ProfileTab
-                mode="REMOTE"
-                onReplaySplash={() => {
-                  setShowSplash(true);
-                  setSplashExiting(false);
-                }}
-              />
+            <div className="pb-12">
+              <header className="px-5 pt-8 pb-1">
+                <h1 className="text-xl font-black text-neutral-900 tracking-tight">Profile</h1>
+                <p className="text-xs text-neutral-500 font-medium">Manage your personal account and preferences</p>
+              </header>
+              <div className="p-4 pt-2">
+                <ProfileTab
+                  mode="REMOTE"
+                  onReplaySplash={() => {
+                    setShowSplash(true);
+                    setSplashExiting(false);
+                  }}
+                />
+              </div>
             </div>
           )}
         </div>
