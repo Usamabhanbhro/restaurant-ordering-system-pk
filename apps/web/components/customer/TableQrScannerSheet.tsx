@@ -30,7 +30,7 @@ export function TableQrScannerSheet({
     >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md" />
-        <Drawer.Content className="fixed inset-0 z-50 max-w-md mx-auto bg-[#F2F4F7] text-neutral-900 flex flex-col focus:outline-none overflow-hidden shadow-2xl">
+        <Drawer.Content className="fixed inset-0 z-50 max-w-md mx-auto bg-[#0C0F17] text-white flex flex-col focus:outline-none overflow-hidden shadow-2xl">
           <ScanQrScreen
             onClose={onClose}
             tenantSlug={tenantSlug}
