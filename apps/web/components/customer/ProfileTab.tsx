@@ -407,11 +407,8 @@ export function ProfileTab({
             className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-50/80 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <Clock className="w-4 h-4 text-[#fd8535] shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-neutral-900">Order history</p>
-                <p className="text-[10px] text-neutral-500 font-medium">View past receipts and completed orders</p>
-              </div>
+              <Clock className="w-4 h-4 text-neutral-600 shrink-0" />
+              <p className="text-xs font-bold text-neutral-900">Order history</p>
             </div>
             <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
           </button>

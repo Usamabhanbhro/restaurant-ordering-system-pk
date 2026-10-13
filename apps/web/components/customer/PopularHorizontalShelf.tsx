@@ -57,9 +57,6 @@ export function PopularHorizontalShelf({
       {/* Section Header */}
       <div className="px-4 flex items-center justify-between">
         <div>
-          <h3 className="font-extrabold text-xs uppercase tracking-wider text-neutral-400">
-            Most Ordered
-          </h3>
           <p className="text-sm font-black text-neutral-900 tracking-tight">
             Popular at Brewery
           </p>

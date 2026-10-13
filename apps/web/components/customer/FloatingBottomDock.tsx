@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Home, Gift, Clock, User, ArrowRight } from "lucide-react";
 
 export type NavTabId = "menu" | "perks" | "status" | "profile";
@@ -23,12 +24,22 @@ export function FloatingBottomDock({
   isFloatingNav,
   hasActiveOrder,
 }: FloatingBottomDockProps) {
+  const router = useRouter();
+
   const navItems = [
-    { id: "menu" as const, label: "Menu", icon: Home },
+    { id: "menu" as const, label: "Home", icon: Home },
     { id: "perks" as const, label: "Perks", icon: Gift },
     { id: "status" as const, label: "Tracker", icon: Clock },
     { id: "profile" as const, label: "Profile", icon: User },
   ];
+
+  const handleNavClick = (id: NavTabId) => {
+    if (id === "menu") {
+      router.push("/");
+    } else {
+      onSelectTab(id);
+    }
+  };
 
   return (
     <>
@@ -82,7 +93,7 @@ export function FloatingBottomDock({
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => onSelectTab(item.id)}
+                  onClick={() => handleNavClick(item.id)}
                   title={item.label}
                   className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 ${
                     isActive ? "liquid-glass-btn-active" : "liquid-glass-btn-inactive"
@@ -105,7 +116,7 @@ export function FloatingBottomDock({
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => onSelectTab(item.id)}
+                  onClick={() => handleNavClick(item.id)}
                   className={`flex flex-col items-center gap-1 text-[10px] font-bold relative transition-colors ${
                     isActive ? "text-[#EF5A30]" : "text-neutral-400 hover:text-neutral-700"
                   }`}

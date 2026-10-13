@@ -17,6 +17,7 @@ import {
   MapPin,
   Copy,
   Upload,
+  ShoppingBag,
 } from "lucide-react";
 import type { VenueData, OrderData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore, EMPTY_CART } from "@/lib/store/cartStore";
@@ -284,8 +285,9 @@ export function CartDrawer({
             <div className="w-12 h-1.5 rounded-full bg-neutral-300" />
           </div>
 
-          {/* Top App Header: Only "Cart" */}
-          <div className="py-3.5 px-4 border-b border-neutral-100 flex items-center justify-center bg-white shrink-0">
+          {/* Top App Header: "Cart" with icon */}
+          <div className="py-3.5 px-4 border-b border-neutral-100 flex items-center justify-center gap-2 bg-white shrink-0">
+            <ShoppingBag className="w-4 h-4 text-neutral-800" />
             <h3 className="font-extrabold text-base text-neutral-900 tracking-tight">
               Cart
             </h3>

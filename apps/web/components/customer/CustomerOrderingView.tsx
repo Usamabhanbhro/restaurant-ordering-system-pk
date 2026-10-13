@@ -268,34 +268,34 @@ export function CustomerOrderingView({
             <div className="px-4 pt-2">
               {isMultiMode ? (
                 <div className="flex justify-center">
-                  <JellyRadio
-                    items={[
-                      { value: "REMOTE", label: "Counter Pickup" },
-                      { value: "IN_VENUE", label: "Table QR Dine-In" },
-                    ]}
-                    value={mode}
-                    onChange={(val) => handleToggleMode(val as OrderingMode)}
-                    chipColor="#F4F4F5"
-                    activeColor="#18181B"
-                    textColor="#52525B"
-                    activeTextColor="#FFFBF8"
-                    size="md"
-                    gap={8}
-                    radius={16}
-                  />
+                  <div className="bg-neutral-100 p-1 rounded-full flex items-center gap-1 w-full max-w-xs border border-neutral-200/60 shadow-xs">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleMode("REMOTE")}
+                      className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
+                        mode === "REMOTE"
+                          ? "bg-white text-neutral-900 shadow-xs"
+                          : "text-neutral-500 hover:text-neutral-800"
+                      }`}
+                    >
+                      Counter Pickup
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleMode("IN_VENUE")}
+                      className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
+                        mode === "IN_VENUE"
+                          ? "bg-white text-neutral-900 shadow-xs"
+                          : "text-neutral-500 hover:text-neutral-800"
+                      }`}
+                    >
+                      Table QR Dine-In
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="py-2 px-3.5 rounded-xl bg-neutral-100/90 border border-neutral-200/60 flex items-center justify-between text-xs font-bold text-neutral-700">
-                  <div className="flex items-center gap-2">
-                    {mode === "REMOTE" ? (
-                      <span>Service Mode: Counter Pickup Only</span>
-                    ) : (
-                      <span>Service Mode: Table QR Only</span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">
-                    Direct Prep
-                  </span>
+                <div className="py-1.5 px-3 rounded-full bg-neutral-100 text-center text-xs font-semibold text-neutral-600 max-w-xs mx-auto">
+                  {mode === "REMOTE" ? "Counter Pickup Only" : "Table QR Only"}
                 </div>
               )}
             </div>

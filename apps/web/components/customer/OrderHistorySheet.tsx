@@ -58,23 +58,11 @@ export function OrderHistorySheet({
             <div className="w-12 h-1.5 rounded-full bg-neutral-300" />
           </div>
 
-          {/* Header */}
-          <div className="px-5 py-3 border-b border-neutral-100 flex items-center justify-between shrink-0">
-            <div>
-              <h3 className="font-black text-base text-neutral-900 tracking-tight">
-                Order History
-              </h3>
-              <p className="text-[11px] text-neutral-500 font-medium">
-                Recent receipts and orders for this venue
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3 py-1 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold cursor-pointer transition-colors"
-            >
-              Close
-            </button>
+          {/* Header: Centered Order History, Subtitle & Close Button Removed */}
+          <div className="py-3.5 px-4 border-b border-neutral-100 flex items-center justify-center bg-white shrink-0">
+            <h3 className="font-extrabold text-base text-neutral-900 tracking-tight text-center">
+              Order History
+            </h3>
           </div>
 
           {/* Scrollable Order List */}

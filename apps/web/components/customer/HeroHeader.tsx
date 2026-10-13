@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { ArrowLeft, ShoppingBag } from "lucide-react";
 import type { VenueData, OrderingMode, TableContext } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/cartStore";
 
@@ -48,14 +49,15 @@ export function HeroHeader({
         {/* Restored warm cream bottom gradient overlay for maximum contrast and seamless text grounding */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBF8] via-black/40 to-black/20" />
 
-        {/* Floating Top Elements: Back to all venues + Cart button */}
+        {/* Floating Top Elements: Simple back button + Cart button */}
         <div className="absolute top-3 left-4 right-4 flex items-center justify-between z-10">
           <Link
             href="/"
-            aria-label="Back to all venues"
-            className="h-8 px-3 rounded-full bg-white/95 backdrop-blur-md text-neutral-800 shadow-md hover:bg-white active:scale-95 flex items-center transition-all border border-neutral-200/60 text-xs font-bold cursor-pointer"
+            aria-label="Back to home"
+            className="h-8 px-2.5 rounded-full bg-white/95 backdrop-blur-md text-neutral-800 shadow-md hover:bg-white active:scale-95 flex items-center gap-1.5 transition-all border border-neutral-200/60 text-xs font-bold cursor-pointer"
           >
-            <span>All Venues</span>
+            <ArrowLeft className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Back</span>
           </Link>
 
           {showCart && (
@@ -65,6 +67,7 @@ export function HeroHeader({
               aria-label={`Shopping Cart (${cartItemCount} items)`}
               className="relative h-8 px-3 rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 active:scale-95 flex items-center justify-center gap-1.5 transition-all border border-neutral-100 cursor-pointer text-xs font-bold"
             >
+              <ShoppingBag className="w-3.5 h-3.5 text-neutral-800" />
               <span>Cart</span>
               {cartItemCount > 0 && (
                 <span className="px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-[#fd8535] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
